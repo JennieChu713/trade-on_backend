@@ -13,7 +13,7 @@ const commonQASchema = new Schema({
     required: true,
     // unique: true,
   },
-  imgUrls: [String],
+  //imgUrls: [String],
 });
 
 // generate createdAt and updatedAt fields automatically
