@@ -15,5 +15,5 @@ node_modules
 
 .env
 
-#temp
-note.txt
+localhost-key.pem
+localhost.pem
