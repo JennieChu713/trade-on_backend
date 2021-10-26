@@ -6,9 +6,10 @@ const userSchema = new Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
+    match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+    // unique: true,
   },
-  nickname: {
+  name: {
     type: String,
     required: true,
   },
