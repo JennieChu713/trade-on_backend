@@ -6,6 +6,7 @@ const userSchema = new Schema({
   email: {
     type: String,
     required: true,
+    unique: true,
   },
   nickname: {
     type: String,
@@ -27,7 +28,20 @@ const userSchema = new Schema({
     bankCode: Number,
     bankName: String,
     accountNum: Number,
-  }, //TODO: check setup fields
+  },
+  isAllowPost: {
+    type: Boolean,
+    default: true,
+  },
+  isAllowMessage: {
+    type: Boolean,
+    default: true,
+  },
+  accountAuthority: {
+    type: String,
+    enum: ["admin", "user"],
+    default: "user",
+  },
 });
 
 export default mongoose.model("User", userSchema);
