@@ -53,7 +53,7 @@ router.delete("/:id", async (req, res) => {
   // TODO: user authentication(admin)
   const { id } = req.params;
   try {
-    await commonQA.findOneAndDelete(id);
+    await commonQA.findByIdAndDelete(id);
     res.status(200).json({ message: "success" });
   } catch (err) {
     res.status(500).json({ error: err.message });
