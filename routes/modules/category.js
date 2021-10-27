@@ -18,11 +18,7 @@ router.post("/", async (req, res) => {
   // TODO: user authentication(admin)
   const { categoryName } = req.body;
   try {
-    const categoryExist = await Category.findOne(categoryName);
-    if (categoryExist) {
-      return res.status(200).json({ error: `Category ${categoryName} exist.` });
-    }
-    const addCategory = await Category.create(categoryName);
+    const addCategory = await Category.create({ categoryName });
     if (addCategory) {
       res.status(200).json(addCategory);
     }
@@ -37,10 +33,6 @@ router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { categoryName } = req.body;
   try {
-    const categoryExist = await Category.findOne(categoryName);
-    if (categoryExist) {
-      return res.status(200).json({ error: `Category ${categoryName} exist.` });
-    }
     const editCategory = await Category.findByIdAndUpdate(
       id,
       { categoryName },
@@ -60,7 +52,7 @@ router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     // TODO: move stored items from POST to "未分類" Category
-    await Category.findOneAndDelete(id);
+    await Category.findByIdAndDelete(id);
     res.status(200).json({ message: "success" });
   } catch (err) {
     res.status(500).json({ error: err.message });

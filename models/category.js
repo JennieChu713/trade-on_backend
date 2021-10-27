@@ -5,8 +5,7 @@ const { Schema } = mongoose;
 const categorySchema = new Schema({
   categoryName: {
     type: String,
-    default: "未分類",
-    //required: true,
+    required: true,
     //unique: true,
   },
 });
