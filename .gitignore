@@ -17,3 +17,5 @@ node_modules
 
 #temp
 note.txt
+localhost.pem
+localhost-key.pem
