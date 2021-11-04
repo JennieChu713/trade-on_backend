@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Category from "./category.js";
 const { Schema } = mongoose;
 
 const postSchema = new Schema({
@@ -85,12 +86,12 @@ const postSchema = new Schema({
   //   index: true,
   //   required: true,
   // },
-  // categoryId: {
-  //   type: Schema.Types.ObjectId,
-  //   ref: "Category",
-  //   index: true,
-  //   required: true,
-  // },
+  categoryId: {
+    type: Schema.Types.ObjectId,
+    ref: "Category",
+    index: true,
+    required: true,
+  },
 });
 
 postSchema.set("timestamps", true);
