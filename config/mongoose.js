@@ -7,8 +7,6 @@ const MONGODB_URI =
 
 main().catch((err) => console.error(err));
 
-main().catch((err) => console.error(err));
-
 async function main() {
   await mongoose.connect(MONGODB_URI);
 }
