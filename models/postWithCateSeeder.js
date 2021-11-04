@@ -104,7 +104,7 @@ db.once("open", async () => {
       if (i === categories.length - 1) {
         console.log("complete seed data of category.");
         // generate 30 dummy data of Posts
-        Array.from({ length: 3 }, async (_, i) => {
+        Array.from({ length: 30 }, async (_, i) => {
           try {
             const getCategory = await Category.findOne({
               categoryName: categories[pickRandom(categories.length)],
@@ -119,7 +119,7 @@ db.once("open", async () => {
               tradingOptions: tradings[pickRandom(tradings.length)],
               categoryId,
             });
-            if (i === 2) {
+            if (i === 29) {
               console.log("post seeder data complete.");
               process.exit();
             }
