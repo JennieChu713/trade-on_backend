@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
-import Post from "./post.js";
 
 const transactSchema = new Schema({
   amount: {
@@ -39,7 +38,7 @@ const transactSchema = new Schema({
     type: Boolean,
     default: true,
   },
-  itemId: {
+  item: {
     type: Schema.Types.ObjectId,
     ref: "Post",
     index: true,

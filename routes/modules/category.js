@@ -20,7 +20,7 @@ router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const { ObjectId } = mongoose.Types;
-    const getReplatedPosts = await Post.find({ categoryId: ObjectId(id) });
+    const getReplatedPosts = await Post.find({ category: ObjectId(id) });
     res.status(200).json({ message: "success", getReplatedPosts });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -116,13 +116,12 @@ router.delete("/:id", async (req, res) => {
       return res.status(200).json({ message: "" });
     }
 
-    const relatedPosts = await Post.find({ categoryId: ObjectId(id) });
+    const relatedPosts = await Post.find({ category: ObjectId(id) });
     if (relatedPosts) {
-      await Post.updateMany;
       relatedPosts.forEach(async (post, i) => {
         const checkUpdatePosts = await Post.updateOne(
           { _id: post._id },
-          { categoryId: ObjectId(primaryCategory._id) },
+          { category: ObjectId(primaryCategory._id) },
           { runValidators: true, new: true }
         ).lean();
 

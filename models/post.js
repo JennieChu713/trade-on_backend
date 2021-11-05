@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import Category from "./category.js";
 const { Schema } = mongoose;
 
 const postSchema = new Schema({
