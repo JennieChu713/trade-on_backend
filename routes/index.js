@@ -7,7 +7,7 @@ import posts from "./modules/posts.js";
 import transactions from "./modules/transactions.js";
 
 router.use("/category", category);
-router.use("/post", posts);
+router.use("/posts", posts);
 router.use("/transactions", transactions);
 
 export default router;

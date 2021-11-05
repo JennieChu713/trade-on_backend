@@ -86,7 +86,7 @@ const postSchema = new Schema({
   //   index: true,
   //   required: true,
   // },
-  categoryId: {
+  category: {
     type: Schema.Types.ObjectId,
     ref: "Category",
     index: true,

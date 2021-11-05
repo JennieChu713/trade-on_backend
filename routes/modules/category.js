@@ -28,7 +28,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // CREATE a Category
-router.post("/", async (req, res) => {
+router.post("/new", async (req, res) => {
   // TODO: user authentication(admin)
   const { categoryName } = req.body;
   try {

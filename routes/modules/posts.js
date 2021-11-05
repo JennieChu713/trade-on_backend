@@ -6,9 +6,11 @@ const router = express.Router();
 //READ all posts
 router.get("/", async (req, res) => {
   try {
-    const allPosts = await Post.find();
+    const allPosts = await Post.find()
+      .lean()
+      .populate("category", "id, categoryName");
     if (allPosts) {
-      res.status(200).json(allPosts);
+      res.status(200).json({ message: "success", allPosts });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -19,9 +21,11 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const post = await Post.findById(id);
+    const post = await Post.findById(id)
+      .lean()
+      .populate("category", "id, categoryName");
     if (post) {
-      res.status(200).json(post);
+      res.status(200).json({ message: "success", post });
     } else {
       return res
         .status(404)
@@ -45,12 +49,14 @@ router.post("/", async (req, res) => {
     storeName,
     region,
     district,
+    categoryId,
   } = req.body;
   const dataStructure = {
     itemName,
     quantity,
     itemStatus,
     description,
+    category: categoryId,
   };
   let tradingOptions = {};
   if ((storeCode && storeName) || (region && district)) {
@@ -65,7 +71,7 @@ router.post("/", async (req, res) => {
   try {
     const addPost = await Post.create(dataStructure);
     if (addPost) {
-      res.status(200).json(addPost);
+      res.status(200).json({ message: "success", addPost });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -86,12 +92,14 @@ router.put("/:id", async (req, res) => {
     storeName,
     region,
     district,
+    categoryId,
   } = req.body;
   const dataStructure = {
     itemName,
     quantity,
     itemStatus,
     description,
+    category: categoryId,
   };
   let tradingOptions = {};
   if ((storeCode && storeName) || (region && district)) {
@@ -110,7 +118,7 @@ router.put("/:id", async (req, res) => {
       new: true,
     });
     if (updatePost) {
-      res.status(200).json(updatePost);
+      res.status(200).json({ message: "success", updatePost });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });

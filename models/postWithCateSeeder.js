@@ -109,7 +109,7 @@ db.once("open", async () => {
             const getCategory = await Category.findOne({
               categoryName: categories[pickRandom(categories.length)],
             });
-            const categoryId = getCategory._id;
+            const category = getCategory._id;
 
             const itemStatus = pickRandom(15) % 2 === 0 ? "全新" : "二手";
             await Post.create({
@@ -117,7 +117,7 @@ db.once("open", async () => {
               quantity: pickRandom(10, "qnt"),
               itemStatus,
               tradingOptions: tradings[pickRandom(tradings.length)],
-              categoryId,
+              category,
             });
             if (i === 29) {
               console.log("post seeder data complete.");
