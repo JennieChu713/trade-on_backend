@@ -4,6 +4,6 @@ const router = express.Router();
 
 import message from "./modules/messages.js";
 
-router.use("/message", message);
+router.use("/messages", message);
 
 export default router;

@@ -6,20 +6,24 @@ const msgSchema = new Schema({
     type: String,
     required: true,
   },
-  relatedMsgId: {
+  relatedMsg: {
     type: Schema.Types.ObjectId,
     ref: "Message",
   },
   messageType: {
     type: String,
-    enum: ["question", "apply"],
+    enum: ["question", "apply", "transaction"],
     required: true,
   },
-  // postId: {
+  // post: {
   //   type: Schema.Types.ObjectId,
   //   ref: "Post",
   // },
-  // userId: {
+  // deal: {
+  //   type: Schema.Types.ObjectId,
+  //   ref: "Transaction",
+  // },
+  // owner: {
   //   type: Schema.Types.ObjectId,
   //   ref: "User",
   //   index: true,
