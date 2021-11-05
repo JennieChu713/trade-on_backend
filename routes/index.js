@@ -8,6 +8,6 @@ import transactions from "./modules/transactions.js";
 
 router.use("/category", category);
 router.use("/posts", posts);
-router.use("/transactions", transactions);
+//router.use("/transactions", transactions);
 
 export default router;

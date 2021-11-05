@@ -1,29 +1,98 @@
 import express from "express";
 import Transaction from "../../models/transaction.js";
+import Post from "../../models/post.js";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
-//CREATE /deal a transaction(add userId and dealerId)
-router.post("/", async (req, res) => {
+// READ all transactions (from a user)
+router.get("/", async (req, res) => {
   //TODO: user authentication
-  const { amount, userId, dealerId, itemId } = req.body;
   try {
-    const newTrans = await Transaction.create({ amount }); //Transaction.create({amount, userId, dealerId, itemId})
+    const allTrans = await Transaction.find()
+      .lean()
+      .populate({ path: "post", select: "itemName id quantity" })
+      .exec(); // TODO: find user from ownerId || dealerId
+    res.status(200).json({ message: "success", allTrans });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//CREATE start a deal transaction - step 1 :send from owner (add userId and postId)
+router.post("/post/:id", async (req, res) => {
+  //TODO: user authentication
+  const { id } = req.params; // postId
+  const { amount, userId } = req.body; // 贈送數量, 索取者ID
+  const { ObjectId } = mongoose.Types;
+
+  if (!amount) {
+    return res.status(200).json({ message: "amount can not be 0!" });
+  }
+  const presentDeals = await Transaction.find({ post: ObjectId(id) })
+    .lean()
+    .populate("post", "quantity givenAmount")
+    .exec();
+  const { quantity, givenAmount } = presentDeals[0].post;
+  let total = 0;
+  if (presentDeals.length) {
+    presentDeals.forEach((deal) => {
+      total += deal.amount;
+    });
+    total += givenAmount;
+    if (quantity - total < amount) {
+      return res
+        .status(200)
+        .json({ message: "amount is over remain quantity." });
+    }
+  }
+
+  try {
+    const newTrans = await Transaction.create({ amount, post: ObjectId(id) });
     if (newTrans) {
-      res.status(200).json(newTrans);
+      res.status(200).json({ message: "success", newTrans });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// READ all transactions
-router.get("/", async (req, res) => {
-  //TODO: user authentication
+// READ a deal transaction info from owner - step 2: get for dealer
+router.get("/post/:id", async (req, res) => {
+  // TODO: user authentication
+  const { user } = req.query; //索取者 ID
+  const { id } = req.params; // 刊登 ID
+  const { ObjectId } = mongoose.Types;
   try {
-    const allTrans = await Transaction.find();
-    if (allTrans) {
-      res.status(200).json(allTrans);
+    const getTrans = await Transaction.findOne({ post: ObjectId(id) })
+      .lean()
+      .populate("post", "tradingOptions")
+      .exec(); //await Transaction.find({ post: ObjectId(id), dealer: ObjectId(user)})
+    res.status(200).json({ message: "success", getTrans });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// UPDATE a deal transaction - step 3: from dealer (add userId )
+router.put("/post/:id", async (req, res) => {
+  const { user } = req.query; //索取者 ID
+  const { id } = req.params; // postId
+  const { userId, tradingOptions } = req.body; // 刊登者ID, 選定的交易方式
+  const { ObjectId } = mongoose.Types;
+  try {
+    const checkTrans = await Transaction.findOne({ post: ObjectId(id) }); //await Transaction.find({ post: ObjectId(id), dealer: ObjectId(user)}).lean().populate("post", "owner").exec()
+    // if (userId === checkTrans.post.owner) {}
+    if (checkTrans) {
+      const dealMethod = tradingOptions.faceToFace
+        ? { ...tradingOptions.faceToFace }
+        : { ...tradingOptions.convenientStore };
+      const { _id } = checkTrans;
+      await Transaction.findByIdAndUpdate(
+        _id,
+        { owner: userId, dealMethod },
+        { runValidators: true, new: true }
+      );
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -35,11 +104,11 @@ router.get("/:id", async (req, res) => {
   // TODO: user authentication
   const { id } = req.params;
   try {
-    const trans = await Transaction.findById(id);
+    const trans = await Transaction.findById(id).lean().populate("post").exec();
     if (trans) {
-      res.status(200).json(trans);
+      res.status(200).json({ message: "success", trans });
     } else {
-      res
+      return res
         .status(200)
         .json({ error: "The deal you are looking for does not exist." });
     }
@@ -63,7 +132,7 @@ router.put("/filling-info/:id", async (req, res) => {
       },
     };
     dataStructure.isFilled = true;
-    // Transaction.findByOneAndUpdate({id, userId, dealerId},dataStructure,{ runValidators: true, new: true })
+    // Transaction.findByOneAndUpdate({id, owner:userId, dealer: dealerId},dataStructure,{ runValidators: true, new: true })
     const updateProcess = await Transaction.findByIdAndUpdate(
       id,
       dataStructure,
@@ -122,11 +191,16 @@ router.put("/sendout/:id", async (req, res) => {
         { isSent: true },
         { runValidators: true, new: true }
       );
+      const updatePost = await Post.findByIdAndUpdate(
+        { _id: updateProcess.post },
+        { givenAmount: { $add: ["$givinAmount", updateProcess.amount] } },
+        { runValidators: true, new: true }
+      );
       if (updateProcess) {
-        res.status(200).json(updateProcess);
+        res.status(200).json({ message: "success", updateProcess });
       }
     } else {
-      return res.status(200).json({ error: "Unpermitted Process" });
+      return res.status(200).json({ error: "Process denied" });
     }
   } catch (err) {
     res.status(500).json(err.message);
@@ -146,14 +220,14 @@ router.put("/complete/:id", async (req, res) => {
         { runValidators: true, new: true }
       );
       if (updateProcess) {
-        res.status(200).json(updateProcess);
+        res.status(200).json({ message: "success", updateProcess });
       }
     } else {
-      return res.status(200).json({ error: "Unpermitted Process" });
+      return res.status(200).json({ error: "Process denied" });
     }
   } catch (err) {
     res.status(500).json(err.message);
   }
 });
 
-export default router;
+//export default router;

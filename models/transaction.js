@@ -6,6 +6,7 @@ const transactSchema = new Schema({
     type: Number,
     required: true,
   },
+  dealMethod: Object,
   isFilled: {
     type: Boolean,
     default: false,
@@ -38,7 +39,7 @@ const transactSchema = new Schema({
     type: Boolean,
     default: true,
   },
-  item: {
+  post: {
     type: Schema.Types.ObjectId,
     ref: "Post",
     index: true,

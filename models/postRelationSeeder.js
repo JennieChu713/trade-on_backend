@@ -138,7 +138,7 @@ db.once("open", async () => {
               const post = allPosts[pickRandom(allPosts.length)];
               await Transaction.create({
                 amount: pickRandom(post.quantity, "qnt"),
-                item: post._id,
+                post: post._id,
               });
 
               if (i === 2) {

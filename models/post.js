@@ -11,6 +11,10 @@ const postSchema = new Schema({
     default: 1,
     required: true,
   },
+  givenAmount: {
+    type: Number,
+    default: 0,
+  },
   itemStatus: {
     type: String,
     enum: ["全新", "二手"],
@@ -79,7 +83,7 @@ const postSchema = new Schema({
     default: true,
   },
   //imgUrls: String,
-  // ownerId: {
+  // owner: {
   //   type: Schema.Types.ObjectId,
   //   ref: "User",
   //   index: true,

@@ -8,7 +8,8 @@ router.get("/", async (req, res) => {
   try {
     const allPosts = await Post.find()
       .lean()
-      .populate("category", "id, categoryName");
+      .populate("category", "id, categoryName")
+      .exec();
     if (allPosts) {
       res.status(200).json({ message: "success", allPosts });
     }
@@ -23,7 +24,8 @@ router.get("/:id", async (req, res) => {
   try {
     const post = await Post.findById(id)
       .lean()
-      .populate("category", "id, categoryName");
+      .populate("category", "id, categoryName")
+      .exec();
     if (post) {
       res.status(200).json({ message: "success", post });
     } else {
