@@ -27,6 +27,18 @@ router.get("/deal/:id", async (rea, res) => {
   }
 });
 
+// READ one message (for edit rendering value)
+router.get("/:id", async (req, res) => {
+  //TODO: user authentication
+  const { id } = req.params;
+  try {
+    const msg = await Message.findById(id);
+    res.status(200).json({ message: "success", msg });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // CREATE a message (post and transaction)
 router.post("/", async (req, res) => {
   // TODO: user authentication
