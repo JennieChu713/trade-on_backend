@@ -45,13 +45,13 @@ const transactSchema = new Schema({
     index: true,
     required: true,
   },
-  // ownerId: {
+  // owner: {
   //   type: Schema.Types.ObjectId,
   //   ref: "User",
   //   index: true,
   //   required: true,
   // },
-  // dealerId: {
+  // dealer: {
   //   type: Schema.Types.ObjectId,
   //   ref: "User",
   //   index: true,
