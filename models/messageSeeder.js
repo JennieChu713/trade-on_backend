@@ -1,5 +1,4 @@
 import db from "../config/mongoose.js";
-import message from "./message.js";
 import Message from "./message.js";
 
 //seeder data
@@ -55,6 +54,7 @@ db.once("open", async () => {
         const addReply = replyMsgs[pickRandom(replyMsgs.length)];
         if (addReply.messageType === messageType) {
           await Message.create({ ...addReply, relatedMsg: _id });
+          console.log("OK");
         }
       }
       if (i === 6) {
