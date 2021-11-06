@@ -2,8 +2,10 @@ import mongoose from "mongoose";
 
 //mongoDB URI
 const MONGODB_URI =
-  process.env.MONGODB_URI ||
-  "mongodb+srv://tester:d4YpkzzpZ9wt345q@cluster0.dalyz.mongodb.net/tradeonTester?retryWrites=true&w=majority";
+  process.env.MONGODB_URI || "mongodb://localhost:27017/tradeon";
+// const MONGODB_URI =
+//   process.env.MONGODB_URI ||
+//   "mongodb+srv://tester:d4YpkzzpZ9wt345q@cluster0.dalyz.mongodb.net/tradeonTester?retryWrites=true&w=majority";
 
 main().catch((err) => console.error(err));
 

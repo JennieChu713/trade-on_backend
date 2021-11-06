@@ -15,7 +15,5 @@ node_modules
 
 .env
 
-#temp
-
 localhost-key.pem
 localhost.pem
