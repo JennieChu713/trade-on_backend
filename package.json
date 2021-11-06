@@ -7,8 +7,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "userSeed": "node models/userSeeder.js",
-    "postRelateSeed": "node models/postRelationSeeder.js"
+    "postTranSeed": "node models/seeds/postnTransSeeder.js",
+    "postMsgSeed": "node models/seeds/postMsgSeeder.js",
+    "commonQASeed": "node models/seeds/commonQASeeder.js"
   },
   "author": "jc",
   "license": "ISC",

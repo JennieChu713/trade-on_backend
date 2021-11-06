@@ -8,7 +8,9 @@ const router = express.Router();
 // READ all Categories
 router.get("/", async (req, res) => {
   try {
-    const allCategories = await Category.find();
+    const allCategories = await Category.find()
+      .lean()
+      .select("-__v -__createdAt -__updatedAt");
     res.status(200).json({ message: "success", allCategories });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -20,7 +22,10 @@ router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const { ObjectId } = mongoose.Types;
-    const getReplatedPosts = await Post.find({ category: ObjectId(id) });
+    const getReplatedPosts = await Post.find({ category: ObjectId(id) })
+      .lean()
+      .select("-__v -__createdAt -__updatedAt");
+
     res.status(200).json({ message: "success", getReplatedPosts });
   } catch (err) {
     res.status(500).json({ error: err.message });

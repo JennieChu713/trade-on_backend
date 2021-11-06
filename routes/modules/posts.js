@@ -3,11 +3,12 @@ import Post from "../../models/post.js";
 
 const router = express.Router();
 
-//READ all posts
+// READ all posts
 router.get("/", async (req, res) => {
   try {
     const allPosts = await Post.find()
       .lean()
+      .select("-__v -createdAt -updatedAt")
       .populate("category", "id, categoryName")
       .exec();
     if (allPosts) {
@@ -18,13 +19,14 @@ router.get("/", async (req, res) => {
   }
 });
 
-//READ a post
+// READ a post
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const post = await Post.findById(id)
       .lean()
-      .populate("category", "id, categoryName")
+      .select("-__v -createdAt -updatedAt")
+      .populate("category", "id categoryName")
       .exec();
     if (post) {
       res.status(200).json({ message: "success", post });
@@ -38,10 +40,9 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-//CREATE a post
+// CREATE a post
 router.post("/", async (req, res) => {
   //TODO: user authentication
-  //const userId = user._id
   const {
     itemName,
     quantity,
@@ -86,7 +87,6 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   // TODO: user authentication
   const { id } = req.params;
-  //const userId = user._id; const {_id} = req.params.id
   const {
     itemName,
     quantity,
@@ -97,6 +97,7 @@ router.put("/:id", async (req, res) => {
     region,
     district,
     categoryId,
+    userId,
   } = req.body;
   const dataStructure = {
     itemName,
@@ -116,25 +117,26 @@ router.put("/:id", async (req, res) => {
   }
   dataStructure.tradingOptions = tradingOptions;
   try {
-    //const updatePost = await Post.findOneAndUpdate({_id: ObjectId(id), userId: userId});
-    const updatePost = await Post.findByIdAndUpdate(id, dataStructure, {
-      runValidators: true,
-      new: true,
-    });
-    if (updatePost) {
-      res.status(200).json({ message: "success", updatePost });
-    }
+    const updatePost = await Post.findByIdAndUpdate(
+      { id, owner: userId },
+      dataStructure,
+      {
+        runValidators: true,
+        new: true,
+      }
+    );
+    res.status(200).json({ message: "success", updatePost });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-//DELETE a post
+// DELETE a post
 router.delete("/:id", async (req, res) => {
   // TODO: user authentication
-  const { id } = req.params;
+  const { id, userId } = req.params;
   try {
-    await Post.findByIdAndDelete(id);
+    await Post.findByIdAndDelete({ id, owner: userId });
     res.status(200).json({ message: "success" });
   } catch (err) {
     res.status(500).json({ error: err.message });

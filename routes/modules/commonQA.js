@@ -6,8 +6,11 @@ const router = express.Router();
 // READ all commonQAs
 router.get("/", async (req, res) => {
   try {
-    const allQAs = await commonQA.find();
-    res.status(200).json(allQAs);
+    const allQAs = await commonQA
+      .find()
+      .lean()
+      .select("-__v -__createdAt -__updatedAt");
+    res.status(200).json({ message: "success", allQAs });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -21,7 +24,7 @@ router.post("/", async (req, res) => {
     const newQA = { question, answer };
     const addQA = await commonQA.create(newQA);
     if (addQA) {
-      res.status(200).json(addQA);
+      res.status(200).json({ message: "success", addQA });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -41,7 +44,7 @@ router.put("/:id", async (req, res) => {
       { runValidators: true, new: true }
     );
     if (editQA) {
-      res.status(200).json(editQA);
+      res.status(200).json({ message: "success", editQA });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
