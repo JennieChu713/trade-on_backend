@@ -151,7 +151,7 @@ db.once("open", async () => {
                 post: post._id,
               });
 
-              if (i === 2) {
+              if ((await Transaction.countDocuments()) === 3) {
                 console.log("transaction seeder data complete.");
                 process.exit();
               }

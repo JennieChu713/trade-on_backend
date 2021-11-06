@@ -34,17 +34,8 @@ db.once("open", async () => {
   //generate 3 dummy users
   Array.from({ length: 3 }, async (_, i) => {
     try {
-      let name, email, password, accountAuthority;
-      if (Object.keys(users[i]).length === 3) {
-        name = users[i].name;
-        email = users[i].email;
-        password = users[i].password;
-      } else {
-        name = users[i].name;
-        email = users[i].email;
-        password = users[i].password;
-        accountAuthority = users[i].accountAuthority;
-      }
+      const { name, email, password, accountAuthority = "" } = users[i];
+
       const hashed = await bcrypt.hash(password, 10);
       if (accountAuthority) {
         await User.create({
@@ -60,8 +51,7 @@ db.once("open", async () => {
           password: hashed,
         });
       }
-
-      if (i === 2) {
+      if ((await User.countDocuments()) === 3) {
         console.log("user seeder completed.");
         process.exit();
       }
