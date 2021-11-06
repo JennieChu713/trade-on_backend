@@ -1,6 +1,7 @@
 import express from "express";
 import Transaction from "../../models/transaction.js";
 import Post from "../../models/post.js";
+import User from "../../models/user.js";
 import mongoose from "mongoose";
 
 const router = express.Router();
@@ -11,21 +12,33 @@ router.get("/", async (req, res) => {
   try {
     const allTrans = await Transaction.find()
       .lean()
-      .populate({ path: "post", select: "itemName id quantity" })
+      .populate({ path: "post", select: "itemName id owner quantity" })
       .exec(); // TODO: find user from ownerId || dealerId
     res.status(200).json({ message: "success", allTrans });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+// READ start a deal transaction - step 0: get dealer info for owner
+router.get("/post/:id/request", async (req, res) => {
+  const { user } = req.query;
+  const getDealer = await User.findById(user);
+  if (!getDealer) {
+    return res
+      .status(200)
+      .json({ message: "the user you are looking for does not exist." });
+  }
+  res.status(200).json({ message: "success", getDealer });
+});
 
-//CREATE start a deal transaction - step 1 :send from owner (add userId and postId)
+// CREATE start a deal transaction - step 1 :send from owner (add owner and postId)
 router.post("/post/:id", async (req, res) => {
   //TODO: user authentication
   const { id } = req.params; // postId
-  const { amount, userId } = req.body; // 贈送數量, 索取者ID
+  const { amount, userId } = req.body; // 贈送數量, 刊登者ID
   const { ObjectId } = mongoose.Types;
 
+  // check if amount is acceptable
   if (!amount) {
     return res.status(200).json({ message: "amount can not be 0!" });
   }
@@ -48,7 +61,18 @@ router.post("/post/:id", async (req, res) => {
   }
 
   try {
-    const newTrans = await Transaction.create({ amount, post: ObjectId(id) });
+    // check if userId and post's owner is equivalent
+    const checkPostOwner = await Post.findById({ id, owner: ObjectId(userId) });
+    if (!checkPostOwner) {
+      return res.status(200).json({ message: "permission denied" });
+    }
+
+    // create
+    const newTrans = await Transaction.create({
+      amount,
+      post: id,
+      owner: userId,
+    });
     if (newTrans) {
       res.status(200).json({ message: "success", newTrans });
     }
@@ -58,7 +82,7 @@ router.post("/post/:id", async (req, res) => {
 });
 
 // READ a deal transaction info from owner - step 2: get for dealer
-router.get("/post/:id", async (req, res) => {
+router.get("/post/:id/accept", async (req, res) => {
   // TODO: user authentication
   const { user } = req.query; //索取者 ID
   const { id } = req.params; // 刊登 ID
@@ -74,26 +98,34 @@ router.get("/post/:id", async (req, res) => {
   }
 });
 
-// UPDATE a deal transaction - step 3: from dealer (add userId )
+// UPDATE a deal transaction - step 3: from dealer (add dealerId and dealMethod)
 router.put("/post/:id", async (req, res) => {
   const { user } = req.query; //索取者 ID
   const { id } = req.params; // postId
-  const { userId, tradingOptions } = req.body; // 刊登者ID, 選定的交易方式
+  const { ownerId, tradingOptions } = req.body; // 刊登者ID, 選定的交易方式
   const { ObjectId } = mongoose.Types;
   try {
-    const checkTrans = await Transaction.findOne({ post: ObjectId(id) }); //await Transaction.find({ post: ObjectId(id), dealer: ObjectId(user)}).lean().populate("post", "owner").exec()
-    // if (userId === checkTrans.post.owner) {}
-    if (checkTrans) {
-      const dealMethod = tradingOptions.faceToFace
-        ? { ...tradingOptions.faceToFace }
-        : { ...tradingOptions.convenientStore };
-      const { _id } = checkTrans;
-      await Transaction.findByIdAndUpdate(
-        _id,
-        { owner: userId, dealMethod },
-        { runValidators: true, new: true }
-      );
+    const checkTrans = await Transaction.findOne({
+      post: ObjectId(id),
+      owner: ObjectId(ownerId),
+    })
+      .lean()
+      .populate("post", "tradingOptions")
+      .exec();
+    if (!checkTrans) {
+      return res.status(200).json({ message: "permission denied." });
     }
+
+    // get dealMethod
+    const dealMethod = tradingOptions.faceToFace
+      ? { ...checkTrans.post.tradingOptions.faceToFace }
+      : { ...checkTrans.post.tradingOptions.convenientStore };
+    const { _id } = checkTrans;
+    await Transaction.findByIdAndUpdate(
+      _id,
+      { dealer: user, dealMethod },
+      { runValidators: true, new: true }
+    );
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

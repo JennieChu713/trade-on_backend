@@ -2,6 +2,7 @@ import db from "../config/mongoose.js";
 import Post from "./post.js";
 import Category from "./category.js";
 import Transaction from "./transaction.js";
+import User from "./user.js";
 
 // seeder data
 const categories = [
@@ -101,8 +102,6 @@ db.once("open", async () => {
     console.log("clearout origin document data of transaction.");
   }
 
-  let limitTransCount = 0;
-
   // generate dummy data of Categories
   categories.forEach(async (category, i) => {
     try {
@@ -113,6 +112,15 @@ db.once("open", async () => {
       if (i === categories.length - 1) {
         console.log("complete seed data of category.");
 
+        // check users data
+        const findUser = await User.findOne({ email: "owner@mail.com" });
+        if (!findUser) {
+          console.log(
+            "generate post relation seeder data failed: no user exist, you need to have user data to proceed. (run 'node models/userSeeder.js')"
+          );
+          process.exit();
+        }
+
         // generate 30 dummy data of Posts
         Array.from({ length: 30 }, async (_, i) => {
           const getCategory = await Category.findOne({
@@ -121,12 +129,14 @@ db.once("open", async () => {
           const category = getCategory._id;
 
           const itemStatus = pickRandom(15) % 2 === 0 ? "全新" : "二手";
+          const { _id } = findUser;
           const newPost = await Post.create({
             itemName: items[pickRandom(items.length)],
             quantity: pickRandom(10, "qnt"),
             itemStatus,
             tradingOptions: tradings[pickRandom(tradings.length)],
             category,
+            owner: _id,
           });
 
           if (i === 29) {

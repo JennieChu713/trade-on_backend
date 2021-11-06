@@ -52,6 +52,7 @@ router.post("/", async (req, res) => {
     region,
     district,
     categoryId,
+    userId,
   } = req.body;
   const dataStructure = {
     itemName,
@@ -59,6 +60,7 @@ router.post("/", async (req, res) => {
     itemStatus,
     description,
     category: categoryId,
+    owner: userId,
   };
   let tradingOptions = {};
   if ((storeCode && storeName) || (region && district)) {
@@ -84,7 +86,7 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   // TODO: user authentication
   const { id } = req.params;
-  //const userId = user._id; const _id = req.params.id
+  //const userId = user._id; const {_id} = req.params.id
   const {
     itemName,
     quantity,

@@ -62,7 +62,7 @@ db.once("open", async () => {
       }
 
       if (i === 2) {
-        console.log("seeder completed.");
+        console.log("user seeder completed.");
         process.exit();
       }
     } catch (err) {

@@ -21,12 +21,6 @@ const transactSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  // account: {// REF USER?
-  //   accountName: { type: String, required: true },
-  //   accountNum: { type: Number, required: true },
-  //   bankCode: { type: Number, required: true },
-  //   bankName: { type: String, required: true },
-  // },
   isSent: {
     type: Boolean,
     default: false,
@@ -45,18 +39,16 @@ const transactSchema = new Schema({
     index: true,
     required: true,
   },
-  // owner: {
-  //   type: Schema.Types.ObjectId,
-  //   ref: "User",
-  //   index: true,
-  //   required: true,
-  // },
-  // dealer: {
-  //   type: Schema.Types.ObjectId,
-  //   ref: "User",
-  //   index: true,
-  //   required: true,
-  // }
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    index: true,
+  },
+  dealer: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    index: true,
+  },
 });
 transactSchema.set("timestamps", true);
 

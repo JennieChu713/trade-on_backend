@@ -70,8 +70,8 @@ const postSchema = new Schema({
 
   payer: {
     type: String,
-    //enum: ["刊登者", "索取者", "贈與者"]
     default: "索取者",
+    //enum: ["刊登者", "索取者", "贈與者"]
     //required: true,
   },
   isGoal: {
@@ -83,12 +83,12 @@ const postSchema = new Schema({
     default: true,
   },
   //imgUrls: String,
-  // owner: {
-  //   type: Schema.Types.ObjectId,
-  //   ref: "User",
-  //   index: true,
-  //   required: true,
-  // },
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    index: true,
+    required: true,
+  },
   category: {
     type: Schema.Types.ObjectId,
     ref: "Category",
