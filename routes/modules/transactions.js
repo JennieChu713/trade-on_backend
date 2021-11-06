@@ -12,8 +12,15 @@ router.get("/", async (req, res) => {
   try {
     const allTrans = await Transaction.find()
       .lean()
+      .select("-__v")
       .populate({ path: "post", select: "itemName id owner quantity" })
       .exec(); // TODO: find user from ownerId || dealerId
+    allTrans.forEach((tran) => {
+      const newCreateAt = new Date(tran.createdAt);
+      const newUpdateAt = new Date(tran.updatedAt);
+      tran.createdAt = newCreateAt.toLocaleString();
+      tran.updatedAt = newUpdateAt.toLocaleString();
+    });
     res.status(200).json({ message: "success", allTrans });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -22,7 +29,9 @@ router.get("/", async (req, res) => {
 // READ start a deal transaction - step 0: get dealer info for owner
 router.get("/post/:id/request", async (req, res) => {
   const { user } = req.query;
-  const getDealer = await User.findById(user);
+  const getDealer = await User.findById(user).select(
+    "-__v -createdAt -updatedAt"
+  );
   if (!getDealer) {
     return res
       .status(200)
@@ -90,6 +99,7 @@ router.get("/post/:id/accept", async (req, res) => {
   try {
     const getTrans = await Transaction.findOne({ post: ObjectId(id) })
       .lean()
+      .select("-__v")
       .populate("post", "tradingOptions")
       .exec(); //await Transaction.find({ post: ObjectId(id), dealer: ObjectId(user)})
     res.status(200).json({ message: "success", getTrans });
@@ -262,4 +272,4 @@ router.put("/complete/:id", async (req, res) => {
   }
 });
 
-//export default router;
+// export default router;
