@@ -1,7 +1,7 @@
 import db from "../config/mongoose.js";
 import Message from "./message.js";
 import Post from "./post.js";
-import User from "/user.js";
+import User from "./user.js";
 
 //seeder data
 const postMsgs = [
@@ -59,15 +59,16 @@ db.once("open", async () => {
   let owner, dealer;
   checkUser.forEach((user) => {
     if (user.name === "dealer") {
-      dealer = user.name;
+      dealer = user._id;
     } else {
-      owner = user.name;
+      owner = user._id;
     }
   });
 
+  console.log("generating message seed data.");
+
   // generate 7 dummy data (only post messages)
   Array.from({ length: 7 }, async (_, i) => {
-    console.log("generating message seed data.");
     try {
       const message = await Message.create({
         ...postMsgs[pickRandom(postMsgs.length)],
@@ -75,6 +76,7 @@ db.once("open", async () => {
         owner: dealer,
       });
 
+      // random generate reply message
       if (message) {
         const { _id, messageType } = message;
         const addReply = replyMsgs[pickRandom(replyMsgs.length)];
