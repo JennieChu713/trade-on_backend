@@ -1,14 +1,18 @@
 import bcrypt from "bcrypt";
 import db from "../config/mongoose.js";
-import user from "./user.js";
 import User from "./user.js";
 
 // seeder data (with password bcrypt)
 const users = [
   {
-    email: "dummy@mail.com",
-    name: "dummyExample",
-    password: "dummy",
+    email: "owner@mail.com",
+    name: "owner",
+    password: "owner",
+  },
+  {
+    email: "dealer@mail.com",
+    name: "dealer",
+    password: "dealer",
   },
   {
     email: "admin@mail.com",
@@ -27,8 +31,8 @@ db.once("open", async () => {
     console.log("clearout origin document data.");
   }
 
-  //generate 2 dummy data, one user one admin
-  Array.from({ length: 2 }, async (_, i) => {
+  //generate 3 dummy users
+  Array.from({ length: 3 }, async (_, i) => {
     try {
       let name, email, password, accountAuthority;
       if (Object.keys(users[i]).length === 3) {
@@ -57,7 +61,7 @@ db.once("open", async () => {
         });
       }
 
-      if (i === 1) {
+      if (i === 2) {
         console.log("seeder completed.");
         process.exit();
       }

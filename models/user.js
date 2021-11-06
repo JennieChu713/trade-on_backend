@@ -7,7 +7,7 @@ const userSchema = new Schema({
     type: String,
     required: true,
     match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-    // unique: true,
+    unique: true,
   },
   name: {
     type: String,
@@ -20,10 +20,10 @@ const userSchema = new Schema({
   introduction: String,
   provider: {
     type: String,
-    //default: "local",
+    default: "local",
     // enum: ["facebook", "line"],
   },
-  avatarUrl: String,
+  // avatarUrl: String,
   account: {
     accountName: String,
     bankCode: Number,
