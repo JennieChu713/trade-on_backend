@@ -12,6 +12,6 @@ router.use("/category", category);
 router.use("/posts", posts);
 // router.use("/transactions", transactions);
 router.use("/messages", message);
-router.use("/commonqna", commonQA);
+router.use("/commonqnas", commonQA);
 
 export default router;

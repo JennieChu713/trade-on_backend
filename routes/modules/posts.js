@@ -1,10 +1,11 @@
 import express from "express";
 import Post from "../../models/post.js";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
 // READ all posts
-router.get("/", async (req, res) => {
+router.get("/all", async (req, res) => {
   try {
     const allPosts = await Post.find()
       .lean()
@@ -41,7 +42,8 @@ router.get("/:id", async (req, res) => {
 });
 
 // CREATE a post
-router.post("/", async (req, res) => {
+router.post("/new", async (req, res) => {
+  const { ObjectId } = mongoose.Type;
   //TODO: user authentication
   const {
     itemName,
@@ -60,8 +62,8 @@ router.post("/", async (req, res) => {
     quantity,
     itemStatus,
     description,
-    category: categoryId,
-    owner: userId,
+    category: ObjectId(categoryId),
+    owner: ObjectId(userId),
   };
   let tradingOptions = {};
   if ((storeCode && storeName) || (region && district)) {
@@ -75,9 +77,7 @@ router.post("/", async (req, res) => {
   dataStructure.tradingOptions = tradingOptions;
   try {
     const addPost = await Post.create(dataStructure);
-    if (addPost) {
-      res.status(200).json({ message: "success", addPost });
-    }
+    res.status(200).json({ message: "success", new: addPost });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -87,6 +87,7 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   // TODO: user authentication
   const { id } = req.params;
+  const { ObjectId } = mongoose.Types;
   const {
     itemName,
     quantity,
@@ -104,7 +105,7 @@ router.put("/:id", async (req, res) => {
     quantity,
     itemStatus,
     description,
-    category: categoryId,
+    category: ObjectId(categoryId),
   };
   let tradingOptions = {};
   if ((storeCode && storeName) || (region && district)) {
@@ -117,15 +118,15 @@ router.put("/:id", async (req, res) => {
   }
   dataStructure.tradingOptions = tradingOptions;
   try {
-    const updatePost = await Post.findByIdAndUpdate(
-      { id, owner: userId },
+    const updatePost = await Post.findOneAndUpdate(
+      { _id: id, owner: ObjectId(userId) },
       dataStructure,
       {
         runValidators: true,
         new: true,
       }
     );
-    res.status(200).json({ message: "success", updatePost });
+    res.status(200).json({ message: "success", update: updatePost });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -134,9 +135,9 @@ router.put("/:id", async (req, res) => {
 // DELETE a post
 router.delete("/:id", async (req, res) => {
   // TODO: user authentication
-  const { id, userId } = req.params;
+  const { id } = req.params;
   try {
-    await Post.findByIdAndDelete({ id, owner: userId });
+    await Post.findByIdAndDelete({ id });
     res.status(200).json({ message: "success" });
   } catch (err) {
     res.status(500).json({ error: err.message });

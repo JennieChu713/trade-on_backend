@@ -81,7 +81,12 @@ db.once("open", async () => {
         const { _id, messageType } = message;
         const addReply = replyMsgs[pickRandom(replyMsgs.length)];
         if (addReply.messageType === messageType) {
-          await Message.create({ ...addReply, relatedMsg: _id, owner });
+          await Message.create({
+            ...addReply,
+            post: checkPost._id,
+            relatedMsg: _id,
+            owner,
+          });
         }
       }
       if (i === 6) {

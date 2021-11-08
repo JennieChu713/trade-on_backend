@@ -6,27 +6,42 @@ import mongoose from "mongoose";
 const router = express.Router();
 
 // READ all Categories
-router.get("/", async (req, res) => {
+router.get("/all", async (req, res) => {
   try {
     const allCategories = await Category.find()
       .lean()
-      .select("-__v -__createdAt -__updatedAt");
-    res.status(200).json({ message: "success", allCategories });
+      .select("-__v -createdAt -updatedAt");
+    res.status(200).json({ message: "success", categories: allCategories });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//READ a category (for editing present data)
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const getCategory = await Category.findById(id)
+      .lean()
+      .select("-__v -createdAt -updatedAt");
+    res.status(200).json({ message: "success", category: getCategory });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // READ a category with related posts
-router.get("/:id", async (req, res) => {
+router.get("/:id/posts", async (req, res) => {
   const { id } = req.params;
   try {
     const { ObjectId } = mongoose.Types;
     const getReplatedPosts = await Post.find({ category: ObjectId(id) })
       .lean()
-      .select("-__v -__createdAt -__updatedAt");
+      .select("-__v -createdAt -updatedAt");
 
-    res.status(200).json({ message: "success", getReplatedPosts });
+    res
+      .status(200)
+      .json({ message: "success", relatedPosts: getReplatedPosts });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -48,14 +63,14 @@ router.post("/new", async (req, res) => {
     // create new category
     const addCategory = await Category.create({ categoryName });
     if (addCategory) {
-      res.status(200).json({ message: "success", addCategory });
+      res.status(200).json({ message: "success", new: addCategory });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-//UPDATE a Category
+// UPDATE a Category
 router.put("/:id", async (req, res) => {
   // TODO: user authentication(admin)
   const { id } = req.params;
@@ -86,7 +101,7 @@ router.put("/:id", async (req, res) => {
         { runValidators: true, new: true }
       );
       if (editCategory) {
-        res.status(200).json({ message: "success", editCategory });
+        res.status(200).json({ message: "success", update: editCategory });
       }
     } else {
       return res.status(200).json({ message: "permission denied." });
@@ -118,7 +133,9 @@ router.delete("/:id", async (req, res) => {
 
     const categoryExist = await Category.findById(id);
     if (!categoryExist) {
-      return res.status(200).json({ message: "" });
+      return res.status(200).json({
+        message: "The category you are attend to delete does not exist.",
+      });
     }
 
     const relatedPosts = await Post.find({ category: ObjectId(id) });
@@ -128,14 +145,18 @@ router.delete("/:id", async (req, res) => {
           { _id: post._id },
           { category: ObjectId(primaryCategory._id) },
           { runValidators: true, new: true }
-        ).lean();
+        );
 
         if (i === relatedPosts.length - 1) {
           await Category.findByIdAndDelete(id);
-          res.status(200).json({ message: "success" });
+          return res.status(200).json({ message: "success" });
         }
       });
     }
+
+    //if not related posts, delete the category
+    await Category.findByIdAndDelete(id);
+    res.status(200).json({ message: "success" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
