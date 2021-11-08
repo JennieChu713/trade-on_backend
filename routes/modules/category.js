@@ -1,7 +1,4 @@
 import express from "express";
-import Category from "../../models/category.js";
-import Post from "../../models/post.js";
-import mongoose from "mongoose";
 
 import CategoryControllers from "../../controllers/categories.js";
 const {
