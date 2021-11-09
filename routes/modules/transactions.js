@@ -15,12 +15,7 @@ router.get("/", async (req, res) => {
       .select("-__v")
       .populate({ path: "post", select: "itemName id owner quantity" })
       .exec(); // TODO: find user from ownerId || dealerId
-    allTrans.forEach((tran) => {
-      const newCreateAt = new Date(tran.createdAt);
-      const newUpdateAt = new Date(tran.updatedAt);
-      tran.createdAt = newCreateAt.toLocaleString();
-      tran.updatedAt = newUpdateAt.toLocaleString();
-    });
+
     res.status(200).json({ message: "success", allTrans });
   } catch (err) {
     res.status(500).json({ error: err.message });

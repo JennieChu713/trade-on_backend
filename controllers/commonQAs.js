@@ -3,7 +3,7 @@ import CommonQA from "../models/commonQA.js";
 // paginate option setup function
 import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
 
-export default class commonQAsController {
+export default class CommonQAsController {
   static async getAllCommonQAs(req, res, next) {
     const { page, size } = req.query;
     const options = optionsSetup(page, size);
@@ -24,8 +24,11 @@ export default class commonQAsController {
     const { id } = req.params;
     try {
       const qna = await commonQA.findById(id);
-
-      res.status(200).json({ message: "success", QnA: qna });
+      if (qna) {
+        res.status(200).json({ message: "success", QnA: qna });
+      } else {
+        return res.status(404).json({ error: "The question you are looking " });
+      }
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

@@ -33,4 +33,16 @@ const msgSchema = new Schema({
 
 msgSchema.set("timestamps", true);
 
+msgSchema.method("toJSON", function () {
+  const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
+  object.id = _id;
+  if (createdAt) {
+    object.createdAt = new Date(createdAt).toLocaleString();
+  }
+  if (updatedAt) {
+    object.lastModified = new Date(updatedAt).toLocaleString();
+  }
+  return object;
+});
+
 export default mongoose.model("Message", msgSchema);

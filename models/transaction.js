@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 const { Schema } = mongoose;
 
 const transactSchema = new Schema({
@@ -51,5 +52,19 @@ const transactSchema = new Schema({
   },
 });
 transactSchema.set("timestamps", true);
+
+transactSchema.method("toJSON", function () {
+  const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
+  object.id = _id;
+  if (createdAt) {
+    object.createdAt = new Date(createdAt).toLocaleString();
+  }
+  if (updatedAt) {
+    object.lastModified = new Date(updatedAt).toLocaleString();
+  }
+  return object;
+});
+
+transactSchema.plugin(mongoosePaginate);
 
 export default mongoose.model("Transaction", transactSchema);
