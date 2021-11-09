@@ -2,17 +2,8 @@ import Category from "../models/category.js";
 import Post from "../models/post.js";
 import mongoose from "mongoose";
 
-// for pagination function
-const optionsSetup = (page, size, select = "", populate = "", sort = {}) => {
-  const limit = size ? +size : 5;
-  const offset = page ? (page - 1) * limit : 0;
-  return {
-    select,
-    populate,
-    limit,
-    offset,
-  };
-};
+// paginate option setup function
+import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
 
 export default class CategoryControllers {
   static async getAllCategories(req, res, next) {
@@ -21,16 +12,9 @@ export default class CategoryControllers {
     const { limit } = options;
 
     try {
-      const allCategories = await Category.paginate({}, options, "", "", {
-        date: -1,
-      });
+      const allCategories = await Category.paginate({}, options);
       const { totalDocs, docs, page } = allCategories;
-      const paginate = {
-        total: totalDocs,
-        itemPerPage: limit,
-        currentPage: page,
-        allPages: Math.ceil(totalDocs / limit),
-      };
+      const paginate = paginateObject(totalDocs, limit, page);
 
       const categories = docs;
       res.status(200).json({
@@ -56,14 +40,11 @@ export default class CategoryControllers {
   static async getRelatedPosts(req, res, next) {
     const { id } = req.params;
     const { page, size } = req.query;
-    const options = optionsSetup(
-      page,
-      size,
-      "-tradingOptions -isPublic",
-      { path: "owner", select: "-_id name email" },
-      { date: -1 }
-    );
-    const { limit, offset } = options;
+    const options = optionsSetup(page, size, "-tradingOptions -isPublic", {
+      path: "owner",
+      select: "-_id name email",
+    });
+    const { limit } = options;
     try {
       const { ObjectId } = mongoose.Types;
       const getRelatedPosts = await Post.paginate(
@@ -71,12 +52,7 @@ export default class CategoryControllers {
         options
       );
       const { totalDocs, docs, page } = getRelatedPosts;
-      const paginate = {
-        total: totalDocs,
-        itemPerPage: limit,
-        currentPage: page,
-        allPages: Math.ceil(totalDocs / limit),
-      };
+      const paginate = paginateObject(totalDocs, limit, page);
       const relatedPosts = docs;
 
       res.status(200).json({ message: "success", paginate, relatedPosts });

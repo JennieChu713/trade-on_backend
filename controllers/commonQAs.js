@@ -1,13 +1,20 @@
 import CommonQA from "../models/commonQA.js";
 
+// paginate option setup function
+import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
+
 export default class commonQAsController {
   static async getAllCommonQAs(req, res, next) {
+    const { page, size } = req.query;
+    const options = optionsSetup(page, size);
+    const { limit } = options;
     try {
-      const allQAs = await commonQA
-        .find()
-        .lean()
-        .select("-__v -createdAt -updatedAt");
-      res.status(200).json({ message: "success", allQAs });
+      const getAllQAs = await CommonQA.paginate({}, options);
+      const { totalDocs, page, docs } = getAllQAs;
+      const paginate = paginateObject(totalDocs, limit, page);
+      const allQAs = docs;
+
+      res.status(200).json({ message: "success", paginate, allQAs });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -16,10 +23,8 @@ export default class commonQAsController {
   static async getOneCommonQA(req, res, next) {
     const { id } = req.params;
     try {
-      const qna = await commonQA
-        .findById(id)
-        .lean()
-        .select("-__v -createdAt -updatedAt");
+      const qna = await commonQA.findById(id);
+
       res.status(200).json({ message: "success", QnA: qna });
     } catch (err) {
       res.status(500).json({ error: err.message });
