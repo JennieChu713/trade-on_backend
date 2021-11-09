@@ -1,4 +1,4 @@
-import commonQA from "../../models/commonQA.js";
+import CommonQA from "../models/commonQA.js";
 
 export default class commonQAsController {
   static async getAllCommonQAs(req, res, next) {

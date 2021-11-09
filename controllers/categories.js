@@ -2,13 +2,42 @@ import Category from "../models/category.js";
 import Post from "../models/post.js";
 import mongoose from "mongoose";
 
+// for pagination function
+const optionsSetup = (page, size, select = "", populate = "", sort = {}) => {
+  const limit = size ? +size : 5;
+  const offset = page ? (page - 1) * limit : 0;
+  return {
+    select,
+    populate,
+    limit,
+    offset,
+  };
+};
+
 export default class CategoryControllers {
   static async getAllCategories(req, res, next) {
+    const { page, size } = req.query;
+    const options = optionsSetup(page, size);
+    const { limit } = options;
+
     try {
-      const allCategories = await Category.find()
-        .lean()
-        .select("-__v -createdAt -updatedAt");
-      res.status(200).json({ message: "success", categories: allCategories });
+      const allCategories = await Category.paginate({}, options, "", "", {
+        date: -1,
+      });
+      const { totalDocs, docs, page } = allCategories;
+      const paginate = {
+        total: totalDocs,
+        itemPerPage: limit,
+        currentPage: page,
+        allPages: Math.ceil(totalDocs / limit),
+      };
+
+      const categories = docs;
+      res.status(200).json({
+        message: "success",
+        paginate,
+        categories,
+      });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -17,9 +46,7 @@ export default class CategoryControllers {
   static async getOneCategory(req, res, next) {
     try {
       const { id } = req.params;
-      const getCategory = await Category.findById(id)
-        .lean()
-        .select("-__v -createdAt -updatedAt");
+      const getCategory = await Category.findById(id);
       res.status(200).json({ message: "success", category: getCategory });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -28,15 +55,31 @@ export default class CategoryControllers {
 
   static async getRelatedPosts(req, res, next) {
     const { id } = req.params;
+    const { page, size } = req.query;
+    const options = optionsSetup(
+      page,
+      size,
+      "-tradingOptions -isPublic",
+      { path: "owner", select: "-_id name email" },
+      { date: -1 }
+    );
+    const { limit, offset } = options;
     try {
       const { ObjectId } = mongoose.Types;
-      const getReplatedPosts = await Post.find({ category: ObjectId(id) })
-        .lean()
-        .select("-__v -createdAt -updatedAt");
+      const getRelatedPosts = await Post.paginate(
+        { category: ObjectId(id) },
+        options
+      );
+      const { totalDocs, docs, page } = getRelatedPosts;
+      const paginate = {
+        total: totalDocs,
+        itemPerPage: limit,
+        currentPage: page,
+        allPages: Math.ceil(totalDocs / limit),
+      };
+      const relatedPosts = docs;
 
-      res
-        .status(200)
-        .json({ message: "success", relatedPosts: getReplatedPosts });
+      res.status(200).json({ message: "success", paginate, relatedPosts });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

@@ -1,5 +1,5 @@
 import express from "express";
-import commonQAsController from "../../controllers/commonQAs";
+import commonQAsController from "../../controllers/commonQAs.js";
 
 const {
   getAllCommonQAs,

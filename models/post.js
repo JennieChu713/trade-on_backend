@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 const { Schema } = mongoose;
+import User from "./user.js";
 
 const postSchema = new Schema({
   itemName: {
@@ -98,5 +100,19 @@ const postSchema = new Schema({
 });
 
 postSchema.set("timestamps", true);
+
+postSchema.method("toJSON", function () {
+  const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
+  object.id = _id;
+  if (createdAt) {
+    object.createdAt = new Date(createdAt).toLocaleString();
+  }
+  if (updatedAt) {
+    object.lastModified = new Date(updatedAt).toLocaleString();
+  }
+  return object;
+});
+
+postSchema.plugin(mongoosePaginate);
 
 export default mongoose.model("Post", postSchema);
