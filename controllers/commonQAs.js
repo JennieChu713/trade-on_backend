@@ -3,7 +3,7 @@ import CommonQA from "../models/commonQA.js";
 // paginate option setup function
 import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
 
-export default class CommonQAsController {
+export default class CommonQAsControllers {
   static async getAllCommonQAs(req, res, next) {
     const { page, size } = req.query;
     const options = optionsSetup(page, size);

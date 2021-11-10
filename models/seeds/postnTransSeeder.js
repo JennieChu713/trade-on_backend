@@ -142,6 +142,7 @@ db.once("open", async () => {
           if (i === 29) {
             console.log("post seeder data complete.");
             const allPosts = await Post.find();
+            const findDealer = await User.findOne({ email: "dealer@mail.com" });
 
             // generate 3 transaction dummy data
             Array.from({ length: 3 }, async (_, i) => {
@@ -149,6 +150,7 @@ db.once("open", async () => {
               await Transaction.create({
                 amount: pickRandom(post.quantity, "qnt"),
                 post: post._id,
+                dealer: findDealer._id,
               });
 
               if ((await Transaction.countDocuments()) === 3) {

@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
 
-export default class MessageController {
+export default class MessageControllers {
   static async getAllMessages(req, res, next) {
     //TODO: user authentication
     const { page, size, type } = req.query;

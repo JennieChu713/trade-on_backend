@@ -1,6 +1,6 @@
 import express from "express";
 
-import MessageController from "../../controllers/messages.js";
+import MessageControllers from "../../controllers/messages.js";
 const {
   getAllMessages,
   getPostRelatedMessages,
@@ -10,7 +10,7 @@ const {
   createReply,
   updateMessage,
   deleteMessageAndRelated,
-} = MessageController;
+} = MessageControllers;
 
 const router = express.Router();
 

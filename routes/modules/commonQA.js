@@ -1,5 +1,5 @@
 import express from "express";
-import CommonQAsController from "../../controllers/commonQAs.js";
+import CommonQAsControllers from "../../controllers/commonQAs.js";
 
 const {
   getAllCommonQAs,
@@ -7,7 +7,7 @@ const {
   createCommonQA,
   updateCommonQA,
   deleteCommonQA,
-} = CommonQAsController;
+} = CommonQAsControllers;
 
 const router = express.Router();
 

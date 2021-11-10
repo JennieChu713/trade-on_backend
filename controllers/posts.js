@@ -2,7 +2,7 @@ import Post from "../models/post.js";
 import mongoose from "mongoose";
 import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
 
-export default class PostController {
+export default class PostControllers {
   static async getAllPosts(req, res, next) {
     const { page, size } = req.query;
     const options = optionsSetup(page, size, "-tradingOptions -isPublic", {
