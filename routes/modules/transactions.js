@@ -13,6 +13,7 @@ const {
   updateAcceptTransaction,
   getOneTransaction,
   updateFillingProgress,
+  updateUserAccount,
   updatePaymentProgress,
   updateSendoutProgress,
   updateCompleteProgress,
@@ -41,7 +42,10 @@ router.get("/:id", getOneTransaction);
 // UPDATE transaction - filling sending info and isFilled
 router.put("/filling-info/:id", updateFillingProgress);
 
-// UPDATE transaction - filling sending info and isFilled
+// UPDATE account of user
+router.put("/account-info/:id", updateUserAccount);
+
+// UPDATE transaction - is paid
 router.put("/payment/:id", updatePaymentProgress);
 
 // UPDATE transaction - is sent

@@ -272,11 +272,12 @@ export default class TransactionControllers {
   // *UPDATE user accountInfo if none;  for ATM usage
   static async updateUserAccount(req, res, next) {
     //TODO: user authentication
-    const { accountName, accountNum, bankCode, bankName, userId } = req.body;
+    const { id } = req.params;
+    const { accountName, accountNum, bankCode, bankName } = req.body;
     try {
       const getUser = await User.findById(userId);
       const updateUser = await User.findByIdAndUpdate(
-        { _id: userId },
+        id,
         { account: { accountName, accountNum, bankCode, bankName } },
         { runValidators: true, new: true }
       );
