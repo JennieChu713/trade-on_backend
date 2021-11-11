@@ -23,7 +23,7 @@ const userSchema = new Schema({
     default: "local",
     // enum: ["facebook", "line"],
   },
-  // avatarUrl: String,
+  avatarUrl: String,
   account: {
     accountName: String,
     bankCode: Number,
