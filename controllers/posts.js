@@ -6,8 +6,8 @@ export default class PostControllers {
   static async getAllPosts(req, res, next) {
     const { page, size } = req.query;
     const options = optionsSetup(page, size, "-tradingOptions -isPublic", {
-      path: "owner",
-      select: "-_id name email",
+      path: "owner category",
+      select: "name email categoryName",
     });
     const { limit } = options;
     try {
@@ -27,8 +27,8 @@ export default class PostControllers {
     const { id } = req.params;
     try {
       const post = await Post.findById(id).populate({
-        path: "owner",
-        select: "-_id email name",
+        path: "owner category",
+        select: "email name categoryName",
       });
       if (post) {
         res.status(200).json({ message: "success", post });

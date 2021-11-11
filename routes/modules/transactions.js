@@ -34,17 +34,13 @@ router.get("/post/:id/request", getTransactionDealerAndPost);
 router.post("/post/:id", createRequestTransaction);
 
 // READ a request deal transaction info from owner - step 2: get for dealer
-router.get("/post/:id/accept", getTransactionOwnerRequest);
-
-// UPDATE a deal transaction - step 3: from dealer (add ownerId and dealMethod)
-// a transaction deal is confirmed
-router.put("/post/:id", updateAcceptTransaction);
+router.get("/:id/accept", getTransactionOwnerRequest);
 
 // UPDATE transaction - filling sending info and isFilled
 router.put("/:id/filling-info", updateFillingProgress);
 
 // UPDATE account of user
-router.put("/:id/account-info", updateUserAccount);
+router.put("/user/:id/account-info", updateUserAccount);
 
 // UPDATE transaction - is paid
 router.put("/:id/payment", updatePaymentProgress);
@@ -54,5 +50,9 @@ router.put("/:id/sendout", updateSendoutProgress);
 
 // UPDATE transaction - is complete
 router.put("/:id/complete", updateCompleteProgress);
+
+// UPDATE a deal transaction - step 3: from dealer (add ownerId and dealMethod)
+// a transaction deal is confirmed
+router.put("/:id", updateAcceptTransaction);
 
 export default router;

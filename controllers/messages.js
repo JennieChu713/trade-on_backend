@@ -3,6 +3,7 @@ import Post from "../models/post.js";
 import mongoose from "mongoose";
 
 import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
+const { ObjectId } = mongoose.Types;
 
 export default class MessageControllers {
   static async getAllMessages(req, res, next) {
@@ -11,7 +12,7 @@ export default class MessageControllers {
     const matchQuery = type ? { messageType: type } : {};
     const options = optionsSetup(page, size, "", {
       path: "owner post",
-      select: "_id email name itemName",
+      select: "email name itemName",
     });
     const { limit } = options;
 
@@ -31,7 +32,7 @@ export default class MessageControllers {
 
   static async getPostRelatedMessages(req, res, next) {
     const { id } = req.params;
-    const { ObjectId } = mongoose.Types;
+
     try {
       const allMsgs = await Message.aggregate([
         { $match: { post: ObjectId(id) } },
@@ -40,15 +41,15 @@ export default class MessageControllers {
             from: "users",
             localField: "owner",
             foreignField: "_id",
-            as: "owner_info",
+            as: "ownerInfo",
           },
         },
         {
           $project: {
             content: 1,
             owner: 1,
-            "owner_info.email": 1,
-            "owner_info.name": 1,
+            "ownerInfo.email": 1,
+            "ownerInfo.name": 1,
             relatedMsg: 1,
             messageType: 1,
           },
@@ -69,29 +70,12 @@ export default class MessageControllers {
   static async getTransactionRelatedMessages(req, res, next) {
     //TODO: user authentication
     const { id } = req.params;
-    const { ObjectId } = mongoose.Types;
+
     try {
-      const allMsgs = await Message.aggregate([
-        { $match: { deal: ObjectId(id) } },
-        {
-          $lookup: {
-            from: "users",
-            localField: "owner",
-            foreignField: "_id",
-            as: "owner_info",
-          },
-        },
-        {
-          $project: {
-            content: 1,
-            owner: 1,
-            "owner_info.email": 1,
-            "owner_info.name": 1,
-            relatedMsg: 1,
-            messageType: 1,
-          },
-        },
-      ]);
+      const allMsgs = await Message.find({ deal: ObjectId(id) }).populate(
+        "owner deal",
+        "email name post"
+      );
       res.status(200).json({ message: "success", dealMessages: allMsgs });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -102,7 +86,10 @@ export default class MessageControllers {
     //TODO: user authentication
     const { id } = req.params;
     try {
-      const msg = await Message.findById(id);
+      const msg = await Message.findById(id).populate(
+        "owner post",
+        "email name itemName"
+      );
 
       res.status(200).json({ message: "success", messageContent: msg });
     } catch (err) {
@@ -113,7 +100,7 @@ export default class MessageControllers {
   static async createMessage(req, res, next) {
     // TODO: user authentication
     const { content, messageType, relatedId, userId } = req.body; // relatedId is a post or transaction
-    const { ObjectId } = mongoose.Types;
+
     const { _id } =
       (await Post.findById(relatedId)) ||
       (await Transaction.findById(relatedId));
@@ -144,7 +131,7 @@ export default class MessageControllers {
     // TODO: user authentication
     const { id } = req.params; // message id
     const { content, messageType, relatedId, userId } = req.body; // related id could be the post or transaction
-    const { ObjectId } = mongoose.Types;
+
     try {
       // check if the message is the related subject
       const checkMsg = await Message.findById(id);
@@ -181,7 +168,7 @@ export default class MessageControllers {
     //TODO: user authentication
     const { id } = req.params;
     const { content, userId } = req.body;
-    const { ObjectId } = mongoose.Types;
+
     try {
       const editMsg = await Message.findOneAndUpdate(
         { _id: id, owner: ObjectId(userId) },
@@ -204,7 +191,7 @@ export default class MessageControllers {
   static async deleteMessageAndRelated(req, res, next) {
     // TODO: user authentication
     const { id } = req.params;
-    const { ObjectId } = mongoose.Types;
+
     try {
       const findMsg = await Message.findById(id);
       if (!findMsg.relatedMsg) {

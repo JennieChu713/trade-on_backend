@@ -20,10 +20,8 @@ router.get("/all", getAllMessages);
 // READ all messages of related post
 router.get("/post/:id", getPostRelatedMessages);
 
-/*
 // READ all messages with related transaction
 router.get("/deal/:id", getTransactionRelatedMessages);
-*/
 
 // READ one message (for edit rendering value)
 router.get("/:id", getOneMessage);

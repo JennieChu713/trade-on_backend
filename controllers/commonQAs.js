@@ -23,11 +23,13 @@ export default class CommonQAsControllers {
   static async getOneCommonQA(req, res, next) {
     const { id } = req.params;
     try {
-      const qna = await commonQA.findById(id);
+      const qna = await CommonQA.findById(id);
       if (qna) {
         res.status(200).json({ message: "success", QnA: qna });
       } else {
-        return res.status(404).json({ error: "The question you are looking " });
+        return res
+          .status(404)
+          .json({ error: "The question you are looking for does not exist." });
       }
     } catch (err) {
       res.status(500).json({ error: err.message });

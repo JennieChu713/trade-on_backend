@@ -1,27 +1,25 @@
 import db from "../../config/mongoose.js";
 import Message from "../message.js";
 import Post from "../post.js";
+import Transaction from "../transaction.js";
 import User from "../user.js";
 
 //seeder data
-const postMsgs = [
+const startMsgs = [
   { content: "想要J個酷東西", messageType: "apply" },
-  { content: "平常都有在用，請問可以送給我嗎？謝謝！", messageType: "apply" },
   {
     content: "我是這個牌子的大粉絲！請問可以給我嗎？\n我會非常珍惜地使用的！",
     messageType: "apply",
   },
   { content: "希望能夠得到這個，非常感謝:)", messageType: "apply" },
-  { content: "我非常需要的東西！希望你願意送我> <", messageType: "apply" },
+  { content: "真的非常需要這個，希望你願意送我> <", messageType: "apply" },
   { content: "請問這上面有期限嗎？", messageType: "question" },
   { content: "請問這個還有嗎？", messageType: "question" },
   {
     content: "你好，請問有沒有機會看一下這個東西背面的樣子？",
     messageType: "question",
   },
-  { content: "請問有什麼其他顏色嗎？", messageType: "question" },
-  { content: "請問這上面有期限嗎？", messageType: "question" },
-  { content: "請問這上面有期限嗎？", messageType: "question" },
+  { content: "請問這有其他顏色嗎？", messageType: "question" },
 ];
 
 const replyMsgs = [
@@ -49,9 +47,10 @@ db.once("open", async () => {
     $or: [{ email: "dealer@mail.com" }, { email: "owner@mail.com" }],
   });
   const checkPost = await Post.findOne();
-  if (!checkUser || !checkPost) {
+  const checkTrans = await Transaction.findOne();
+  if (!checkUser || !checkPost || !checkTrans) {
     console.log(
-      "generate message seed data failed: post and user data required. run 'node model/userSeeder.js' then 'node model/messageSeeder.js'"
+      "generate message seed data failed: transaction, post and user data required. run 'node model/userSeeder.js' then 'node model/messageSeeder.js'"
     );
     process.exit();
   }
@@ -67,15 +66,16 @@ db.once("open", async () => {
 
   console.log("generating message seed data.");
 
+  let created = false;
   // generate 7 dummy data (only post messages)
   Array.from({ length: 7 }, async (_, i) => {
     try {
-      const message = await Message.create({
-        ...postMsgs[pickRandom(postMsgs.length)],
+      let message;
+      message = await Message.create({
+        ...startMsgs[pickRandom(startMsgs.length)],
         post: checkPost._id,
         owner: dealer,
       });
-
       // random generate reply message
       if (message) {
         const { _id, messageType } = message;
@@ -89,9 +89,27 @@ db.once("open", async () => {
           });
         }
       }
+
       if (i === 6) {
-        console.log("complete message seeder data.");
-        process.exit();
+        const transMsg = await Message.create({
+          content: "寄送資料已經填寫好囉！再請你確認～",
+          messageType: "transaction",
+          deal: checkTrans._id,
+          owner: dealer,
+        });
+        if (transMsg) {
+          const replyTrans = await Message.create({
+            content: "好的，確認後我再回覆您！",
+            messageType: "transaction",
+            deal: checkTrans._id,
+            relatedMsg: transMsg._id,
+            owner,
+          });
+          if (replyTrans) {
+            console.log("complete message seeder data.");
+            process.exit();
+          }
+        }
       }
     } catch (err) {
       console.log("generate message seed data failed");

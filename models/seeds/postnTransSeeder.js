@@ -150,7 +150,16 @@ db.once("open", async () => {
               await Transaction.create({
                 amount: pickRandom(post.quantity, "qnt"),
                 post: post._id,
+                dealMethod: {
+                  [post.tradingOptions.convenientStore.storeCode
+                    ? "convenientStore"
+                    : "faceToFace"]: post.tradingOptions.convenientStore
+                    .storeCode
+                    ? post.tradingOptions.convenientStore
+                    : post.tradingOptions.faceToFace,
+                },
                 dealer: findDealer._id,
+                owner: _id,
               });
 
               if ((await Transaction.countDocuments()) === 3) {
