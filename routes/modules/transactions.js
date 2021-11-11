@@ -24,6 +24,9 @@ const router = express.Router();
 // READ all transactions (from a user)
 router.get("/all", getAllTransactions);
 
+// READ a transaction
+router.get("/:id", getOneTransaction);
+
 // READ start a deal transaction - step 0: get dealer info and post info for owner
 router.get("/post/:id/request", getTransactionDealerAndPost);
 
@@ -34,24 +37,22 @@ router.post("/post/:id", createRequestTransaction);
 router.get("/post/:id/accept", getTransactionOwnerRequest);
 
 // UPDATE a deal transaction - step 3: from dealer (add ownerId and dealMethod)
+// a transaction deal is confirmed
 router.put("/post/:id", updateAcceptTransaction);
 
-// READ a transaction
-router.get("/:id", getOneTransaction);
-
 // UPDATE transaction - filling sending info and isFilled
-router.put("/filling-info/:id", updateFillingProgress);
+router.put("/:id/filling-info", updateFillingProgress);
 
 // UPDATE account of user
-router.put("/account-info/:id", updateUserAccount);
+router.put("/:id/account-info", updateUserAccount);
 
 // UPDATE transaction - is paid
-router.put("/payment/:id", updatePaymentProgress);
+router.put("/:id/payment", updatePaymentProgress);
 
 // UPDATE transaction - is sent
-router.put("/sendout/:id", updateSendoutProgress);
+router.put("/:id/sendout", updateSendoutProgress);
 
 // UPDATE transaction - is complete
-router.put("/complete/:id", updateCompleteProgress);
+router.put("/:id/complete", updateCompleteProgress);
 
 export default router;

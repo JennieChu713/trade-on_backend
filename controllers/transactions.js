@@ -5,11 +5,46 @@ import User from "../models/user.js";
 
 import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
 
+const { ObjectId } = mongoose.Types;
+
 export default class TransactionControllers {
   static async getAllTransactions(req, res, next) {
     //TODO: user authentication
     const { page, size, progress } = req.query;
-    const progressQuery = progress ? { [progress]: true } : {};
+
+    const progressFilters = {
+      isFilled: false,
+      isPayed: false,
+      isSent: false,
+      isCompleted: false,
+    };
+    switch (progress) {
+      case "isFilled":
+        progressFilters.isFilled = true;
+        break;
+      case "isPayed":
+        progressFilters.isFilled = true;
+        progressFilters.isPayed = true;
+        break;
+      case "isSent":
+        progressFilters.isFilled = true;
+        progressFilters.isPayed = true;
+        progressFilters.isSent = true;
+        break;
+      case "isCompleted":
+        progressFilters.isFilled = true;
+        progressFilters.isPayed = true;
+        progressFilters.isSent = true;
+        progressFilters.isCompleted = true;
+        break;
+    }
+    const progressQuery = progress
+      ? {
+          owner: { $exists: true },
+          dealer: { $exists: true },
+          ...progressFilters,
+        }
+      : { owner: { $exists: true }, dealer: { $exists: true } };
     const options = optionsSetup(page, size, "", {
       path: "post owner dealer",
       select: "_id itemName quantity givenAmount email name",
@@ -29,11 +64,33 @@ export default class TransactionControllers {
     }
   }
 
+  static async getOneTransaction(req, res, next) {
+    // TODO: user authentication
+    const { id } = req.params;
+    try {
+      const trans = await Transaction.findById(id).populate(
+        "post owner dealer",
+        "itemName account name email"
+      );
+
+      if (trans) {
+        res.status(200).json({ message: "success", dealInfo: trans });
+      } else {
+        return res
+          .status(200)
+          .json({ error: "The deal you are looking for does not exist." });
+      }
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  //create a transaction steps : step 1-1
   static async getTransactionDealerAndPost(req, res, next) {
     //TODO: user authentication
     const { user } = req.query; // 欲發出交易邀請的索取者id
     const { id } = req.params; //post id
-    const { ObjectId } = mongoose.Types;
+
     try {
       //Post.findOne(_id:id, owner: ObjectId(ownerId)) for verify
       const getPost = await Post.aggregate([
@@ -66,11 +123,11 @@ export default class TransactionControllers {
     }
   }
 
+  //create a transaction steps : step 1-2
   static async createRequestTransaction(req, res, next) {
     //TODO: user authentication
     const { id } = req.params; // postId
     const { amount, userId } = req.body; // 贈送數量, 索取者ID
-    const { ObjectId } = mongoose.Types;
 
     // check if amount is acceptable
     if (!amount) {
@@ -139,11 +196,12 @@ export default class TransactionControllers {
     }
   }
 
+  //create a transaction steps : step 2-1
   static async getTransactionOwnerRequest(req, res, next) {
     // TODO: user authentication
     const { user } = req.query; //(發出交易邀請的)刊登者Id
     const { id } = req.params; // 刊登 ID
-    const { ObjectId } = mongoose.Types;
+
     try {
       const getTrans = await Transaction.findOne({
         post: ObjectId(id),
@@ -173,10 +231,11 @@ export default class TransactionControllers {
     }
   }
 
+  //create a transaction steps : step 2-2 FINISH
   static async updateAcceptTransaction(req, res, next) {
     const { id } = req.params; // postId
     const { ownerId, transId, convenientStore, faceToFace } = req.body; // 刊登者ID, 選定的交易方式
-    const { ObjectId } = mongoose.Types;
+
     try {
       const checkTrans = await Transaction.findOne({
         _id: ObjectId(transId),
@@ -202,6 +261,9 @@ export default class TransactionControllers {
       }
 
       // get dealMethod
+      const dealMethodKey = checkTrans.post.tradingOptions.convenientStore
+        ? "convenientStore"
+        : "faceToFace";
       const dealMethod =
         checkTrans.post.tradingOptions[
           convenientStore ? convenientStore : faceToFace
@@ -210,7 +272,7 @@ export default class TransactionControllers {
         { _id: checkTrans.id },
         {
           owner: ObjectId(ownerId),
-          dealMethod,
+          dealMethod: { [dealMethodKey]: dealMethod },
         },
         { runValidators: true, new: true }
       );
@@ -222,42 +284,39 @@ export default class TransactionControllers {
     }
   }
 
-  static async getOneTransaction(req, res, next) {
-    // TODO: user authentication
-    const { id } = req.params;
-    try {
-      const trans = await Transaction.findById(id).populate(
-        "post owner dealer",
-        "itemName account"
-      );
-
-      if (trans) {
-        res.status(200).json({ message: "success", dealInfo: trans });
-      } else {
-        return res
-          .status(200)
-          .json({ error: "The deal you are looking for does not exist." });
-      }
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-
   static async updateFillingProgress(req, res, next) {
     //TODO: user authentication
     const { id } = req.params;
-    const { ObjectId } = mongoose.Types;
     const { name, cellPhone, storeCode, storeName, dealerId } = req.body;
-    const dataStructure = {
-      sendingInfo: {
-        name,
-        cellPhone,
-        storeCode,
-        storeName,
-      },
-    };
-    dataStructure.isFilled = true;
+
     try {
+      const getTrans = await Transaction.findOne({
+        _id: id,
+        dealer: ObjectId(dealerId),
+      });
+      if (!getTrans) {
+        return res.status(403).json({ message: "Permission denied." });
+      }
+      if (getTrans.dealMethod.faceToFace) {
+        const updateProcess = await Transaction.findOneAndUpdate(
+          { _id: id, dealer: ObjectId(dealerId) },
+          { isFilled: true, isPayed: true },
+          { runValidators: true, new: true }
+        );
+        return res
+          .status(200)
+          .json({ message: "success", updated: updateProcess });
+      }
+
+      const dataStructure = {
+        sendingInfo: {
+          name,
+          cellPhone,
+          storeCode,
+          storeName,
+        },
+      };
+      dataStructure.isFilled = true;
       const updateProcess = await Transaction.findOneAndUpdate(
         { _id: id, dealer: ObjectId(dealerId) },
         dataStructure,
@@ -269,7 +328,7 @@ export default class TransactionControllers {
     }
   }
 
-  // *UPDATE user accountInfo if none;  for ATM usage
+  // UPDATE user accountInfo if none;  for ATM usage
   static async updateUserAccount(req, res, next) {
     //TODO: user authentication
     const { id } = req.params;
@@ -291,7 +350,6 @@ export default class TransactionControllers {
     //TODO: user authentication
     const { id } = req.params;
     const { userId } = req.body;
-    const { ObjectId } = mongoose.Types;
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
@@ -314,8 +372,8 @@ export default class TransactionControllers {
 
   static async updateSendoutProgress(req, res, next) {
     //TODO: user authentication
-    const { id, userId } = req.params;
-    const { ObjectId } = mongoose.Types;
+    const { id } = req.params;
+    const { userId } = req.body;
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
@@ -332,7 +390,7 @@ export default class TransactionControllers {
         );
         await Post.findByIdAndUpdate(
           { _id: ObjectId(updateProcess.post) },
-          { givenAmount: { $add: ["$givinAmount", updateProcess.amount] } },
+          { $inc: { givenAmount: updateProcess.amount } },
           { runValidators: true, new: true }
         );
         if (updateProcess) {
@@ -350,7 +408,7 @@ export default class TransactionControllers {
     //TODO: user authentication
     const { id } = req.params;
     const { userId } = req.body;
-    const { ObjectId } = mongoose.Types;
+
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
