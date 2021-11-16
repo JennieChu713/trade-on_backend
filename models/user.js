@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
+import bcrypt from "bcrypt";
 const { Schema } = mongoose;
 
 // define user schema
@@ -49,7 +50,20 @@ const userSchema = new Schema({
 
 userSchema.set("timestamps", true);
 
-//userSchema.method("toJSON", )
+userSchema.plugin(mongoosePaginate);
+
+userSchema.method("toJSON", function () {
+  const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
+  object.id = _id;
+  if (createdAt) {
+    object.createdAt = new Date(createdAt).toLocaleString();
+  }
+  if (updatedAt) {
+    object.lastModified = new Date(updatedAt).toLocaleString();
+  }
+  return object;
+});
+
 // save hashed password
 userSchema.pre("save", async function (next) {
   //must use function declaration
@@ -66,7 +80,5 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.matchPasswords = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
-
-userSchema.plugin(mongoosePaginate);
 
 export default mongoose.model("User", userSchema);

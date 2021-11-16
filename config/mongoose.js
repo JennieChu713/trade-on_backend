@@ -1,11 +1,17 @@
 import mongoose from "mongoose";
+import dotenv from "dotenv";
+
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
 //mongoDB URI
 const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://localhost:27017/tradeon";
 
-//mongoDB connection
-export default async function main() {
+main().catch((err) => console.error(err));
+
+async function main() {
   await mongoose.connect(MONGODB_URI);
 }
 
@@ -18,3 +24,6 @@ db.on("error", () => {
 db.once("open", () => {
   console.log("mongoDB connected");
 });
+
+//mongoDB connection
+export default db;
