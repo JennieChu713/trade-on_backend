@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 const { Schema } = mongoose;
 
 // define user schema
@@ -9,13 +10,14 @@ const userSchema = new Schema({
     match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
     unique: true,
   },
-  name: {
+  nickname: {
     type: String,
     required: true,
   },
   password: {
     type: String,
     required: true,
+    select: false,
   },
   introduction: String,
   provider: {
@@ -23,7 +25,7 @@ const userSchema = new Schema({
     default: "local",
     // enum: ["facebook", "line"],
   },
-  // avatarUrl: String,
+  avatarUrl: String,
   account: {
     accountName: String,
     bankCode: Number,
@@ -46,5 +48,25 @@ const userSchema = new Schema({
 });
 
 userSchema.set("timestamps", true);
+
+//userSchema.method("toJSON", )
+// save hashed password
+userSchema.pre("save", async function (next) {
+  //must use function declaration
+  if (!this.isModified("password")) {
+    next();
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// verified password function
+userSchema.methods.matchPasswords = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+userSchema.plugin(mongoosePaginate);
 
 export default mongoose.model("User", userSchema);

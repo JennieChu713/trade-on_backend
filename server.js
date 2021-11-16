@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
-import mongoose from "mongoose";
+
+import mongoDB from "./config/mongoose.js";
 import https from "https";
 import fs from "fs";
 import session from "express-session";
@@ -12,6 +13,9 @@ if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
 
+//mongoDB connection (immediate process)
+mongoDB();
+
 // App config
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,9 +23,7 @@ const PORT = process.env.PORT || 3000;
 //middlewares
 app.use(cors());
 app.use(express.json());
-
-//mongoDB connection (immediate process)
-import "./config/mongoose.js";
+app.use(express.urlencoded({ extended: true }));
 
 // session
 app.use(
@@ -35,11 +37,11 @@ app.use(
 // passport
 usePassport(app);
 
-app.use((req, res, next) => {
-  res.locals.isAuthenticated = req.isAuthenticated();
-  res.locals.user = req.user;
-  next();
-});
+// app.use((req, res, next) => {
+//   res.locals.isAuthenticated = req.isAuthenticated();
+//   res.locals.user = req.user;
+//   next();
+// });
 
 // routes
 app.use(routes);

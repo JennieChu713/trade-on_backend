@@ -4,9 +4,8 @@ import mongoose from "mongoose";
 const MONGODB_URI =
   process.env.MONGODB_URI || "mongodb://localhost:27017/tradeon";
 
-main().catch((err) => console.error(err));
-
-async function main() {
+//mongoDB connection
+export default async function main() {
   await mongoose.connect(MONGODB_URI);
 }
 
@@ -19,6 +18,3 @@ db.on("error", () => {
 db.once("open", () => {
   console.log("mongoDB connected");
 });
-
-//mongoDB connection
-export default db;
