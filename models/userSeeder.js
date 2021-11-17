@@ -1,5 +1,6 @@
 import db from "../config/mongoose.js";
 import User from "./user.js";
+import bcrypt from "bcrypt";
 
 // seeder data (with password bcrypt)
 const users = [
@@ -46,18 +47,20 @@ db.once("open", async () => {
         accountAuthority = users[i].accountAuthority;
       }
 
+      const hashed = await bcrypt.hash(password, 10);
+
       if (accountAuthority) {
         await User.create({
           nickname,
           email,
-          password,
+          password: hashed,
           accountAuthority,
         });
       } else {
         await User.create({
           nickname,
           email,
-          password,
+          password: hashed,
         });
       }
 
@@ -66,7 +69,7 @@ db.once("open", async () => {
         process.exit(1);
       }
     } catch (err) {
-      next(err);
+      (err) => console.error(err.message);
     }
   });
 });

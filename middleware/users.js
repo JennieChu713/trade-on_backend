@@ -30,7 +30,9 @@ export default class UserControllers {
     }
   }
 
-  static async login(req, res, next) {}
+  static async login(req, res, next) {
+    res.status(200).json({ message: "success" });
+  }
 
   static async logout(req, res, next) {
     req.logout();
