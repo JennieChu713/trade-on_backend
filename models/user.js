@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
+import bcrypt from "bcrypt";
 const { Schema } = mongoose;
 
 // define user schema
@@ -9,13 +11,14 @@ const userSchema = new Schema({
     match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
     unique: true,
   },
-  name: {
+  nickname: {
     type: String,
     required: true,
   },
   password: {
     type: String,
     required: true,
+    select: false,
   },
   introduction: String,
   provider: {
@@ -47,8 +50,11 @@ const userSchema = new Schema({
 
 userSchema.set("timestamps", true);
 
+userSchema.plugin(mongoosePaginate);
+
 userSchema.method("toJSON", function () {
-  const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
+  const { __v, _id, updatedAt, createdAt, password, ...object } =
+    this.toObject();
   object.id = _id;
   if (createdAt) {
     object.createdAt = new Date(createdAt).toLocaleString();
@@ -58,5 +64,22 @@ userSchema.method("toJSON", function () {
   }
   return object;
 });
+
+// save hashed password
+userSchema.pre("save", async function (next) {
+  //must use function declaration
+  if (!this.isModified("password")) {
+    next();
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// verified password function
+userSchema.methods.matchPasswords = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
 
 export default mongoose.model("User", userSchema);
