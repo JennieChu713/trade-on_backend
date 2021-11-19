@@ -2,12 +2,15 @@ import Message from "../models/message.js";
 import Post from "../models/post.js";
 import mongoose from "mongoose";
 
-import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
+import {
+  optionsSetup,
+  paginateObject,
+} from "../utils/paginateOptionSetup.common.js";
 const { ObjectId } = mongoose.Types;
 
 export default class MessageControllers {
+  // READ all messages (for admin)
   static async getAllMessages(req, res, next) {
-    //TODO: user authentication
     const { page, size, type } = req.query;
     const matchQuery = type ? { messageType: type } : {};
     const options = optionsSetup(page, size, "", {
@@ -30,6 +33,7 @@ export default class MessageControllers {
     }
   }
 
+  // READ post related messages
   static async getPostRelatedMessages(req, res, next) {
     const { id } = req.params;
 
@@ -67,8 +71,8 @@ export default class MessageControllers {
     }
   }
 
+  // READ transaction related messages as 1:1
   static async getTransactionRelatedMessages(req, res, next) {
-    //TODO: user authentication
     const { id } = req.params;
 
     try {
@@ -82,8 +86,8 @@ export default class MessageControllers {
     }
   }
 
+  // READ one message as for editing
   static async getOneMessage(req, res, next) {
-    //TODO: user authentication
     const { id } = req.params;
     try {
       const msg = await Message.findById(id).populate(
@@ -97,9 +101,9 @@ export default class MessageControllers {
     }
   }
 
+  // CREATE a message (transaction or post)
   static async createMessage(req, res, next) {
-    // TODO: user authentication
-    const { content, messageType, relatedId, userId } = req.body; // relatedId is a post or transaction
+    const { content, messageType, relatedId } = req.body; // relatedId is a post or transaction
 
     const { _id } =
       (await Post.findById(relatedId)) ||
@@ -111,14 +115,14 @@ export default class MessageControllers {
           content,
           messageType,
           post: ObjectId(_id),
-          owner: ObjectId(userId),
+          owner: ObjectId(req.user._id),
         });
       } else {
         newMessage = await Message.create({
           content,
           messageType,
           deal: ObjectId(_id),
-          owner: ObjectId(userId),
+          owner: ObjectId(req.user._id),
         });
       }
       res.status(200).json({ message: "success", new: newMessage });
@@ -127,10 +131,10 @@ export default class MessageControllers {
     }
   }
 
+  // CREATE a reply message (transaction or post)
   static async createReply(req, res, next) {
-    // TODO: user authentication
     const { id } = req.params; // message id
-    const { content, messageType, relatedId, userId } = req.body; // related id could be the post or transaction
+    const { content, messageType, relatedId } = req.body; // related id could be the post or transaction
 
     try {
       // check if the message is the related subject
@@ -147,7 +151,7 @@ export default class MessageControllers {
           messageType,
           relatedMsg: ObjectId(id),
           post: ObjectId(relatedId),
-          owner: ObjectId(userId),
+          owner: ObjectId(req.user._id),
         });
       } else {
         newReply = await Message.create({
@@ -155,7 +159,7 @@ export default class MessageControllers {
           messageType,
           relatedMsg: ObjectId(id),
           deal: ObjectId(relatedId),
-          owner: ObjectId(userId),
+          owner: ObjectId(req.user._id),
         });
       }
       res.status(200).json({ message: "success", new: newReply });
@@ -164,14 +168,14 @@ export default class MessageControllers {
     }
   }
 
+  // UPDATE a message (transaction or post)
   static async updateMessage(req, res, next) {
-    //TODO: user authentication
     const { id } = req.params;
-    const { content, userId } = req.body;
+    const { content } = req.body;
 
     try {
-      const editMsg = await Message.findOneAndUpdate(
-        { _id: id, owner: ObjectId(userId) },
+      const editMsg = await Message.findByIdAndUpdate(
+        id,
         { content },
         {
           runValidators: true,
@@ -188,8 +192,8 @@ export default class MessageControllers {
     }
   }
 
+  // DELETE message and its related
   static async deleteMessageAndRelated(req, res, next) {
-    // TODO: user authentication
     const { id } = req.params;
 
     try {

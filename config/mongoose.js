@@ -1,17 +1,9 @@
 import mongoose from "mongoose";
-<<<<<<< HEAD
 import { config } from "dotenv";
 
 // if (process.env.NODE_ENV !== "production") {
 //   config();
 // }
-=======
-import dotenv from "dotenv";
-
-if (process.env.NODE_ENV !== "production") {
-  dotenv.config();
-}
->>>>>>> user
 
 //mongoDB URI
 const MONGODB_USER = process.env.MONGODB_USER;

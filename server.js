@@ -18,7 +18,12 @@ const app = express();
 const PORT = process.env.PORT || 8081;
 
 //middlewares
-app.use(cors());
+app.use(
+  cors({
+    credentials: true,
+    origin: `http://localhost:${PORT}`,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -41,7 +46,8 @@ usePassport(app);
 
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.isAuthenticated();
-  res.locals.user = req.user;
+  res.locals.user = req.user || null;
+  res.locals.session = req.session;
   next();
 });
 

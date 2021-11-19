@@ -3,13 +3,16 @@ import Transaction from "../models/transaction.js";
 import Post from "../models/post.js";
 import User from "../models/user.js";
 
-import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
+import {
+  optionsSetup,
+  paginateObject,
+} from "../utils/paginateOptionSetup.common.js";
 
 const { ObjectId } = mongoose.Types;
 
 export default class TransactionControllers {
+  // READ all transactions of a user
   static async getAllTransactions(req, res, next) {
-    //TODO: user authentication
     const { page, size, progress } = req.query;
 
     const progressFilters = {
@@ -39,8 +42,10 @@ export default class TransactionControllers {
         break;
     }
     const progressQuery = {
-      owner: { $exists: true },
-      dealer: { $exists: true },
+      $or: [
+        { owner: ObjectId(req.user._id) },
+        { dealer: ObjectId(req.user._id) },
+      ],
       ...progressFilters,
     };
     const options = optionsSetup(
@@ -67,8 +72,8 @@ export default class TransactionControllers {
     }
   }
 
+  // READ a transaction
   static async getOneTransaction(req, res, next) {
-    // TODO: user authentication
     const { id } = req.params;
     try {
       const trans = await Transaction.findById(id)
@@ -87,14 +92,12 @@ export default class TransactionControllers {
     }
   }
 
-  //create a transaction steps : step 1-1
+  // READ a pre-transaction for dealer info and available amount steps : step 1-1
   static async getTransactionDealerAndPost(req, res, next) {
-    //TODO: user authentication
     const { user } = req.query; // 欲發出交易邀請的索取者id
     const { id } = req.params; //post id
 
     try {
-      //Post.findOne(_id:id, owner: ObjectId(ownerId)) for verify
       const getPost = await Post.aggregate([
         { $match: { _id: ObjectId(id) } },
         {
@@ -140,9 +143,8 @@ export default class TransactionControllers {
     }
   }
 
-  //create a transaction steps : step 1-2
+  // CREATE a transaction send invitation and selected amount steps : step 1-2
   static async createRequestTransaction(req, res, next) {
-    //TODO: user authentication
     const { id } = req.params; // postId
     const { amount, userId } = req.body; // 贈送數量, 索取者ID
 
@@ -213,9 +215,8 @@ export default class TransactionControllers {
     }
   }
 
-  //create a transaction steps : step 2-1
+  // READ a transaction invitation  for owner info, a set-amount, and available deal options steps : step 2-1
   static async getTransactionOwnerRequest(req, res, next) {
-    // TODO: user authentication
     const { user, post } = req.query; //(發出交易邀請的)刊登者Id,刊登 ID
     const { id } = req.params; //Transaction id
 
@@ -249,7 +250,7 @@ export default class TransactionControllers {
     }
   }
 
-  //create a transaction steps : step 2-2 FINISH
+  // UPDATE a transaction accept invitation and selected deal method steps : step 2-2 FINISH
   static async updateAcceptTransaction(req, res, next) {
     const { id } = req.params; // trans id
     const { ownerId, postId, convenientStore, faceToFace } = req.body; // 刊登者ID, postid, 選定的交易方式
@@ -304,22 +305,22 @@ export default class TransactionControllers {
     }
   }
 
+  // UPDATE transaction deal: filling sending info
   static async updateFillingProgress(req, res, next) {
-    //TODO: user authentication
     const { id } = req.params;
-    const { name, cellPhone, storeCode, storeName, userId } = req.body;
+    const { name, cellPhone, storeCode, storeName } = req.body;
 
     try {
       const getTrans = await Transaction.findOne({
         _id: id,
-        dealer: ObjectId(userId),
+        dealer: ObjectId(req.user_id),
       });
       if (!getTrans) {
         return res.status(403).json({ message: "Permission denied." });
       }
       if (getTrans.dealMethod.faceToFace) {
         const updateProcess = await Transaction.findOneAndUpdate(
-          { _id: id, dealer: ObjectId(userId) },
+          { _id: id, dealer: ObjectId(req.user_id) },
           { isFilled: true, isPaid: true },
           { runValidators: true, new: true }
         );
@@ -338,7 +339,7 @@ export default class TransactionControllers {
       };
       dataStructure.isFilled = true;
       const updateProcess = await Transaction.findOneAndUpdate(
-        { _id: id, dealer: ObjectId(userId) },
+        { _id: id, dealer: ObjectId(req.user._id) },
         dataStructure,
         { runValidators: true, new: true }
       );
@@ -350,11 +351,10 @@ export default class TransactionControllers {
 
   // UPDATE user accountInfo if none;  for ATM usage
   static async updateUserAccount(req, res, next) {
-    //TODO: user authentication
     const { id } = req.params;
-    const { accountName, accountNum, bankCode, bankName, userId } = req.body;
+    const { accountName, accountNum, bankCode, bankName } = req.body;
     try {
-      const checkUser = User.findById(userId);
+      const checkUser = User.findById(req.user._id);
       if (!checkUser) {
         return res.status(403).json({ message: "Permission denied" });
       }
@@ -371,14 +371,13 @@ export default class TransactionControllers {
     }
   }
 
+  // UPDATE a transaction deal: is paid
   static async updatePaymentProgress(req, res, next) {
-    //TODO: user authentication
     const { id } = req.params;
-    const { userId } = req.body;
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        dealer: ObjectId(userId),
+        dealer: ObjectId(req.user._id),
       });
       if (checkProcess.isFilled) {
         const updateProcess = await Transaction.findByIdAndUpdate(
@@ -395,14 +394,13 @@ export default class TransactionControllers {
     }
   }
 
+  // UPDATE a transaction deal: is send out
   static async updateSendoutProgress(req, res, next) {
-    //TODO: user authentication
     const { id } = req.params;
-    const { userId } = req.body;
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        owner: ObjectId(userId),
+        owner: ObjectId(req.user._id),
       });
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });
@@ -429,15 +427,15 @@ export default class TransactionControllers {
     }
   }
 
+  // UPDATE a transaction deal: is complete
   static async updateCompleteProgress(req, res, next) {
     //TODO: user authentication
     const { id } = req.params;
-    const { userId } = req.body;
 
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        dealer: ObjectId(userId),
+        dealer: ObjectId(req.user._id),
       });
       if (checkProcess.isFilled && checkProcess.isPaid && checkProcess.isSent) {
         const updateProcess = await Transaction.findByIdAndUpdate(

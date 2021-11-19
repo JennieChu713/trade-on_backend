@@ -1,7 +1,10 @@
 import CommonQA from "../models/commonQA.js";
 
 // paginate option setup function
-import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
+import {
+  optionsSetup,
+  paginateObject,
+} from "../utils/paginateOptionSetup.common.js";
 
 export default class CommonQAsControllers {
   static async getAllCommonQAs(req, res, next) {
@@ -37,11 +40,10 @@ export default class CommonQAsControllers {
   }
 
   static async createCommonQA(req, res, next) {
-    // TODO: user authentication(admin)
     const { question, answer, imgUrls } = req.body;
     try {
       const newQA = { question, answer };
-      const addQA = await commonQA.create(newQA);
+      const addQA = await CommonQA.create(newQA);
       res.status(200).json({ message: "success", new: addQA });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -49,11 +51,10 @@ export default class CommonQAsControllers {
   }
 
   static async updateCommonQA(req, res, next) {
-    // TODO: user authentication(admin)
     const { id } = req.params;
     const { question, answer } = req.body;
     try {
-      const editQA = await commonQA.findByIdAndUpdate(
+      const editQA = await CommonQA.findByIdAndUpdate(
         id,
         { question, answer },
         { runValidators: true, new: true }
@@ -67,10 +68,9 @@ export default class CommonQAsControllers {
   }
 
   static async deleteCommonQA(req, res, next) {
-    // TODO: user authentication(admin)
     const { id } = req.params;
     try {
-      await commonQA.findByIdAndDelete(id);
+      await CommonQA.findByIdAndDelete(id);
       res.status(200).json({ message: "success" });
     } catch (err) {
       res.status(500).json({ error: err.message });

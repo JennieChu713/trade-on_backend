@@ -46,6 +46,7 @@ db.once("open", async () => {
   const checkUser = await User.find({
     $or: [{ email: "dealer@mail.com" }, { email: "owner@mail.com" }],
   });
+
   const checkPost = await Post.findOne();
   const checkTrans = await Transaction.findOne();
   if (!checkUser || !checkPost || !checkTrans) {
@@ -57,7 +58,7 @@ db.once("open", async () => {
 
   let owner, dealer;
   checkUser.forEach((user) => {
-    if (user.name === "dealer") {
+    if (user.nickname === "dealer") {
       dealer = user._id;
     } else {
       owner = user._id;

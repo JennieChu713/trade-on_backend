@@ -3,7 +3,10 @@ import Post from "../models/post.js";
 import mongoose from "mongoose";
 
 // paginate option setup function
-import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
+import {
+  optionsSetup,
+  paginateObject,
+} from "../utils/paginateOptionSetup.common.js";
 
 export default class CategoryControllers {
   static async getAllCategories(req, res, next) {
@@ -62,7 +65,6 @@ export default class CategoryControllers {
   }
 
   static async createCategory(req, res, next) {
-    // TODO: user authentication(admin)
     const { categoryName } = req.body;
     try {
       // check if category exist
@@ -84,7 +86,6 @@ export default class CategoryControllers {
   }
 
   static async updateCategory(req, res, next) {
-    // TODO: user authentication(admin)
     const { id } = req.params;
     const { categoryName, compareId } = req.body;
     try {
@@ -124,7 +125,6 @@ export default class CategoryControllers {
   }
 
   static async deleteCategory(req, res, next) {
-    // TODO: user authentication(admin)
     const { ObjectId } = mongoose.Types;
     const { id } = req.params;
     try {

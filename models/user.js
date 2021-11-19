@@ -53,8 +53,7 @@ userSchema.set("timestamps", true);
 userSchema.plugin(mongoosePaginate);
 
 userSchema.method("toJSON", function () {
-  const { __v, _id, updatedAt, createdAt, password, ...object } =
-    this.toObject();
+  const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
   object.id = _id;
   if (createdAt) {
     object.createdAt = new Date(createdAt).toLocaleString();

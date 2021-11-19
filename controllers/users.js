@@ -1,6 +1,11 @@
 import User from "../models/user.js";
 import ErrorResponse from "../utils/errorResponse.js";
 
+import {
+  optionsSetup,
+  paginateObject,
+} from "../utils/paginateOptionSetup.common.js";
+
 export default class UserControllers {
   static async register(req, res, next) {
     const { email, nickname, password, confirmPassword } = req.body;
@@ -23,8 +28,7 @@ export default class UserControllers {
         email,
         password,
       });
-
-      res.status(200).json({ success: true, newUser });
+      res.status(200).json({ message: "success" });
     } catch (err) {
       next(err);
     }
@@ -37,5 +41,20 @@ export default class UserControllers {
   static async logout(req, res, next) {
     req.logout();
     res.status(200).json({ message: "success" });
+  }
+
+  static async getAllUsers(req, res, next) {
+    const { page, size } = req.query;
+    const options = optionsSetup(page, size);
+    const { limit } = options;
+    try {
+      const getAllUsers = await User.paginate({}, options);
+      const { totalDocs, docs, page } = getAllUsers;
+      const paginate = paginateObject(totalDocs, limit, page);
+      const allUsers = docs;
+      res.status(200).json({ message: "success", paginate, allUsers });
+    } catch (err) {
+      next(err);
+    }
   }
 }
