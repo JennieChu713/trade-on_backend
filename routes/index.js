@@ -31,7 +31,7 @@ import { resetting } from "../controllers/reset.js";
 // temporary reset seed
 router.get("/reset", resetting);
 
-router.get("/*", (req, res) => {
+router.all("/*", (req, res) => {
   res.status(404).json({ error: "permission denied or incorrect route." });
 });
 

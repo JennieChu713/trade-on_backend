@@ -24,6 +24,7 @@ const userSchema = new Schema({
   provider: {
     type: String,
     default: "local",
+    select: false,
     // enum: ["facebook", "line"],
   },
   avatarUrl: String,
@@ -32,19 +33,23 @@ const userSchema = new Schema({
     bankCode: Number,
     bankName: String,
     accountNum: Number,
+    select: false,
   },
   isAllowPost: {
     type: Boolean,
     default: true,
+    select: false,
   },
   isAllowMessage: {
     type: Boolean,
     default: true,
+    select: false,
   },
   accountAuthority: {
     type: String,
     enum: ["admin", "user"],
     default: "user",
+    select: false,
   },
 });
 

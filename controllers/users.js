@@ -1,10 +1,14 @@
 import User from "../models/user.js";
+import Transaction from "../models/transaction.js";
+import mongoose from "mongoose";
 import ErrorResponse from "../utils/errorResponse.js";
 
 import {
   optionsSetup,
   paginateObject,
 } from "../utils/paginateOptionSetup.common.js";
+
+const { ObjectId } = mongoose.Types;
 
 export default class UserControllers {
   static async register(req, res, next) {
@@ -55,6 +59,52 @@ export default class UserControllers {
       res.status(200).json({ message: "success", paginate, allUsers });
     } catch (err) {
       next(err);
+    }
+  }
+
+  static async getUserInfo(req, res, next) {
+    const { id } = req.params;
+    try {
+      const user = await User.findById(id);
+      const record = await Transaction.find({
+        $or: [{ owner: ObjectId(id) }, { dealer: ObjectId(id) }],
+        isCompleted: true,
+      });
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ error: "The user you are looking for does not exist." });
+      }
+      res.status(200).json({ message: "success", userInfo: user, record });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async updateUserInfo(req, res, next) {
+    const { id } = req.params;
+    const {
+      nickname,
+      introduction,
+      avatarUrl,
+      accountName,
+      bankCode,
+      bankName,
+      accountNum,
+    } = req.body;
+  }
+  static async deleteUser(req, res, next) {
+    const { id } = req.params;
+    if (String(req.user._id) !== id || req.user.accountAuthority !== "admin") {
+      return res.status(401).json({ error: "Unauthorized." });
+    }
+
+    try {
+      await User.findByIdAndDelete(id);
+      res.status(200).json({ message: "success" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
   }
 }

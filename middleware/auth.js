@@ -45,8 +45,8 @@ export const isAdmin = (req, res, next) => {
 };
 
 export const isPostPermitted = (req, res, next) => {
-  const { isAllowPost, isAllowMessage } = req.user;
-  if (isAllowPost) {
+  const { isAllowPost } = req.user;
+  if (!isAllowPost) {
     return res.status(401).json({ error: "Permission been denied." });
   }
   next();
@@ -54,7 +54,7 @@ export const isPostPermitted = (req, res, next) => {
 
 export const isMessagePermitted = (req, res, next) => {
   const { isAllowMessage } = req.user;
-  if (isAllowMessage) {
+  if (!isAllowMessage) {
     return res.status(401).json({ error: "Permission been denied." });
   }
   next();
@@ -64,14 +64,33 @@ export const isTransactionRelated = async (req, res, next) => {
   const { id } = req.params;
   try {
     const transaction = await Transaction.findById(id);
-    if (
-      transaction.owner !== req.user._id &&
-      transaction.dealer !== req.user._id
-    ) {
-      return res.status(401).json({ error: "Unauthorized" });
+    if (!transaction.owner && transaction.dealer) {
+      if (transaction.dealer.equals(req.user._id)) {
+        return next();
+      }
     }
+    if (transaction.owner && transaction.dealer) {
+      if (transaction.owner.equals(req.user._id)) {
+        return next();
+      }
+      if (transaction.dealer.equals(req.user._id)) {
+        return next();
+      }
+    }
+    return res.status(401).json({ error: "Unauthorized" });
   } catch (err) {
     next(err);
+  }
+  next();
+};
+
+export const hasQueryUser = async (req, res, next) => {
+  const { user } = req.query;
+  if (!user) {
+    return next();
+  }
+  if (user !== String(req.user._id)) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
   next();
 };

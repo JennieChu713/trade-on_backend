@@ -42,10 +42,7 @@ export default class TransactionControllers {
         break;
     }
     const progressQuery = {
-      $or: [
-        { owner: ObjectId(req.user._id) },
-        { dealer: ObjectId(req.user._id) },
-      ],
+      $or: [{ owner: req.user._id }, { dealer: req.user._id }],
       ...progressFilters,
     };
     const options = optionsSetup(
@@ -59,10 +56,14 @@ export default class TransactionControllers {
     );
     const { limit } = options;
     try {
-      const getAllTrans = await Transaction.paginate(progressQuery, options); // TODO: find user from ownerId || dealerId
+      const getAllTrans = await Transaction.paginate(progressQuery, options);
       const { totalDocs, page, docs } = getAllTrans;
       const paginate = paginateObject(totalDocs, limit, page);
       const allTrans = docs;
+
+      if (!allTrans.length) {
+        return res.status(200).json({ message: "No deal submitted yet." });
+      }
 
       res
         .status(200)
@@ -121,7 +122,9 @@ export default class TransactionControllers {
         },
       ]);
 
-      getPost[0].remain -= getTrans[0].reservedTransAmount;
+      if (getTrans.length) {
+        getPost[0].remain -= getTrans[0].reservedTransAmount;
+      }
 
       const getDealer = await User.findById(user).select("id name email");
       if (!getDealer) {
@@ -178,19 +181,19 @@ export default class TransactionControllers {
           },
         },
       ]);
+
+      //check if required amount is over actual quantities
+      if (presentDeals.length && remainAmount) {
+        const { remain } = remainAmount[0];
+        const { reservedTransAmount } = presentDeals[0];
+        if (remain - reservedTransAmount < amount) {
+          return res
+            .status(200)
+            .json({ message: "Amount is over remain quantities." });
+        }
+      }
     } catch (err) {
       res.status(500).json({ error: err.message });
-    }
-
-    //check if required amount is over actual quantities
-    const { remain, _id } = remainAmount[0];
-    if (presentDeals.length) {
-      const { reservedTransAmount } = presentDeals[0];
-      if (remain - reservedTransAmount < amount) {
-        return res
-          .status(200)
-          .json({ message: "Amount is over remain quantities." });
-      }
     }
 
     try {
@@ -313,7 +316,7 @@ export default class TransactionControllers {
     try {
       const getTrans = await Transaction.findOne({
         _id: id,
-        dealer: ObjectId(req.user_id),
+        dealer: req.user._id,
       });
       if (!getTrans) {
         return res.status(403).json({ message: "Permission denied." });
@@ -354,18 +357,17 @@ export default class TransactionControllers {
     const { id } = req.params;
     const { accountName, accountNum, bankCode, bankName } = req.body;
     try {
-      const checkUser = User.findById(req.user._id);
-      if (!checkUser) {
+      const checkUser = await User.findById(req.user._id);
+      if (!checkUser || String(req.user._id) !== id) {
         return res.status(403).json({ message: "Permission denied" });
       }
-      if (String(checkUser._id) === id) {
-        const updateUser = await User.findByIdAndUpdate(
-          id,
-          { account: { accountName, accountNum, bankCode, bankName } },
-          { runValidators: true, new: true }
-        );
-        res.status(200).json({ message: "success", update: updateUser });
-      }
+
+      const updateUser = await User.findByIdAndUpdate(
+        id,
+        { account: { accountName, accountNum, bankCode, bankName } },
+        { runValidators: true, new: true }
+      );
+      res.status(200).json({ message: "success", update: updateUser });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -377,8 +379,13 @@ export default class TransactionControllers {
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        dealer: ObjectId(req.user._id),
+        dealer: req.user._id,
       });
+
+      if (!checkProcess) {
+        return res.status(403).json({ message: "Permission denied" });
+      }
+
       if (checkProcess.isFilled) {
         const updateProcess = await Transaction.findByIdAndUpdate(
           id,
@@ -400,7 +407,7 @@ export default class TransactionControllers {
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        owner: ObjectId(req.user._id),
+        owner: req.user._id,
       });
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });
@@ -435,8 +442,11 @@ export default class TransactionControllers {
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        dealer: ObjectId(req.user._id),
+        dealer: req.user._id,
       });
+      if (!checkProcess) {
+        return res.status(403).json({ message: "Permission denied" });
+      }
       if (checkProcess.isFilled && checkProcess.isPaid && checkProcess.isSent) {
         const updateProcess = await Transaction.findByIdAndUpdate(
           id,

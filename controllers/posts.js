@@ -8,16 +8,24 @@ import {
 const { ObjectId } = mongoose.Types;
 
 export default class PostControllers {
-  // READ all posts
+  // READ all posts, or related posts of user
   static async getAllPosts(req, res, next) {
-    const { page, size } = req.query;
-    const options = optionsSetup(page, size, "-tradingOptions -isPublic", {
-      path: "owner category",
-      select: "name email categoryName",
-    });
+    const { page, size, user } = req.query;
+    const filterQuery = user
+      ? { owner: ObjectId(user), isPublic: true }
+      : { isPublic: true };
+    const options = optionsSetup(
+      page,
+      size,
+      "-tradingOptions -isPublic -description",
+      {
+        path: "owner category",
+        select: "name email categoryName",
+      }
+    );
     const { limit } = options;
     try {
-      const getAllPosts = await Post.paginate({ isPublic: true }, options);
+      const getAllPosts = await Post.paginate(filterQuery, options);
       const { totalDocs, docs, page } = getAllPosts;
       const paginate = paginateObject(totalDocs, limit, page);
       const allPosts = docs;
@@ -58,22 +66,35 @@ export default class PostControllers {
       description,
       storeCode,
       storeName,
+      storeFee,
       region,
       district,
+      imgUrl,
       categoryId,
     } = req.body;
+
+    const imgUrls = [];
+    if (imgUrl) {
+      imgUrls.push(imgUrl);
+    }
+
     const dataStructure = {
       itemName,
       quantity,
       itemStatus,
       description,
+      imgUrls,
       category: ObjectId(categoryId),
       owner: ObjectId(req.user._id),
     };
     let tradingOptions = {};
     if ((storeCode && storeName) || (region && district)) {
       if (storeCode && storeName) {
-        tradingOptions.convenientStore = { storeCode, storeName };
+        tradingOptions.convenientStore = {
+          storeCode,
+          storeName,
+          fee: storeFee,
+        };
       }
       if (region && district) {
         tradingOptions.faceToFace = { region, district };
@@ -101,15 +122,29 @@ export default class PostControllers {
       storeName,
       region,
       district,
+      imgUrl,
       categoryId,
+      postId,
     } = req.body;
+
+    if (id !== postId) {
+      return res.status(401).json({ error: "Permission denied" });
+    }
+
+    const imgUrls = [];
+    if (imgUrl) {
+      imgUrls.push(imgUrl);
+    }
+
     const dataStructure = {
       itemName,
       quantity,
       itemStatus,
       description,
+      imgUrls,
       category: ObjectId(categoryId),
     };
+
     let tradingOptions = {};
     if ((storeCode && storeName) || (region && district)) {
       if (storeCode && storeName) {
@@ -121,10 +156,14 @@ export default class PostControllers {
     }
     dataStructure.tradingOptions = tradingOptions;
     try {
-      const updatePost = await Post.findByIdAndUpdate(id, dataStructure, {
-        runValidators: true,
-        new: true,
-      });
+      const updatePost = await Post.findByIdAndUpdate(
+        id,
+        { ...dataStructure },
+        {
+          runValidators: true,
+          new: true,
+        }
+      );
       res.status(200).json({ message: "success", update: updatePost });
     } catch (err) {
       res.status(500).json({ error: err.message });

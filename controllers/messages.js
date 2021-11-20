@@ -104,13 +104,19 @@ export default class MessageControllers {
   // CREATE a message (transaction or post)
   static async createMessage(req, res, next) {
     const { content, messageType, relatedId } = req.body; // relatedId is a post or transaction
-
-    const { _id } =
-      (await Post.findById(relatedId)) ||
-      (await Transaction.findById(relatedId));
     try {
+      const { _id, dealer } =
+        (await Post.findById(relatedId)) ||
+        (await Transaction.findById(relatedId));
+
+      console.log(_id, dealer);
+
+      if (!_id) {
+        return res.status(401).json({ message: "Permission denied" });
+      }
+
       let newMessage;
-      if (messageType !== "transaction") {
+      if (messageType !== "transaction" && !dealer) {
         newMessage = await Message.create({
           content,
           messageType,
@@ -145,7 +151,7 @@ export default class MessageControllers {
       }
 
       let newReply;
-      if (messageType !== "transaction") {
+      if (messageType !== "transaction" && !checkMsg.deal) {
         newReply = await Message.create({
           content,
           messageType,
@@ -197,21 +203,22 @@ export default class MessageControllers {
     const { id } = req.params;
 
     try {
-      const findMsg = await Message.findById(id);
-      if (!findMsg.relatedMsg) {
-        const findRelatedMsgs = await Message.find({
-          $or: [{ _id: id }, { relatedMsg: ObjectId(id) }],
+      const findMsgs = await Message.find({
+        $or: [{ _id: id }, { relatedMsg: ObjectId(id) }],
+      });
+
+      let count = findMsgs.length;
+
+      findMsgs.forEach(async (msg) => {
+        await Message.deleteOne(msg);
+      });
+
+      if (count > 1) {
+        return res.status(200).json({
+          message: "delete all related messages successfully.",
         });
-        if (findRelatedMsgs.length) {
-          findRelatedMsgs.forEach(async (msg) => {
-            await Message.deleteOne(msg);
-          });
-          return res.status(200).json({
-            message: "delete all related messages successfully.",
-          });
-        }
       }
-      await findMsg.delete();
+
       res.status(200).json({ message: "success" });
     } catch (err) {
       res.status(500).json({ error: err.message });
