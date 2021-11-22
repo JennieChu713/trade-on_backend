@@ -154,10 +154,9 @@ export const resetting = async (req, res, next) => {
           res.status(500).json({ error: err.message });
         }
       });
-      res
+      return res
         .status(200)
         .json({ message: "success; reset commonQAs as 20 samples." });
-      break;
 
     case "posts":
       dataExist = await Post.find();
@@ -236,11 +235,10 @@ export const resetting = async (req, res, next) => {
           res.status(500).json({ error: err.message });
         }
       });
-      res.status(200).json({
+      return res.status(200).json({
         message:
           "success; reset posts of 30 samples, categories of 7 samples, and transactions of 3 samples.",
       });
-      break;
 
     case "messages":
       dataExist = await Message.find();
@@ -313,9 +311,8 @@ export const resetting = async (req, res, next) => {
           res.status(500).json({ error: err.message });
         }
       });
-      res.status(200).json({
+      return res.status(200).json({
         message: "success; reset messages of 6 samples with random reply.",
       });
-      break;
   }
 };
