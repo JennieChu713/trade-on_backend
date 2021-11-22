@@ -1,11 +1,13 @@
 import express from "express";
-import {
+import AuthenticationMiddleware from "../../middleware/auth.js";
+
+const {
   authenticator,
   isMessageAuthor,
-  isMessagePermitted,
-  isAdmin,
-  isTransactionRelated,
-} from "../../middleware/auth.js";
+  messagePermission,
+  transactionInvolved,
+  permissionCheck,
+} = AuthenticationMiddleware;
 
 import MessageControllers from "../../controllers/messages.js";
 const {
@@ -22,7 +24,7 @@ const {
 const router = express.Router();
 
 // READ all messages (for admin)
-router.get("/all", authenticator, isAdmin, getAllMessages);
+router.get("/all", authenticator, permissionCheck, getAllMessages);
 
 // READ all messages of related post
 router.get("/post/:id", getPostRelatedMessages);
@@ -31,7 +33,7 @@ router.get("/post/:id", getPostRelatedMessages);
 router.get(
   "/deal/:id",
   authenticator,
-  isTransactionRelated,
+  transactionInvolved,
   getTransactionRelatedMessages
 );
 
@@ -39,10 +41,10 @@ router.get(
 router.get("/:id", authenticator, isMessageAuthor, getOneMessage);
 
 // CREATE a message (post and transaction)
-router.post("/new", authenticator, isMessagePermitted, createMessage);
+router.post("/new", authenticator, messagePermission, createMessage);
 
 //CREATE a reply (post and transaction)
-router.post("/:id/new", authenticator, isMessagePermitted, createReply);
+router.post("/:id/new", authenticator, messagePermission, createReply);
 
 //UPDATE message / reply
 router.put("/:id", authenticator, isMessageAuthor, updateMessage);

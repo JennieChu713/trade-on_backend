@@ -267,17 +267,17 @@ export default class TransactionControllers {
         .populate("post", "tradingOptions itemName owner");
 
       if (!checkTrans) {
-        return res.status(200).json({ message: "Permission denied" });
+        return res.status(401).json({ message: "Permission denied" });
       }
 
       //check if ownerId and checkTrans's ownerId is equivalent
       if (ownerId !== String(checkTrans.post.owner)) {
-        return res.status(200).json({ message: "Permission denied." });
+        return res.status(401).json({ message: "Permission denied." });
       }
 
       //check if either convenientStore or faceToFace is selected
       if (!convenientStore && !faceToFace) {
-        return res.status(200).json({
+        return res.status(400).json({
           message: "must select a trading options to confirm the deal.",
         });
       }

@@ -1,5 +1,7 @@
 import express from "express";
-import { authenticator, isAdmin } from "../../middleware/auth.js";
+import AuthenticationMiddleware from "../../middleware/auth.js";
+
+const { authenticator, permissionCheck } = AuthenticationMiddleware;
 
 import CategoryControllers from "../../controllers/categories.js";
 const {
@@ -20,15 +22,15 @@ router.get("/all", getAllCategories);
 router.get("/:id/posts", getRelatedPosts);
 
 //READ a category (for editing present data)
-router.get("/:id", authenticator, isAdmin, getOneCategory);
+router.get("/:id", authenticator, permissionCheck, getOneCategory);
 
 // CREATE a Category
-router.post("/new", authenticator, isAdmin, createCategory);
+router.post("/new", authenticator, permissionCheck, createCategory);
 
 // UPDATE a Category
-router.put("/:id", authenticator, isAdmin, updateCategory);
+router.put("/:id", authenticator, permissionCheck, updateCategory);
 
 // DELETE a Category
-router.delete("/:id", authenticator, isAdmin, deleteCategory);
+router.delete("/:id", authenticator, permissionCheck, deleteCategory);
 
 export default router;

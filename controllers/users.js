@@ -1,7 +1,6 @@
 import User from "../models/user.js";
 import Transaction from "../models/transaction.js";
 import mongoose from "mongoose";
-import ErrorResponse from "../utils/errorResponse.js";
 
 import {
   optionsSetup,
@@ -16,25 +15,32 @@ export default class UserControllers {
 
     //prevention before storing data
     if (!email || !nickname || !password || !confirmPassword) {
-      return next(new ErrorResponse("All field(s) required", 400));
+      return res.status(400).json({ error: "All field(s) required" });
     }
     if (password !== confirmPassword) {
-      return next(new ErrorResponse("password confirmation failed", 401));
+      return res.status(401).json({ error: "password confirmation failed" });
     }
 
     try {
       const userExist = await User.findOne({ email });
       if (userExist) {
-        return next(new ErrorResponse("User already exist"), 401);
+        return res.status(401).json({ error: "User already exist" });
       }
       const newUser = await User.create({
         nickname,
         email,
         password,
       });
-      res.status(200).json({ message: "success" });
+      if (newUser) {
+        req.logIn(newUser, function (err) {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+          res.status(200).json({ message: "success" });
+        });
+      }
     } catch (err) {
-      next(err);
+      res.status(500).json({ error: err.message });
     }
   }
 
@@ -44,6 +50,7 @@ export default class UserControllers {
 
   static async logout(req, res, next) {
     req.logout();
+    req.session.destroy();
     res.status(200).json({ message: "success" });
   }
 
@@ -58,25 +65,21 @@ export default class UserControllers {
       const allUsers = docs;
       res.status(200).json({ message: "success", paginate, allUsers });
     } catch (err) {
-      next(err);
+      res.status(500).json({ error: err.message });
     }
   }
 
   static async getUserInfo(req, res, next) {
     const { id } = req.params;
     try {
-      const user = await User.findById(id);
-      const record = await Transaction.find({
-        $or: [{ owner: ObjectId(id) }, { dealer: ObjectId(id) }],
-        isCompleted: true,
-      });
+      const user = await User.findById(id).select("-account");
 
       if (!user) {
         return res
           .status(404)
           .json({ error: "The user you are looking for does not exist." });
       }
-      res.status(200).json({ message: "success", userInfo: user, record });
+      res.status(200).json({ message: "success", userInfo: user });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -93,10 +96,31 @@ export default class UserControllers {
       bankName,
       accountNum,
     } = req.body;
+
+    const account = { accountName, accountNum, bankCode, bankName };
+    if (!nickname) {
+      return res.status(400).json({ message: "nickname is required" });
+    }
+    try {
+      const updateUser = await User.findByIdAndUpdate(
+        id,
+        {
+          nickname,
+          introduction,
+          avatarUrl,
+          account,
+        },
+        { runValidators: true, new: true }
+      );
+
+      res.status(200).json({ message: "success", update: updateUser });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   }
   static async deleteUser(req, res, next) {
     const { id } = req.params;
-    if (String(req.user._id) !== id || req.user.accountAuthority !== "admin") {
+    if (String(res.locals.user._id) !== id) {
       return res.status(401).json({ error: "Unauthorized." });
     }
 

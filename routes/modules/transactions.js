@@ -1,6 +1,7 @@
 import express from "express";
-import { isTransactionRelated, isPostAuthor } from "../../middleware/auth.js";
+import AuthenticationMiddleware from "../../middleware/auth.js";
 
+const { transactionInvolved, isPostAuthor } = AuthenticationMiddleware;
 import TransactionControllers from "../../controllers/transactions.js";
 const {
   getAllTransactions,
@@ -22,7 +23,7 @@ const router = express.Router();
 router.get("/all", getAllTransactions);
 
 // READ a transaction
-router.get("/:id", isTransactionRelated, getOneTransaction);
+router.get("/:id", transactionInvolved, getOneTransaction);
 
 // READ start a deal transaction - step 0: get dealer info and post info for owner
 router.get("/post/:id/request", isPostAuthor, getTransactionDealerAndPost);
@@ -31,25 +32,25 @@ router.get("/post/:id/request", isPostAuthor, getTransactionDealerAndPost);
 router.post("/post/:id", isPostAuthor, createRequestTransaction);
 
 // READ a request deal transaction info from owner - step 2: get for dealer
-router.get("/:id/accept", isTransactionRelated, getTransactionOwnerRequest);
+router.get("/:id/accept", transactionInvolved, getTransactionOwnerRequest);
 
 // UPDATE transaction - filling sending info and isFilled
-router.put("/:id/filling-info", isTransactionRelated, updateFillingProgress);
+router.put("/:id/filling-info", transactionInvolved, updateFillingProgress);
 
 // UPDATE account of user
 router.put("/user/:id/account-info", updateUserAccount);
 
 // UPDATE transaction - is paid
-router.put("/:id/payment", isTransactionRelated, updatePaymentProgress);
+router.put("/:id/payment", transactionInvolved, updatePaymentProgress);
 
 // UPDATE transaction - is sent
-router.put("/:id/sendout", isTransactionRelated, updateSendoutProgress);
+router.put("/:id/sendout", transactionInvolved, updateSendoutProgress);
 
 // UPDATE transaction - is complete
-router.put("/:id/complete", isTransactionRelated, updateCompleteProgress);
+router.put("/:id/complete", transactionInvolved, updateCompleteProgress);
 
 // UPDATE a deal transaction - step 3: from dealer (add ownerId and dealMethod)
 // a transaction deal is confirmed
-router.put("/:id", isTransactionRelated, updateAcceptTransaction);
+router.put("/:id", transactionInvolved, updateAcceptTransaction);
 
 export default router;

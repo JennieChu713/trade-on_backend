@@ -1,5 +1,7 @@
 import express from "express";
-import { authenticator } from "../middleware/auth.js";
+import AuthenticationMiddleware from "../middleware/auth.js";
+
+const { authenticator } = AuthenticationMiddleware;
 
 const router = express.Router();
 
