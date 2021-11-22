@@ -36,6 +36,6 @@ router.get("/:id", getUserInfo);
 router.put("/:id", authenticator, updateUserInfo);
 
 // DELETE user
-router.delete("/:id", authenticator, deleteUser);
+router.delete("/:id/delete", authenticator, deleteUser);
 
 export default router;

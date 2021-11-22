@@ -15,7 +15,7 @@ export default class MessageControllers {
     const matchQuery = type ? { messageType: type } : {};
     const options = optionsSetup(page, size, "", {
       path: "owner post",
-      select: "email name itemName",
+      select: "email nickname itemName",
     });
     const { limit } = options;
 
@@ -53,7 +53,7 @@ export default class MessageControllers {
             content: 1,
             owner: 1,
             "ownerInfo.email": 1,
-            "ownerInfo.name": 1,
+            "ownerInfo.nickname": 1,
             relatedMsg: 1,
             messageType: 1,
           },
@@ -78,7 +78,7 @@ export default class MessageControllers {
     try {
       const allMsgs = await Message.find({ deal: ObjectId(id) }).populate(
         "owner deal",
-        "email name post"
+        "email nickname post"
       );
       res.status(200).json({ message: "success", dealMessages: allMsgs });
     } catch (err) {
@@ -92,7 +92,7 @@ export default class MessageControllers {
     try {
       const msg = await Message.findById(id).populate(
         "owner post",
-        "email name itemName"
+        "email nickname itemName"
       );
 
       res.status(200).json({ message: "success", messageContent: msg });
@@ -121,14 +121,14 @@ export default class MessageControllers {
           content,
           messageType,
           post: ObjectId(_id),
-          owner: ObjectId(req.user._id),
+          owner: ObjectId(res.locals.user._id),
         });
       } else {
         newMessage = await Message.create({
           content,
           messageType,
           deal: ObjectId(_id),
-          owner: ObjectId(req.user._id),
+          owner: ObjectId(res.locals.user._id),
         });
       }
       res.status(200).json({ message: "success", new: newMessage });
@@ -157,7 +157,7 @@ export default class MessageControllers {
           messageType,
           relatedMsg: ObjectId(id),
           post: ObjectId(relatedId),
-          owner: ObjectId(req.user._id),
+          owner: ObjectId(res.locals.user._id),
         });
       } else {
         newReply = await Message.create({
@@ -165,7 +165,7 @@ export default class MessageControllers {
           messageType,
           relatedMsg: ObjectId(id),
           deal: ObjectId(relatedId),
-          owner: ObjectId(req.user._id),
+          owner: ObjectId(es.locals.user._id),
         });
       }
       res.status(200).json({ message: "success", new: newReply });

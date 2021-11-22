@@ -20,7 +20,7 @@ export default class PostControllers {
       "-tradingOptions -isPublic -description",
       {
         path: "owner category",
-        select: "name email categoryName",
+        select: "nickname email categoryName",
       }
     );
     const { limit } = options;
@@ -43,7 +43,7 @@ export default class PostControllers {
     try {
       const post = await Post.findById(id).populate({
         path: "owner category",
-        select: "email name categoryName",
+        select: "email nickname categoryName",
       });
       if (post) {
         res.status(200).json({ message: "success", post });
@@ -85,7 +85,7 @@ export default class PostControllers {
       description,
       imgUrls,
       category: ObjectId(categoryId),
-      owner: ObjectId(req.user._id),
+      owner: ObjectId(res.locals.user._id),
     };
     let tradingOptions = {};
     if ((storeCode && storeName) || (region && district)) {

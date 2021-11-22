@@ -45,7 +45,7 @@ export default class CategoryControllers {
     const { page, size } = req.query;
     const options = optionsSetup(page, size, "-tradingOptions -isPublic", {
       path: "owner category",
-      select: "name email categoryName",
+      select: "nickname email categoryName",
     });
     const { limit } = options;
     try {

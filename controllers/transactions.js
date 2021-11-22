@@ -42,7 +42,7 @@ export default class TransactionControllers {
         break;
     }
     const progressQuery = {
-      $or: [{ owner: req.user._id }, { dealer: req.user._id }],
+      $or: [{ owner: res.locals.user._id }, { dealer: res.locals.user._id }],
       ...progressFilters,
     };
     const options = optionsSetup(
@@ -126,7 +126,7 @@ export default class TransactionControllers {
         getPost[0].remain -= getTrans[0].reservedTransAmount;
       }
 
-      const getDealer = await User.findById(user).select("id name email");
+      const getDealer = await User.findById(user).select("id nickname email");
       if (!getDealer) {
         return res
           .status(200)
@@ -229,7 +229,7 @@ export default class TransactionControllers {
         post: ObjectId(post),
       })
         .select("amount")
-        .populate("post", "itemName owner tradingOptions"); //await Transaction.find({ post: ObjectId(id), dealer: ObjectId(user)})
+        .populate("post", "itemName owner tradingOptions");
 
       // check if user is exist, and transaction ownerId and userId is equivalent
       const checkOwner = await User.findById(user).select("name email");
@@ -323,7 +323,7 @@ export default class TransactionControllers {
       }
       if (getTrans.dealMethod.faceToFace) {
         const updateProcess = await Transaction.findOneAndUpdate(
-          { _id: id, dealer: ObjectId(req.user_id) },
+          { _id: id, dealer: ObjectId(res.locals.user_id) },
           { isFilled: true, isPaid: true },
           { runValidators: true, new: true }
         );
@@ -357,8 +357,8 @@ export default class TransactionControllers {
     const { id } = req.params;
     const { accountName, accountNum, bankCode, bankName } = req.body;
     try {
-      const checkUser = await User.findById(req.user._id);
-      if (!checkUser || String(req.user._id) !== id) {
+      const checkUser = await User.findById(res.locals.user._id);
+      if (!checkUser || String(res.locals.user._id) !== id) {
         return res.status(403).json({ message: "Permission denied" });
       }
 
@@ -379,7 +379,7 @@ export default class TransactionControllers {
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        dealer: req.user._id,
+        dealer: res.locals.user._id,
       });
 
       if (!checkProcess) {
@@ -407,7 +407,7 @@ export default class TransactionControllers {
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        owner: req.user._id,
+        owner: res.locals.user._id,
       });
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });
@@ -442,7 +442,7 @@ export default class TransactionControllers {
     try {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        dealer: req.user._id,
+        dealer: res.locals.user._id,
       });
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });

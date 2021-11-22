@@ -37,11 +37,11 @@ router.get(
   getTransactionRelatedMessages
 );
 
-// READ one message (for edit rendering value)
-router.get("/:id", authenticator, isMessageAuthor, getOneMessage);
-
 // CREATE a message (post and transaction)
 router.post("/new", authenticator, messagePermission, createMessage);
+
+// READ one message (for edit rendering value)
+router.get("/:id", authenticator, isMessageAuthor, getOneMessage);
 
 //CREATE a reply (post and transaction)
 router.post("/:id/new", authenticator, messagePermission, createReply);
