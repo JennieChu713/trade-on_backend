@@ -50,18 +50,18 @@ const postSchema = new Schema({
           "花蓮縣",
           "雲林縣",
           "嘉義縣",
+          "嘉義市",
           "臺南市",
           "高雄市",
-          "台東縣",
+          "臺東縣",
           "屏東縣",
           "澎湖縣",
           "金門縣",
           "連江縣",
         ],
       },
-      district: {
-        type: String,
-      },
+      district: String,
+
       fee: {
         type: Number,
         default: 0,

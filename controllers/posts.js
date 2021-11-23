@@ -1,17 +1,31 @@
 import Post from "../models/post.js";
 import mongoose from "mongoose";
-import { optionsSetup, paginateObject } from "./paginateOptionSetup.common.js";
+import {
+  optionsSetup,
+  paginateObject,
+} from "../utils/paginateOptionSetup.common.js";
+
+const { ObjectId } = mongoose.Types;
 
 export default class PostControllers {
+  // READ all posts, or related posts of user
   static async getAllPosts(req, res, next) {
-    const { page, size } = req.query;
-    const options = optionsSetup(page, size, "-tradingOptions -isPublic", {
-      path: "owner category",
-      select: "name email categoryName",
-    });
+    const { page, size, user } = req.query;
+    const filterQuery = user
+      ? { owner: ObjectId(user), isPublic: true }
+      : { isPublic: true };
+    const options = optionsSetup(
+      page,
+      size,
+      "-tradingOptions -isPublic -description",
+      {
+        path: "owner category",
+        select: "nickname email categoryName",
+      }
+    );
     const { limit } = options;
     try {
-      const getAllPosts = await Post.paginate({ isPublic: true }, options);
+      const getAllPosts = await Post.paginate(filterQuery, options);
       const { totalDocs, docs, page } = getAllPosts;
       const paginate = paginateObject(totalDocs, limit, page);
       const allPosts = docs;
@@ -23,12 +37,13 @@ export default class PostControllers {
     }
   }
 
+  // READ a post
   static async getOnePost(req, res, next) {
     const { id } = req.params;
     try {
       const post = await Post.findById(id).populate({
         path: "owner category",
-        select: "email name categoryName",
+        select: "email nickname categoryName",
       });
       if (post) {
         res.status(200).json({ message: "success", post });
@@ -42,9 +57,8 @@ export default class PostControllers {
     }
   }
 
+  // CREATE a post
   static async createPost(req, res, next) {
-    const { ObjectId } = mongoose.Type;
-    //TODO: user authentication
     const {
       itemName,
       quantity,
@@ -52,23 +66,35 @@ export default class PostControllers {
       description,
       storeCode,
       storeName,
+      storeFee,
       region,
       district,
+      imgUrl,
       categoryId,
-      userId,
     } = req.body;
+
+    const imgUrls = [];
+    if (imgUrl) {
+      imgUrls.push(imgUrl);
+    }
+
     const dataStructure = {
       itemName,
       quantity,
       itemStatus,
       description,
+      imgUrls,
       category: ObjectId(categoryId),
-      owner: ObjectId(userId),
+      owner: ObjectId(res.locals.user._id),
     };
     let tradingOptions = {};
     if ((storeCode && storeName) || (region && district)) {
       if (storeCode && storeName) {
-        tradingOptions.convenientStore = { storeCode, storeName };
+        tradingOptions.convenientStore = {
+          storeCode,
+          storeName,
+          fee: storeFee,
+        };
       }
       if (region && district) {
         tradingOptions.faceToFace = { region, district };
@@ -83,10 +109,10 @@ export default class PostControllers {
     }
   }
 
+  // UPDATE a post
   static async updatePost(req, res, next) {
-    // TODO: user authentication
     const { id } = req.params;
-    const { ObjectId } = mongoose.Types;
+
     const {
       itemName,
       quantity,
@@ -96,16 +122,29 @@ export default class PostControllers {
       storeName,
       region,
       district,
+      imgUrl,
       categoryId,
-      userId,
+      postId,
     } = req.body;
+
+    if (id !== postId) {
+      return res.status(401).json({ error: "Permission denied" });
+    }
+
+    const imgUrls = [];
+    if (imgUrl) {
+      imgUrls.push(imgUrl);
+    }
+
     const dataStructure = {
       itemName,
       quantity,
       itemStatus,
       description,
+      imgUrls,
       category: ObjectId(categoryId),
     };
+
     let tradingOptions = {};
     if ((storeCode && storeName) || (region && district)) {
       if (storeCode && storeName) {
@@ -117,9 +156,9 @@ export default class PostControllers {
     }
     dataStructure.tradingOptions = tradingOptions;
     try {
-      const updatePost = await Post.findOneAndUpdate(
-        { _id: id, owner: ObjectId(userId) },
-        dataStructure,
+      const updatePost = await Post.findByIdAndUpdate(
+        id,
+        { ...dataStructure },
         {
           runValidators: true,
           new: true,
@@ -131,11 +170,11 @@ export default class PostControllers {
     }
   }
 
+  // DELETE a post
   static async deletePost(req, res, next) {
-    // TODO: user authentication
     const { id } = req.params;
     try {
-      await Post.findByIdAndDelete({ id });
+      await Post.findByIdAndDelete(id);
       res.status(200).json({ message: "success" });
     } catch (err) {
       res.status(500).json({ error: err.message });

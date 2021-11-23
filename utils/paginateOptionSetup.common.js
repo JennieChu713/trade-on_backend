@@ -3,7 +3,7 @@ export const optionsSetup = (
   size,
   select = "",
   populate = "",
-  sort = { date: -1 }
+  sort = { updatedAt: -1 }
 ) => {
   const limit = size ? +size : 5;
   const offset = page ? (page - 1) * limit : 0;
@@ -12,6 +12,7 @@ export const optionsSetup = (
     populate,
     limit,
     offset,
+    sort,
   };
 };
 

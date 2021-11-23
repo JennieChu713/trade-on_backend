@@ -1,4 +1,7 @@
 import express from "express";
+import AuthenticationMiddleware from "../middleware/auth.js";
+
+const { authenticator } = AuthenticationMiddleware;
 
 const router = express.Router();
 
@@ -7,12 +10,14 @@ import category from "./modules/category.js";
 import posts from "./modules/posts.js";
 import message from "./modules/messages.js";
 import transactions from "./modules/transactions.js";
+import users from "./modules/users.js";
 
 router.use("/category", category);
 router.use("/posts", posts);
-router.use("/transactions", transactions);
+router.use("/transactions", authenticator, transactions);
 router.use("/messages", message);
 router.use("/commonqnas", commonQA);
+router.use("/users", users);
 
 //additional routes present message
 router.get("/", (req, res) => {
@@ -22,7 +27,13 @@ router.get("/", (req, res) => {
       "Welcome to tradeon backend. please type-in a desire route to enter."
     );
 });
-router.get("/*", (req, res) => {
+
+////// reset temp route /////
+import { resetting } from "../controllers/reset.js";
+// temporary reset seed
+router.get("/reset", resetting);
+
+router.all("/*", (req, res) => {
   res.status(404).json({ error: "permission denied or incorrect route." });
 });
 
