@@ -151,17 +151,12 @@ export default class CategoryControllers {
 
       const relatedPosts = await Post.find({ category: ObjectId(id) });
       if (relatedPosts) {
-        relatedPosts.forEach(async (post, i) => {
+        relatedPosts.forEach(async (post) => {
           const checkUpdatePosts = await Post.updateOne(
             { _id: post._id },
             { category: ObjectId(primaryCategory._id) },
             { runValidators: true, new: true }
           );
-
-          if (i === relatedPosts.length - 1) {
-            await Category.findByIdAndDelete(id);
-            return res.status(200).json({ message: "success" });
-          }
         });
       }
 

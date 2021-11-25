@@ -46,7 +46,7 @@ export default class AuthenticationMiddleware {
       );
       const { isAllowPost } = checkUser;
       if (!isAllowPost) {
-        return res.status(401).json({ error: "Permission been denied." });
+        return res.status(401).json({ error: "Permission has been denied." });
       }
       next();
     } catch (err) {
@@ -61,7 +61,7 @@ export default class AuthenticationMiddleware {
       );
       const { isAllowMessage } = checkUser;
       if (!isAllowPost) {
-        return res.status(401).json({ error: "Permission been denied." });
+        return res.status(401).json({ error: "Permission has been denied." });
       }
       next();
     } catch (err) {
@@ -115,9 +115,50 @@ export default class AuthenticationMiddleware {
     if (!user) {
       return next();
     }
-    if (user !== String(res.locals.user._id)) {
+    if (!res.locals.user || user !== String(res.locals.user._id)) {
       return res.status(401).json({ error: "Unauthorized" });
     }
     next();
+  }
+
+  static async hasQueryPublic(req, res, next) {
+    const { isPublic } = req.query;
+    if (!isPublic) {
+      return next();
+    }
+    if (!res.locals.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      const checkUser = await User.findById(res.locals.user._id).select(
+        "+accountAuthority"
+      );
+      if (checkUser.accountAuthority !== "admin") {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      next();
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async isAdminOrOwner(req, res, next) {
+    const { id } = req.params;
+    try {
+      const post = await Post.findById(id);
+      const checkUser = await User.findById(res.locals.user._id).select(
+        "+accountAuthority"
+      );
+      const { accountAuthority } = checkUser;
+      if (
+        post.owner.equals(res.locals.user._id) ||
+        accountAuthority === "admin"
+      ) {
+        return next();
+      }
+    } catch (err) {
+      next(err);
+    }
+    res.status(401).json({ error: "Unauthorized" });
   }
 }

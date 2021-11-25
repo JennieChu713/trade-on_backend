@@ -74,6 +74,13 @@ const tradings = [
     },
   },
 ];
+const descripts = [
+  "一直維持很乾淨的狀態，如果願意的話請收下。",
+  "雖然舊但堪用",
+  '事情是這樣的，因為家裡東西實在是太多了> <"⋯⋯\n所以就決定來個大清倉，但就像照片看到的，其實都跟全新一樣，就給有緣分的人，希望這些物品還能被好好愛惜下去。\n需要的人請按申請，感謝！',
+  "買來之後就完全沒開過，所以給需要的人。",
+  "遺忘很久的東西，不過狀態還不錯，所以就送給需要的人。\n所索取請留言聯絡。",
+];
 function pickRandom(num, mode = "pick") {
   if (mode === "qnt") {
     return Math.floor(Math.random() * num) + 1;
@@ -134,6 +141,7 @@ db.once("open", async () => {
             itemName: items[pickRandom(items.length)],
             quantity: pickRandom(10, "qnt"),
             itemStatus,
+            description: descripts[pickRandom(descripts.length)],
             tradingOptions: tradings[pickRandom(tradings.length)],
             category,
             owner: _id,
