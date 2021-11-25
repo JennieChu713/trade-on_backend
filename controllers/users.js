@@ -36,7 +36,8 @@ export default class UserControllers {
           if (err) {
             return res.status(500).json({ error: err.message });
           }
-          res.status(200).json({ message: "success" });
+          const userInfo = { email: newUser.email, nickname: newUser.nickname };
+          res.status(200).json({ message: "success", user: userInfo });
         });
       }
     } catch (err) {
@@ -45,7 +46,8 @@ export default class UserControllers {
   }
 
   static async login(req, res, next) {
-    res.status(200).json({ message: "success" });
+    const userInfo = { email: req.user.email, nickname: req.user.nickname };
+    res.status(200).json({ message: "success", user: userInfo });
   }
 
   static async logout(req, res, next) {

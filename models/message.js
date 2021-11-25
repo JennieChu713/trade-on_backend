@@ -36,12 +36,24 @@ msgSchema.set("timestamps", true);
 
 msgSchema.method("toJSON", function () {
   const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
+  const timeOptions = {
+    timeZone: "Asia/Taipei",
+    hour12: false,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  };
   object.id = _id;
   if (createdAt) {
-    object.createdAt = new Date(createdAt).toLocaleString();
+    object.createdAt = new Date(createdAt).toLocaleString("zh-TW", timeOptions);
   }
   if (updatedAt) {
-    object.lastModified = new Date(updatedAt).toLocaleString();
+    object.lastModified = new Date(updatedAt).toLocaleString(
+      "zh-TW",
+      timeOptions
+    );
   }
   return object;
 });

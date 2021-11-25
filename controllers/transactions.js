@@ -418,11 +418,6 @@ export default class TransactionControllers {
           { isSent: true },
           { runValidators: true, new: true }
         );
-        await Post.findByIdAndUpdate(
-          { _id: ObjectId(updateProcess.post) },
-          { $inc: { givenAmount: updateProcess.amount } },
-          { runValidators: true, new: true }
-        );
         if (updateProcess) {
           res.status(200).json({ message: "success", update: updateProcess });
         }
@@ -453,26 +448,36 @@ export default class TransactionControllers {
           { isCompleted: true },
           { runValidators: true, new: true }
         );
-        const checkGoal = await Post.aggregate([
-          {
-            $match: { _id: ObjectId(updateProcess.post) },
-          },
-          {
-            $project: {
-              _id: 0,
-              quantity: 1,
-              givenAmount: 1,
-              reachGoal: { $eq: ["$quantity", "$givenAmount"] },
+        const givenRecord = await Post.findByIdAndUpdate(
+          { _id: ObjectId(updateProcess.post) },
+          { $inc: { givenAmount: updateProcess.amount } },
+          { runValidators: true, new: true }
+        );
+
+        if (givenRecord) {
+          const checkGoal = await Post.aggregate([
+            {
+              $match: { _id: ObjectId(updateProcess.post) },
             },
-          },
-        ]);
-        if (checkGoal[0].reachGoal) {
-          await Post.findByIdAndUpdate(
-            { _id: ObjectId(updateProcess.post) },
-            { isGoal: true },
-            { runValidators: true, new: true }
-          );
+            {
+              $project: {
+                _id: 0,
+                quantity: 1,
+                givenAmount: 1,
+                reachGoal: { $eq: ["$quantity", "$givenAmount"] },
+              },
+            },
+          ]);
+
+          if (checkGoal[0].reachGoal) {
+            await Post.findByIdAndUpdate(
+              { _id: ObjectId(updateProcess.post) },
+              { isGoal: true },
+              { runValidators: true, new: true }
+            );
+          }
         }
+
         if (updateProcess) {
           res.status(200).json({ message: "success", update: updateProcess });
         }

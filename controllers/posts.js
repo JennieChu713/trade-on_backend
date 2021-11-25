@@ -1,4 +1,5 @@
 import Post from "../models/post.js";
+import User from "../models/user.js";
 import mongoose from "mongoose";
 import {
   optionsSetup,
@@ -10,29 +11,29 @@ const { ObjectId } = mongoose.Types;
 export default class PostControllers {
   // READ all posts, or related posts of user
   static async getAllPosts(req, res, next) {
-    const { page, size, user } = req.query;
+    const { page, size, user, isPublic } = req.query;
+
     const filterQuery = user
-      ? { owner: ObjectId(user), isPublic: true }
-      : { isPublic: true };
-    const options = optionsSetup(
-      page,
-      size,
-      "-tradingOptions -isPublic -description",
-      {
-        path: "owner category",
-        select: "nickname email categoryName",
-      }
-    );
+      ? { owner: ObjectId(user) }
+      : { isPublic: isPublic ? isPublic : true };
+    const selecting = user ? "-tradingOptions" : "-tradingOptions -isPublic";
+    const options = optionsSetup(page, size, selecting, {
+      path: "owner category",
+      select: "nickname email categoryName",
+    });
     const { limit } = options;
+
     try {
       const getAllPosts = await Post.paginate(filterQuery, options);
-      const { totalDocs, docs, page } = getAllPosts;
-      const paginate = paginateObject(totalDocs, limit, page);
+      const { totalDocs, docs } = getAllPosts;
+      const current = getAllPosts.page;
+      const paginate = paginateObject(totalDocs, limit, current);
       const allPosts = docs;
       if (allPosts) {
         res.status(200).json({ message: "success", paginate, allPosts });
       }
     } catch (err) {
+      console.log(err);
       res.status(500).json({ error: err.message });
     }
   }
@@ -74,8 +75,12 @@ export default class PostControllers {
     } = req.body;
 
     const imgUrls = [];
-    if (imgUrl) {
-      imgUrls.push(imgUrl);
+    if (imgUrl.length) {
+      if (typeof imgUrl === "object") {
+        imgUrls = [...imgUrl];
+      } else {
+        imgUrls.push(imgUrl);
+      }
     }
 
     const dataStructure = {
@@ -132,8 +137,12 @@ export default class PostControllers {
     }
 
     const imgUrls = [];
-    if (imgUrl) {
-      imgUrls.push(imgUrl);
+    if (imgUrl.length) {
+      if (typeof imgUrl === "object") {
+        imgUrls = [...imgUrl];
+      } else {
+        imgUrls.push(imgUrl);
+      }
     }
 
     const dataStructure = {
@@ -164,6 +173,38 @@ export default class PostControllers {
           new: true,
         }
       );
+      res.status(200).json({ message: "success", update: updatePost });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  // UPDATE a post status
+  static async updatePostStatus(req, res, next) {
+    const { id } = req.params;
+    try {
+      const checkUserAuth = await User.findById(res.locals.user._id).select(
+        "+accountAuthority"
+      );
+
+      const checkPost = await Post.findById(id);
+      if (checkPost) {
+        if (
+          accountAuthority === "admin" &&
+          !checkPost.owner.equals(res.locals.user._id)
+        ) {
+          await User.findByIdAndUpdate(
+            checkPost.owner,
+            { isAllowPost: false },
+            {
+              runValidators: true,
+              new: true,
+            }
+          );
+        }
+        checkPost.isPublic = !checkPost.isPublic;
+      }
+      const updatePost = await checkPost.save();
       res.status(200).json({ message: "success", update: updatePost });
     } catch (err) {
       res.status(500).json({ error: err.message });
