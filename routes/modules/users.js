@@ -13,6 +13,7 @@ const {
   getUserInfo,
   updateUserInfo,
   deleteUser,
+  getMe,
 } = UserControllers;
 
 const router = express.Router();
@@ -28,6 +29,9 @@ router.post("/register", register);
 
 //handle LOGOUT
 router.get("/logout", logout);
+
+// get cookie route
+router.get("/me", authenticator, getMe);
 
 // READ userInfo
 router.get("/:id", getUserInfo);

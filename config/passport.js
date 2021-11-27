@@ -78,11 +78,11 @@ export default function usePassport(app) {
 
   //setup serialize and deserialize
   passport.serializeUser((user, done) => {
-    done(null, user.id);
+    done(null, user._id);
   });
   passport.deserializeUser(async (id, done) => {
     try {
-      const findUser = await User.findById(id).lean();
+      const findUser = await User.findById(id);
       if (findUser) {
         return done(null, findUser);
       }

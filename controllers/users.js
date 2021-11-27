@@ -36,7 +36,7 @@ export default class UserControllers {
             return res.status(500).json({ error: err.message });
           }
           const { email, nickname, _id } = newUser;
-          const userInfo = { email, nickname, id: _id };
+          const userInfo = { email, nickname, _id };
 
           for (let info in userInfo) {
             res.cookie(info, userInfo[info], {
@@ -58,7 +58,7 @@ export default class UserControllers {
 
   static async login(req, res, next) {
     const { email, nickname, _id } = req.user;
-    const userInfo = { email, nickname, id: _id };
+    const userInfo = { email, nickname, _id };
     for (let info in userInfo) {
       res.cookie(info, userInfo[info], {
         httpOnly: true,
@@ -169,6 +169,22 @@ export default class UserControllers {
     try {
       await User.findByIdAndDelete(id);
       res.status(200).json({ message: "success" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async getMe(req, res, next) {
+    console.log(req.cookies);
+    try {
+      const user = await User.findById(res.locals.user._id).select("-account");
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ error: "The user you are looking for does not exist." });
+      }
+      res.status(200).json({ message: "success", userInfo: user });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
