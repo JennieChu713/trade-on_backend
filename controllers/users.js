@@ -130,13 +130,25 @@ export default class UserControllers {
     if (!nickname) {
       return res.status(400).json({ message: "nickname is required" });
     }
+    let onlyImgUrl = "";
+    if (typeof avatarUrl === "object") {
+      const {
+        data: { link },
+      } = avatarUrl;
+
+      onlyImgUrl = link;
+    }
+    if (typeof avatarUrl === "string" && avatarUrl.length) {
+      const jsonfied = JSON.parse(avatarUrl);
+      onlyImgUrl = jsonfied.data.link;
+    }
     try {
       const updateUser = await User.findByIdAndUpdate(
         id,
         {
           nickname,
           introduction,
-          avatarUrl,
+          avatarUrl: onlyImgUrl,
           account,
         },
         { runValidators: true, new: true }

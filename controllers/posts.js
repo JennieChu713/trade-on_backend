@@ -70,17 +70,20 @@ export default class PostControllers {
       storeFee,
       region,
       district,
-      imgUrl,
+      imgUrls,
       categoryId,
     } = req.body;
 
-    const imgUrls = [];
-    if (imgUrl.length) {
-      if (typeof imgUrl === "object") {
-        imgUrls = [...imgUrl];
-      } else {
-        imgUrls.push(imgUrl);
-      }
+    const allImgUrls = [];
+    if (typeof imgUrls === "object") {
+      const {
+        data: { link },
+      } = imgUrls;
+      allImgUrls.push(link);
+    }
+    if (typeof imgUrls === "string" && imgUrls.length) {
+      const img = JSON.parse(imgUrls);
+      allImgUrls.push(img.data.link);
     }
 
     const dataStructure = {
@@ -88,7 +91,7 @@ export default class PostControllers {
       quantity,
       itemStatus,
       description,
-      imgUrls,
+      imgUrls: allImgUrls,
       category: ObjectId(categoryId),
       owner: ObjectId(res.locals.user._id),
     };
@@ -136,13 +139,16 @@ export default class PostControllers {
       return res.status(401).json({ error: "Permission denied" });
     }
 
-    const imgUrls = [];
-    if (imgUrl.length) {
-      if (typeof imgUrl === "object") {
-        imgUrls = [...imgUrl];
-      } else {
-        imgUrls.push(imgUrl);
-      }
+    const allImgUrls = [];
+    if (typeof imgUrls === "object") {
+      const {
+        data: { link },
+      } = imgUrls;
+      allImgUrls.push(link);
+    }
+    if (typeof imgUrls === "string" && imgUrls.length) {
+      const img = JSON.parse(imgUrls);
+      allImgUrls.push(img.data.link);
     }
 
     const dataStructure = {
@@ -150,7 +156,7 @@ export default class PostControllers {
       quantity,
       itemStatus,
       description,
-      imgUrls,
+      imgUrls: allImgUrls,
       category: ObjectId(categoryId),
     };
 
