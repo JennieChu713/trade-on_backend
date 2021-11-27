@@ -1,5 +1,4 @@
 import User from "../models/user.js";
-import Transaction from "../models/transaction.js";
 import mongoose from "mongoose";
 
 import {
@@ -36,8 +35,20 @@ export default class UserControllers {
           if (err) {
             return res.status(500).json({ error: err.message });
           }
-          const userInfo = { email: newUser.email, nickname: newUser.nickname };
-          res.status(200).json({ message: "success", user: userInfo });
+          const { email, nickname, _id } = newUser;
+          const userInfo = { email, nickname, id: _id };
+
+          for (let info in userInfo) {
+            res.cookie(info, userInfo[info], {
+              httpOnly: true,
+              maxAge: 1000 * 60 * 60 * 24 * 3,
+            });
+          }
+
+          res.status(200).json({
+            message: "success",
+            user: userInfo,
+          });
         });
       }
     } catch (err) {
@@ -46,13 +57,29 @@ export default class UserControllers {
   }
 
   static async login(req, res, next) {
-    const userInfo = { email: req.user.email, nickname: req.user.nickname };
-    res.status(200).json({ message: "success", user: userInfo });
+    const { email, nickname, _id } = req.user;
+    const userInfo = { email, nickname, id: _id };
+    for (let info in userInfo) {
+      res.cookie(info, userInfo[info], {
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 3,
+      });
+    }
+
+    res.status(200).json({
+      message: "success",
+      user: userInfo,
+    });
   }
 
   static async logout(req, res, next) {
     req.logout();
     req.session.destroy();
+    if (req.cookies) {
+      for (let key in req.cookies) {
+        res.clearCookie(`${key}`);
+      }
+    }
     res.status(200).json({ message: "success" });
   }
 
@@ -120,6 +147,7 @@ export default class UserControllers {
       res.status(500).json({ error: err.message });
     }
   }
+
   static async deleteUser(req, res, next) {
     const { id } = req.params;
     if (String(res.locals.user._id) !== id) {

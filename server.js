@@ -5,6 +5,7 @@ import usePassport from "./config/passport.js";
 import { config } from "dotenv";
 import routes from "./routes/index.js";
 import MongoStore from "connect-mongo";
+import cookieParser from "cookie-parser";
 
 if (process.env.NODE_ENV !== "production") {
   config();
@@ -21,12 +22,14 @@ const PORT = process.env.PORT || 8081;
 app.use(
   cors({
     credentials: true,
-    origin: `http://localhost:${PORT}`,
+    origin: `http://localhost:${PORT}`, //frontend URL
   })
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// additional cookies
+app.use(cookieParser());
 // session
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || "default secret",
@@ -35,6 +38,7 @@ const sessionConfig = {
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
+    //secure: true,
     maxAge: 1000 * 60 * 60 * 24 * 3,
   },
 };
@@ -43,6 +47,8 @@ app.use(session(sessionConfig));
 
 // passport
 usePassport(app);
+
+app.disable("x-powered-by");
 
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.isAuthenticated();
