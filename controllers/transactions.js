@@ -41,8 +41,12 @@ export default class TransactionControllers {
         progressFilters.isCompleted = true;
         break;
     }
+    // TEMPORARY userfilled userID
+    const owner = await User.find({ email: "owner@mail.com" });
+    const dealer = await User.find({ email: "dealer@mail.com" });
+
     const progressQuery = {
-      $or: [{ owner: res.locals.user._id }, { dealer: res.locals.user._id }],
+      $or: [{ owner: owner._id }, { dealer: dealer._id }], // $or: [{ owner: res.locals.user._id }, { dealer: res.locals.user._id }],
       ...progressFilters,
     };
     const options = optionsSetup(
@@ -314,16 +318,19 @@ export default class TransactionControllers {
     const { name, cellPhone, storeCode, storeName } = req.body;
 
     try {
+      //TEMPORARY userfilled userID
+      const dealer = await User.find({ email: "dealer@mail.com" });
+
       const getTrans = await Transaction.findOne({
         _id: id,
-        dealer: req.user._id,
+        dealer: dealer._id, // dealer: res.locals.user._id,
       });
       if (!getTrans) {
         return res.status(403).json({ message: "Permission denied." });
       }
       if (getTrans.dealMethod.faceToFace) {
         const updateProcess = await Transaction.findOneAndUpdate(
-          { _id: id, dealer: ObjectId(res.locals.user_id) },
+          { _id: id, dealer: ObjectId(dealer._id) }, // { _id: id, dealer: ObjectId(res.locals.user._id) },
           { isFilled: true, isPaid: true },
           { runValidators: true, new: true }
         );
@@ -342,7 +349,7 @@ export default class TransactionControllers {
       };
       dataStructure.isFilled = true;
       const updateProcess = await Transaction.findOneAndUpdate(
-        { _id: id, dealer: ObjectId(req.user._id) },
+        { _id: id, dealer: ObjectId(dealer._id) }, // { _id: id, dealer: ObjectId(res.locals.user._id) },
         dataStructure,
         { runValidators: true, new: true }
       );
@@ -357,7 +364,7 @@ export default class TransactionControllers {
     const { id } = req.params;
     const { accountName, accountNum, bankCode, bankName } = req.body;
     try {
-      const checkUser = await User.findById(res.locals.user._id);
+      const checkUser = await User.find({ email: "owner@mail.com" }); // const checkUser = await User.findById(res.locals.user._id);
       if (!checkUser || String(res.locals.user._id) !== id) {
         return res.status(403).json({ message: "Permission denied" });
       }
@@ -377,9 +384,12 @@ export default class TransactionControllers {
   static async updatePaymentProgress(req, res, next) {
     const { id } = req.params;
     try {
+      // TEMPORARY userfilled userID
+      const dealer = User.find({ email: "dealer@mail.com" });
+
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        dealer: res.locals.user._id,
+        dealer: dealer._id, // dealer: res.locals.user._id,
       });
 
       if (!checkProcess) {
@@ -405,9 +415,12 @@ export default class TransactionControllers {
   static async updateSendoutProgress(req, res, next) {
     const { id } = req.params;
     try {
+      // TEMPORARY userfilled userID
+      const owner = await User.find({ email: "owner@mail.com" });
+
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        owner: res.locals.user._id,
+        owner: owner._id, // owner: res.locals.user._id,
       });
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });
@@ -435,9 +448,12 @@ export default class TransactionControllers {
     const { id } = req.params;
 
     try {
+      // TEMPORARY userfilled userID
+      const dealer = await User.find({ email: "dealer@mail.com" });
+
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        dealer: res.locals.user._id,
+        dealer: dealer._id, // dealer: res.locals.user._id,
       });
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });

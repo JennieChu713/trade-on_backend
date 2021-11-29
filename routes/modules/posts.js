@@ -25,27 +25,32 @@ const {
 const router = express.Router();
 
 // READ all posts
-router.get("/all", hasQueryUser, hasQueryPublic, getAllPosts);
+router.get("/all", getAllPosts);
+// router.get("/all", hasQueryUser, hasQueryPublic, getAllPosts);
 
 // CREATE a post
-router.post("/new", authenticator, postPermission, createPost);
+router.post("/new", createPost);
+// router.post("/new", authenticator, postPermission, createPost);
 
 // READ a post
 router.get("/:id", getOnePost);
 
 // UPDATE a post status
-router.put(
-  "/:id/status",
-  authenticator,
-  postPermission,
-  isAdminOrOwner,
-  updatePostStatus
-);
+router.put("/:id/status", updatePostStatus);
+// router.put(
+//   "/:id/status",
+//   authenticator,
+//   postPermission,
+//   isAdminOrOwner,
+//   updatePostStatus
+// );
 
 //UPDATE a post
-router.put("/:id", authenticator, isPostAuthor, updatePost);
+router.put("/:id", updatePost);
+// router.put("/:id", authenticator, isPostAuthor, updatePost);
 
 // DELETE a post
-router.delete("/:id", authenticator, isPostAuthor, deletePost);
+router.delete("/:id", deletePost);
+// router.delete("/:id", authenticator, isPostAuthor, deletePost);
 
 export default router;

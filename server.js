@@ -58,7 +58,7 @@ app.use((req, res, next) => {
 });
 
 // routes
-app.use(routes);
+app.use("/tradeon/api", routes);
 
 //listen port (with SSL environment)
 app.listen(PORT, () => console.log(`Listen on http://localhost:${PORT}`));

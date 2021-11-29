@@ -22,15 +22,19 @@ router.get("/all", getAllCategories);
 router.get("/:id/posts", getRelatedPosts);
 
 //READ a category (for editing present data)
-router.get("/:id", authenticator, permissionCheck, getOneCategory);
+router.get("/:id", getOneCategory);
+//router.get("/:id", authenticator, permissionCheck, getOneCategory);
 
 // CREATE a Category
-router.post("/new", authenticator, permissionCheck, createCategory);
+router.post("/new", createCategory);
+//router.post("/new", authenticator, permissionCheck, createCategory);
 
 // UPDATE a Category
-router.put("/:id", authenticator, permissionCheck, updateCategory);
+router.put("/:id", updateCategory);
+//router.put("/:id", authenticator, permissionCheck, updateCategory);
 
 // DELETE a Category
-router.delete("/:id", authenticator, permissionCheck, deleteCategory);
+router.delete("/:id", deleteCategory);
+// router.delete("/:id", authenticator, permissionCheck, deleteCategory);
 
 export default router;

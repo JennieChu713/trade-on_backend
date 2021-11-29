@@ -25,7 +25,7 @@ const userSchema = new Schema({
     type: String,
     default: "local",
     select: false,
-    // enum: ["facebook", "line"],
+    enum: ["local", "facebook"],
   },
   avatarUrl: String,
   account: {

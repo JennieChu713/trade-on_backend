@@ -2,6 +2,9 @@ import Message from "../models/message.js";
 import Post from "../models/post.js";
 import mongoose from "mongoose";
 
+//TEMPORARY
+import User from "../models/user.js";
+
 import {
   optionsSetup,
   paginateObject,
@@ -109,11 +112,12 @@ export default class MessageControllers {
         (await Post.findById(relatedId)) ||
         (await Transaction.findById(relatedId));
 
-      console.log(_id, dealer);
-
       if (!_id) {
         return res.status(401).json({ message: "Permission denied" });
       }
+
+      // TEMPORARY self-filled userID
+      const user = await User.find({ email: "dealer@mail.com" });
 
       let newMessage;
       if (messageType !== "transaction" && !dealer) {
@@ -121,14 +125,14 @@ export default class MessageControllers {
           content,
           messageType,
           post: ObjectId(_id),
-          owner: ObjectId(res.locals.user._id),
+          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user._id),
         });
       } else {
         newMessage = await Message.create({
           content,
           messageType,
           deal: ObjectId(_id),
-          owner: ObjectId(res.locals.user._id),
+          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user._id),
         });
       }
       res.status(200).json({ message: "success", new: newMessage });
@@ -150,6 +154,9 @@ export default class MessageControllers {
         return res.status(200).json({ message: "No permission." });
       }
 
+      // TEMPORARY self-filled userID
+      const user = await User.find({ name: "owner" });
+
       let newReply;
       if (messageType !== "transaction" && !checkMsg.deal) {
         newReply = await Message.create({
@@ -157,7 +164,7 @@ export default class MessageControllers {
           messageType,
           relatedMsg: ObjectId(id),
           post: ObjectId(relatedId),
-          owner: ObjectId(res.locals.user._id),
+          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user._id),
         });
       } else {
         newReply = await Message.create({
@@ -165,7 +172,7 @@ export default class MessageControllers {
           messageType,
           relatedMsg: ObjectId(id),
           deal: ObjectId(relatedId),
-          owner: ObjectId(es.locals.user._id),
+          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user._id),
         });
       }
       res.status(200).json({ message: "success", new: newReply });

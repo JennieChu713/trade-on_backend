@@ -37,44 +37,42 @@ export default function usePassport(app) {
   );
 
   //setup facebook strategy
-  // passport.use(
-  //   new FacebookStrategy(
-  //     {
-  //       clientID: process.env.FACEBOOK_ID,
-  //       clientSecret: process.env.FACEBOOK_SECRET,
-  //       callbackURL: process.env.FACEBOOK_CALLBACK,
-  //       profileFields: ["email", "displayName"],
-  //     },
-  //     async (accessToken, refreshToken, profile, done) => {
-  //       const { email, name } = profile._json;
-  //       const { provider } = profile.provider;
-  //       try {
-  //         // login
-  //         const user = await User.findOne({ email });
-  //         if (user) {
-  //           return done(null, user);
-  //         }
+  passport.use(
+    new FacebookStrategy(
+      {
+        clientID: process.env.FACEBOOK_ID,
+        clientSecret: process.env.FACEBOOK_SECRET,
+        callbackURL: process.env.FACEBOOK_CALLBACK,
+        profileFields: ["email", "displayName"],
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        const { email, name } = profile._json;
+        const { provider } = profile.provider;
+        try {
+          // login
+          const user = await User.findOne({ email });
+          if (user) {
+            return done(null, user);
+          }
 
-  //         //register
-  //         const randomPassword = Math.random().toString(36).slice(-8);
-  //         const hashed = await bcrypt.hash(randomPassword, 10);
-  //         if (hashed) {
-  //           const newUser = await User.create({
-  //             email,
-  //             name,
-  //             password: hashed,
-  //             provider,
-  //           });
-  //           if (newUser) {
-  //             return done(null, newUser);
-  //           }
-  //         }
-  //       } catch (err) {
-  //         (err) => done(err, false);
-  //       }
-  //     }
-  //   )
-  // );
+          //register
+          const randomPassword = Math.random().toString(36).slice(-8);
+
+          const newUser = await User.create({
+            email,
+            name,
+            password: randomPassword,
+            provider,
+          });
+          if (newUser) {
+            return done(null, newUser);
+          }
+        } catch (err) {
+          (err) => done(err, false);
+        }
+      }
+    )
+  );
 
   //setup serialize and deserialize
   passport.serializeUser((user, done) => {

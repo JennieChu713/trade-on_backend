@@ -18,15 +18,19 @@ const router = express.Router();
 router.get("/all", getAllCommonQAs);
 
 // CREATE a commonQA
-router.post("/new", authenticator, permissionCheck, createCommonQA);
+router.post("/new", createCommonQA);
+// router.post("/new", authenticator, permissionCheck, createCommonQA);
 
 // READ a commonQA (for editing present data)
-router.get("/:id", authenticator, permissionCheck, getOneCommonQA);
+router.get("/:id", getOneCommonQA);
+// router.get("/:id", authenticator, permissionCheck, getOneCommonQA);
 
 //UPDATE a commonQA
-router.put("/:id", authenticator, permissionCheck, updateCommonQA);
+router.put("/:id", updateCommonQA);
+// router.put("/:id", authenticator, permissionCheck, updateCommonQA);
 
 // DELETE a commonQA
-router.delete("/:id", authenticator, permissionCheck, deleteCommonQA);
+router.delete("/:id", deleteCommonQA);
+// router.delete("/:id", authenticator, permissionCheck, deleteCommonQA);
 
 export default router;
