@@ -30,6 +30,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // additional cookies
 app.use(cookieParser());
+
+app.set("trust proxy", 1);
 // session
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || "default secret",
@@ -38,6 +40,7 @@ const sessionConfig = {
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
+    //sameSite: "none",
     //secure: true,
     maxAge: 1000 * 60 * 60 * 24 * 3,
   },

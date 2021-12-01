@@ -35,15 +35,14 @@ export default class UserControllers {
           if (err) {
             return res.status(500).json({ error: err.message });
           }
-          const { email, nickname, _id } = newUser;
-          const userInfo = { email, nickname, _id };
-
-          for (let info in userInfo) {
-            res.cookie(info, userInfo[info], {
-              httpOnly: true,
-              maxAge: 1000 * 60 * 60 * 24 * 3,
-            });
-          }
+          const { email, nickname, _id, accountAuthority, avatarUrl } = newUser;
+          const userInfo = {
+            email,
+            nickname,
+            _id,
+            accountAuthority,
+            avatarUrl,
+          };
 
           res.status(200).json({
             message: "success",
@@ -57,14 +56,8 @@ export default class UserControllers {
   }
 
   static async login(req, res, next) {
-    const { email, nickname, _id } = req.user;
-    const userInfo = { email, nickname, _id };
-    for (let info in userInfo) {
-      res.cookie(info, userInfo[info], {
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24 * 3,
-      });
-    }
+    const { email, nickname, _id, accountAuthority, avatarUrl } = req.user;
+    const userInfo = { email, nickname, _id, accountAuthority, avatarUrl };
 
     res.status(200).json({
       message: "success",
@@ -177,7 +170,9 @@ export default class UserControllers {
   static async getMe(req, res, next) {
     console.log(req.cookies);
     try {
-      const user = await User.findById(res.locals.user._id).select("-account");
+      const user = await User.findById(res.locals.user._id).select(
+        "-account +accountAuthority"
+      );
 
       if (!user) {
         return res

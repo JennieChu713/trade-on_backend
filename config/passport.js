@@ -17,7 +17,9 @@ export default function usePassport(app) {
       { usernameField: "email" },
       async (email, password, done) => {
         try {
-          const user = await User.findOne({ email }).select("+password");
+          const user = await User.findOne({ email }).select(
+            "+password +accountAuthority +avatarUrl"
+          );
           if (!user) {
             return done(null, false, { message: "Not a registered email" });
           } else {

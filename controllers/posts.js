@@ -16,7 +16,8 @@ export default class PostControllers {
     const filterQuery = user
       ? { owner: ObjectId(user) }
       : { isPublic: isPublic ? isPublic : true };
-    const selecting = user ? "-tradingOptions" : "-tradingOptions -isPublic";
+    const selecting = "-tradingOptions";
+    //const selecting = user ? "-tradingOptions" : "-tradingOptions -isPublic";
     const options = optionsSetup(page, size, selecting, {
       path: "owner category",
       select: "nickname email categoryName",
@@ -189,25 +190,25 @@ export default class PostControllers {
   static async updatePostStatus(req, res, next) {
     const { id } = req.params;
     try {
-      const checkUserAuth = await User.findById(res.locals.user._id).select(
-        "+accountAuthority"
-      );
+      // const checkUserAuth = await User.findById(res.locals.user._id).select(
+      //   "+accountAuthority"
+      // );
 
       const checkPost = await Post.findById(id);
       if (checkPost) {
-        if (
-          accountAuthority === "admin" &&
-          !checkPost.owner.equals(res.locals.user._id)
-        ) {
-          await User.findByIdAndUpdate(
-            checkPost.owner,
-            { isAllowPost: false },
-            {
-              runValidators: true,
-              new: true,
-            }
-          );
-        }
+        // if (
+        //   accountAuthority === "admin" &&
+        //   !checkPost.owner.equals(res.locals.user._id)
+        // ) {
+        //   await User.findByIdAndUpdate(
+        //     checkPost.owner,
+        //     { isAllowPost: false },
+        //     {
+        //       runValidators: true,
+        //       new: true,
+        //     }
+        //   );
+        // }
         checkPost.isPublic = !checkPost.isPublic;
       }
       const updatePost = await checkPost.save();
