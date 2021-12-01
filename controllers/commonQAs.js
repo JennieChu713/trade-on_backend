@@ -8,16 +8,20 @@ import {
 
 export default class CommonQAsControllers {
   static async getAllCommonQAs(req, res, next) {
-    const { page, size } = req.query;
-    const options = optionsSetup(page, size);
-    const { limit } = options;
+    const { sortBy } = req.query;
+    let updatedAt = 1;
+    switch (sortBy) {
+      case "asc":
+        updatedAt = 1;
+        break;
+      case "desc":
+        updatedAt = -1;
+        break;
+    }
     try {
-      const getAllQAs = await CommonQA.paginate({}, options);
-      const { totalDocs, page, docs } = getAllQAs;
-      const paginate = paginateObject(totalDocs, limit, page);
-      const allQAs = docs;
+      const allQAs = await CommonQA.find().sort({ updatedAt });
 
-      res.status(200).json({ message: "success", paginate, allQAs });
+      res.status(200).json({ message: "success", allQAs });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

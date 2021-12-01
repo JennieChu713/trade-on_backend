@@ -168,7 +168,6 @@ export default class UserControllers {
   }
 
   static async getMe(req, res, next) {
-    console.log(req.cookies);
     try {
       const user = await User.findById(res.locals.user._id).select(
         "-account +accountAuthority"

@@ -22,7 +22,11 @@ const PORT = process.env.PORT || 8081;
 app.use(
   cors({
     credentials: true,
-    origin: `http://localhost:${PORT}`, //frontend URL
+    origin: [
+      "http://localhost:3000",
+      `http://localhost:${PORT}`,
+      process.env.FRONTEND_URI,
+    ], //frontend URL
   })
 );
 app.use(express.json());
@@ -40,7 +44,7 @@ const sessionConfig = {
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    //sameSite: "none",
+    sameSite: "none",
     //secure: true,
     maxAge: 1000 * 60 * 60 * 24 * 3,
   },
@@ -65,14 +69,3 @@ app.use("/tradeon/api", routes);
 
 //listen port (with SSL environment)
 app.listen(PORT, () => console.log(`Listen on http://localhost:${PORT}`));
-// const LOCALHOST_KEY = process.env.LOCALHOST_KEY || "./localhost-key.pem";
-// const LOCALHOST_PEM = process.env.LOCALHOST_PEM || "./localhost.pem";
-// const options = {
-//   key: fs.readFileSync(LOCALHOST_KEY),
-//   cert: fs.readFileSync(LOCALHOST_PEM),
-// };
-
-// const httpsServer = https.createServer(options, app);
-// httpsServer.listen(PORT, () =>
-//   console.log(`Listen on https://localhost:${PORT}`)
-// );

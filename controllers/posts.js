@@ -13,9 +13,17 @@ export default class PostControllers {
   static async getAllPosts(req, res, next) {
     const { page, size, user, isPublic } = req.query;
 
-    const filterQuery = user
-      ? { owner: ObjectId(user) }
-      : { isPublic: isPublic ? isPublic : true };
+    const publicValue = {};
+    switch (isPublic) {
+      case "true":
+        publicValue.isPublic = true;
+        break;
+      case "false":
+        publicValue.isPublic = false;
+        break;
+    }
+
+    const filterQuery = user ? { owner: ObjectId(user) } : publicValue;
     const selecting = "-tradingOptions";
     //const selecting = user ? "-tradingOptions" : "-tradingOptions -isPublic";
     const options = optionsSetup(page, size, selecting, {

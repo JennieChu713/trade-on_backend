@@ -47,20 +47,23 @@ db.once("open", async () => {
         accountAuthority = users[i].accountAuthority;
       }
 
-      const hashed = await bcrypt.hash(password, 10);
+      const avatarUrl =
+        "https://images.unsplash.com/photo-1558276561-95e31d860c4b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1035&q=80";
 
       if (accountAuthority) {
         await User.create({
           nickname,
           email,
-          password: hashed,
+          password,
           accountAuthority,
+          avatarUrl,
         });
       } else {
         await User.create({
           nickname,
           email,
-          password: hashed,
+          password,
+          avatarUrl,
         });
       }
       if ((await User.countDocuments()) === 3) {

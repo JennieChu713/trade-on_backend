@@ -10,19 +10,26 @@ import {
 
 export default class CategoryControllers {
   static async getAllCategories(req, res, next) {
-    const { page, size } = req.query;
-    const options = optionsSetup(page, size);
-    const { limit } = options;
+    const { sortBy } = req.query;
+    let updatedAt;
+    switch (sortBy) {
+      case "asc":
+        updatedAt = 1;
+        break;
+      case "desc":
+        updatedAt = -1;
+        break;
+      default:
+        updatedAt = 1;
+        break;
+    }
 
     try {
-      const allCategories = await Category.paginate({}, options);
-      const { totalDocs, docs, page } = allCategories;
-      const paginate = paginateObject(totalDocs, limit, page);
-
-      const categories = docs;
+      const categories = await Category.find().sort({
+        updatedAt,
+      });
       res.status(200).json({
         message: "success",
-        paginate,
         categories,
       });
     } catch (err) {
