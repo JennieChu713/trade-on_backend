@@ -79,20 +79,15 @@ export default class PostControllers {
       storeFee,
       region,
       district,
-      imgUrls,
+      imgUrl,
       categoryId,
     } = req.body;
 
     const allImgUrls = [];
-    if (typeof imgUrls === "object") {
-      const {
-        data: { link },
-      } = imgUrls;
-      allImgUrls.push(link);
-    }
-    if (typeof imgUrls === "string" && imgUrls.length) {
-      const img = JSON.parse(imgUrls);
-      allImgUrls.push(img.data.link);
+    if (imgUrl.length && typeof imgUrl !== "string") {
+      allImgUrls = [...imgUrl];
+    } else if (typeof imgUrl === "string") {
+      allImgUrls.push(imgUrl);
     }
 
     const dataStructure = {
@@ -149,15 +144,10 @@ export default class PostControllers {
     }
 
     const allImgUrls = [];
-    if (typeof imgUrls === "object") {
-      const {
-        data: { link },
-      } = imgUrls;
-      allImgUrls.push(link);
-    }
-    if (typeof imgUrls === "string" && imgUrls.length) {
-      const img = JSON.parse(imgUrls);
-      allImgUrls.push(img.data.link);
+    if (imgUrl.length && typeof imgUrl !== "string") {
+      allImgUrls = [...imgUrl];
+    } else if (typeof imgUrl === "string") {
+      allImgUrls.push(imgUrl);
     }
 
     const dataStructure = {
