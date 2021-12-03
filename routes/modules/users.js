@@ -1,5 +1,4 @@
 import express from "express";
-import passport from "passport";
 import AuthenticationMiddleware from "../../middleware/auth.js";
 
 const { authenticator, permissionCheck } = AuthenticationMiddleware;
@@ -22,7 +21,7 @@ const router = express.Router();
 router.get("/all", authenticator, permissionCheck, getAllUsers);
 
 // handle LOGIN
-router.post("/login", passport.authenticate("local"), login);
+router.post("/login", login);
 
 //handle REGISTER
 router.post("/register", register);
