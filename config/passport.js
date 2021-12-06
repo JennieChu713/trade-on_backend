@@ -24,7 +24,11 @@ export default function usePassport(app) {
           const user = await User.findById(payload.sub);
 
           if (!user) {
-            return done(null, false);
+            return done(null, false, { message: "Not a valid token" });
+          }
+
+          if (payload.exp < new Date().getTime()) {
+            return done(null, false, { message: "token has expired" });
           }
 
           done(null, user);
@@ -43,7 +47,9 @@ export default function usePassport(app) {
         try {
           const user = await User.findOne({ email }).select("+password");
           if (!user) {
-            return done(null, false, { message: "Not a registered email" });
+            return done(null, false, {
+              message: "Not a registered email",
+            });
           } else {
             const isMatch = await user.matchPasswords(password);
             if (!isMatch) {
@@ -51,8 +57,9 @@ export default function usePassport(app) {
                 message: "Email or password incorrect",
               });
             }
-            return done(null, user);
           }
+          user.password = "";
+          done(null, user);
         } catch (err) {
           done(err, false);
         }
