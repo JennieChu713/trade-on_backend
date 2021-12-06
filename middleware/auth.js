@@ -1,3 +1,4 @@
+import passport from "passport";
 import Post from "../models/post.js";
 import Message from "../models/message.js";
 import Transaction from "../models/transaction.js";
@@ -160,5 +161,49 @@ export default class AuthenticationMiddleware {
       next(err);
     }
     res.status(401).json({ error: "Unauthorized" });
+  }
+
+  static verifyLogin(req, res, next) {
+    passport.authenticate(
+      "local",
+      { session: false },
+      function (err, user, info) {
+        if (err) {
+          return next(err);
+        }
+        if (!user) {
+          console.log("!user");
+          return res.json(info);
+        }
+        req.logIn(user, function (err) {
+          if (err) {
+            return next(err);
+          }
+          next();
+        });
+      }
+    )(req, res, next);
+  }
+
+  static checkToken(req, res, next) {
+    passport.authenticate(
+      "jwt",
+      { session: false },
+      function (err, user, info) {
+        if (err) {
+          return next(err);
+        }
+        if (req.headers.authorization.split(" ").length === 1) {
+          return res.json({
+            message: "No token provided; login or register first",
+          });
+        }
+
+        if (!user) {
+          return res.json(info);
+        }
+        next();
+      }
+    )(req, res, next);
   }
 }

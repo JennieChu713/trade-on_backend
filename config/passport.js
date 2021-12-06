@@ -1,15 +1,43 @@
 import passport from "passport";
 import passportLocal from "passport-local";
+import passportJWT, { ExtractJwt } from "passport-jwt";
 import passportFacebook from "passport-facebook";
 import User from "../models/user.js";
 
 const LocalStrategy = passportLocal.Strategy;
+const JWTStrategy = passportJWT.Strategy;
 const FacebookStrategy = passportFacebook.Strategy;
 
 export default function usePassport(app) {
   // initialize passport
   app.use(passport.initialize());
-  app.use(passport.session());
+
+  // setup JWTtoken
+  passport.use(
+    new JWTStrategy(
+      {
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        secretOrKey: process.env.JWT_SECRET,
+      },
+      async (payload, done) => {
+        try {
+          const user = await User.findById(payload.sub);
+
+          if (!user) {
+            return done(null, false, { message: "Not a valid token" });
+          }
+
+          if (payload.exp < new Date().getTime()) {
+            return done(null, false, { message: "token has expired" });
+          }
+
+          done(null, user);
+        } catch (err) {
+          done(err, false);
+        }
+      }
+    )
+  );
 
   // setup local login strategy
   passport.use(
@@ -21,7 +49,9 @@ export default function usePassport(app) {
             "+password +accountAuthority +avatarUrl"
           );
           if (!user) {
-            return done(null, false, { message: "Not a registered email" });
+            return done(null, false, {
+              message: "Not a registered email",
+            });
           } else {
             const isMatch = await user.matchPasswords(password);
             if (!isMatch) {
@@ -29,10 +59,11 @@ export default function usePassport(app) {
                 message: "Email or password incorrect",
               });
             }
-            return done(null, user);
           }
+          user.password = "";
+          done(null, user);
         } catch (err) {
-          (err) => done(err, false);
+          done(err, false);
         }
       }
     )
@@ -80,6 +111,7 @@ export default function usePassport(app) {
   passport.serializeUser((user, done) => {
     done(null, user._id);
   });
+<<<<<<< HEAD
   passport.deserializeUser(async (id, done) => {
     try {
       const findUser = await User.findById(id);
@@ -90,4 +122,16 @@ export default function usePassport(app) {
       return done(err, false);
     }
   });
+=======
+  // passport.deserializeUser(async (id, done) => {
+  //   try {
+  //     const findUser = await User.findById(id).lean();
+  //     if (findUser) {
+  //       return done(null, findUser);
+  //     }
+  //   } catch (err) {
+  //     return done(err, false);
+  //   }
+  // });
+>>>>>>> user
 }

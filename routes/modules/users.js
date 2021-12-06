@@ -13,6 +13,8 @@ const {
   updateUserInfo,
   deleteUser,
   getMe,
+  verifyLogin,
+  checkToken,
 } = UserControllers;
 
 const router = express.Router();
@@ -21,7 +23,7 @@ const router = express.Router();
 router.get("/all", authenticator, permissionCheck, getAllUsers);
 
 // handle LOGIN
-router.post("/login", login);
+router.post("/login", verifyLogin, login);
 
 //handle REGISTER
 router.post("/register", register);
@@ -30,15 +32,18 @@ router.post("/register", register);
 router.get("/logout", logout);
 
 // get cookie route
-router.get("/me", authenticator, getMe);
+router.get("/me", checkToken, getMe);
 
 // READ userInfo
 router.get("/:id", getUserInfo);
 
 // UPDATE userInfo
-router.put("/:id", authenticator, updateUserInfo);
+router.put("/:id", checkToken, updateUserInfo);
 
 // DELETE user
-router.delete("/:id/delete", authenticator, deleteUser);
+router.delete("/:id/delete", checkToken, deleteUser);
+
+//TEMPORARY test token route
+router.get("/tokenTest", checkToken, testing);
 
 export default router;

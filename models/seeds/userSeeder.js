@@ -1,3 +1,8 @@
+<<<<<<< HEAD:models/seeds/userSeeder.js
+=======
+import db from "../../config/mongoose.js";
+import User from "../user.js";
+>>>>>>> user:models/userSeeder.js
 import bcrypt from "bcrypt";
 import db from "../../config/mongoose.js";
 import User from "../user.js";
