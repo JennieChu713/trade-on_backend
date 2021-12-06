@@ -1,7 +1,8 @@
 import express from "express";
 import AuthenticationMiddleware from "../../middleware/auth.js";
 
-const { authenticator, permissionCheck } = AuthenticationMiddleware;
+const { authenticator, permissionCheck, verifyLogin, checkToken } =
+  AuthenticationMiddleware;
 
 import UserControllers from "../../controllers/users.js";
 const {
@@ -13,8 +14,6 @@ const {
   updateUserInfo,
   deleteUser,
   getMe,
-  verifyLogin,
-  checkToken,
 } = UserControllers;
 
 const router = express.Router();

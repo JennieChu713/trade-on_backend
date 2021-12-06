@@ -111,18 +111,6 @@ export default function usePassport(app) {
   passport.serializeUser((user, done) => {
     done(null, user._id);
   });
-<<<<<<< HEAD
-  passport.deserializeUser(async (id, done) => {
-    try {
-      const findUser = await User.findById(id);
-      if (findUser) {
-        return done(null, findUser);
-      }
-    } catch (err) {
-      return done(err, false);
-    }
-  });
-=======
   // passport.deserializeUser(async (id, done) => {
   //   try {
   //     const findUser = await User.findById(id).lean();
@@ -133,5 +121,4 @@ export default function usePassport(app) {
   //     return done(err, false);
   //   }
   // });
->>>>>>> user
 }

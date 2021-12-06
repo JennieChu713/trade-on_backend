@@ -1,14 +1,8 @@
 import express from "express";
 import cors from "cors";
-import session from "express-session";
 import usePassport from "./config/passport.js";
 import { config } from "dotenv";
 import routes from "./routes/index.js";
-<<<<<<< HEAD
-import MongoStore from "connect-mongo";
-import cookieParser from "cookie-parser";
-=======
->>>>>>> user
 
 if (process.env.NODE_ENV !== "production") {
   config();
@@ -33,29 +27,6 @@ app.use(
   })
 );
 app.use(express.json());
-<<<<<<< HEAD
-app.use(express.urlencoded({ extended: true }));
-
-// additional cookies
-app.use(cookieParser());
-
-app.set("trust proxy", 1);
-// session
-const sessionConfig = {
-  secret: process.env.SESSION_SECRET || "default secret",
-  store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    sameSite: "none",
-    //secure: true,
-    maxAge: 1000 * 60 * 60 * 24 * 3,
-  },
-};
-
-app.use(session(sessionConfig));
-=======
 // app.use(express.urlencoded({ extended: false }));
 
 // // session
@@ -71,7 +42,6 @@ app.use(session(sessionConfig));
 // };
 
 // app.use(session(sessionConfig));
->>>>>>> user
 
 // passport
 usePassport(app);
