@@ -14,6 +14,7 @@ const {
   updateUserInfo,
   deleteUser,
   getMe,
+  testing,
 } = UserControllers;
 
 const router = express.Router();

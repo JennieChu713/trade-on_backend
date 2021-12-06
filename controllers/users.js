@@ -1,7 +1,13 @@
 import JWT from "jsonwebtoken";
-import passport from "passport";
+import mongoose from "mongoose";
 
 import User from "../models/user.js";
+import {
+  optionsSetup,
+  paginateObject,
+} from "../utils/paginateOptionSetup.common.js";
+
+const { ObjectId } = mongoose.Types;
 
 const signToken = (user) => {
   return JWT.sign(
@@ -16,19 +22,6 @@ const signToken = (user) => {
     process.env.JWT_SECRET
   );
 };
-
-/* origin diverse/jwt-auth
-import User from "../models/user.js";
-import mongoose from "mongoose";
-import passport from "passport";
-
-import {
-  optionsSetup,
-  paginateObject,
-} from "../utils/paginateOptionSetup.common.js";
-
-const { ObjectId } = mongoose.Types;
-*/
 
 export default class UserControllers {
   static async register(req, res, next) {
@@ -75,6 +68,114 @@ export default class UserControllers {
   static async logout(req, res, next) {
     req.logout();
     res.status(200).json({ message: "success" });
+  }
+
+  static async getAllUsers(req, res, next) {
+    const { page, size } = req.query;
+    const options = optionsSetup(page, size);
+    const { limit } = options;
+    try {
+      const getAllUsers = await User.paginate({}, options);
+      const { totalDocs, docs, page } = getAllUsers;
+      const paginate = paginateObject(totalDocs, limit, page);
+      const allUsers = docs;
+      res.status(200).json({ message: "success", paginate, allUsers });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async getUserInfo(req, res, next) {
+    const { id } = req.params;
+    try {
+      const user = await User.findById(id).select("-account");
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ error: "The user you are looking for does not exist." });
+      }
+      res.status(200).json({ message: "success", userInfo: user });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async updateUserInfo(req, res, next) {
+    const { id } = req.params;
+    const {
+      nickname,
+      introduction,
+      avatarUrl,
+      accountName,
+      bankCode,
+      bankName,
+      accountNum,
+    } = req.body;
+
+    const account = { accountName, accountNum, bankCode, bankName };
+    if (!nickname) {
+      return res.status(400).json({ message: "nickname is required" });
+    }
+    let onlyImgUrl = "";
+    if (typeof avatarUrl === "object") {
+      const {
+        data: { link },
+      } = avatarUrl;
+
+      onlyImgUrl = link;
+    }
+    if (typeof avatarUrl === "string" && avatarUrl.length) {
+      const jsonfied = JSON.parse(avatarUrl);
+      onlyImgUrl = jsonfied.data.link;
+    }
+    try {
+      const updateUser = await User.findByIdAndUpdate(
+        id,
+        {
+          nickname,
+          introduction,
+          avatarUrl: onlyImgUrl,
+          account,
+        },
+        { runValidators: true, new: true }
+      );
+
+      res.status(200).json({ message: "success", update: updateUser });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async deleteUser(req, res, next) {
+    const { id } = req.params;
+    if (String(res.locals.user._id) !== id) {
+      return res.status(401).json({ error: "Unauthorized." });
+    }
+
+    try {
+      await User.findByIdAndDelete(id);
+      res.status(200).json({ message: "success" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async getMe(req, res, next) {
+    try {
+      const user = await User.findById(res.locals.user._id).select(
+        "-account +accountAuthority"
+      );
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ error: "The user you are looking for does not exist." });
+      }
+      res.status(200).json({ message: "success", userInfo: user });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   }
 
   //TEMPORARY testing route
