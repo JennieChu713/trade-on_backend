@@ -1,15 +1,39 @@
 import passport from "passport";
 import passportLocal from "passport-local";
+import passportJWT, { ExtractJwt } from "passport-jwt";
 import passportFacebook from "passport-facebook";
 import User from "../models/user.js";
 
 const LocalStrategy = passportLocal.Strategy;
+const JWTStrategy = passportJWT.Strategy;
 const FacebookStrategy = passportFacebook.Strategy;
 
 export default function usePassport(app) {
   // initialize passport
   app.use(passport.initialize());
-  app.use(passport.session());
+
+  // setup JWTtoken
+  passport.use(
+    new JWTStrategy(
+      {
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        secretOrKey: process.env.JWT_SECRET,
+      },
+      async (payload, done) => {
+        try {
+          const user = await User.findById(payload.sub);
+
+          if (!user) {
+            return done(null, false);
+          }
+
+          done(null, user);
+        } catch (err) {
+          done(err, false);
+        }
+      }
+    )
+  );
 
   // setup local login strategy
   passport.use(
@@ -30,7 +54,7 @@ export default function usePassport(app) {
             return done(null, user);
           }
         } catch (err) {
-          (err) => done(err, false);
+          done(err, false);
         }
       }
     )
@@ -80,14 +104,14 @@ export default function usePassport(app) {
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });
-  passport.deserializeUser(async (id, done) => {
-    try {
-      const findUser = await User.findById(id).lean();
-      if (findUser) {
-        return done(null, findUser);
-      }
-    } catch (err) {
-      return done(err, false);
-    }
-  });
+  // passport.deserializeUser(async (id, done) => {
+  //   try {
+  //     const findUser = await User.findById(id).lean();
+  //     if (findUser) {
+  //       return done(null, findUser);
+  //     }
+  //   } catch (err) {
+  //     return done(err, false);
+  //   }
+  // });
 }

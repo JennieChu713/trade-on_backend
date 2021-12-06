@@ -4,7 +4,6 @@ import session from "express-session";
 import usePassport from "./config/passport.js";
 import dotenv from "dotenv";
 import routes from "./routes/index.js";
-import MongoStore from "connect-mongo";
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
@@ -20,21 +19,21 @@ const PORT = process.env.PORT || 3000;
 //middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.urlencoded({ extended: false }));
 
-// session
-const sessionConfig = {
-  secret: process.env.SESSION_SECRET || "default secret",
-  store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 3,
-  },
-};
+// // session
+// const sessionConfig = {
+//   secret: process.env.SESSION_SECRET || "default secret",
+//   store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
+//   resave: false,
+//   saveUninitialized: false,
+//   cookie: {
+//     httpOnly: true,
+//     maxAge: 1000 * 60 * 60 * 24 * 3,
+//   },
+// };
 
-app.use(session(sessionConfig));
+// app.use(session(sessionConfig));
 
 // passport
 usePassport(app);
@@ -46,7 +45,7 @@ app.use((req, res, next) => {
 });
 
 // routes
-app.use(routes);
+app.use("/tradeon/api", routes);
 
 //listen port (with SSL environment)
 app.listen(PORT, () => console.log(`Listen on http://localhost:${PORT}`));

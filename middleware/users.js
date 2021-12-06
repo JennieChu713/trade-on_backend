@@ -1,5 +1,20 @@
+import JWT from "jsonwebtoken";
+
 import User from "../models/user.js";
-import ErrorResponse from "../utils/errorResponse.js";
+
+const signToken = (user) => {
+  return JWT.sign(
+    {
+      iss: "tradeon",
+      sub: user.id,
+      iat: new Date().getTime(),
+      exp: new Date().setTime(
+        new Date().getTime() + Number(process.env.JWT_EXPIRE)
+      ),
+    },
+    process.env.JWT_SECRET
+  );
+};
 
 export default class UserControllers {
   static async register(req, res, next) {
@@ -7,16 +22,16 @@ export default class UserControllers {
 
     //prevention before storing data
     if (!email || !nickname || !password || !confirmPassword) {
-      return next(new ErrorResponse("All field(s) required", 400));
+      return res.status(400).json({ error: "All field(s) required" });
     }
     if (password !== confirmPassword) {
-      return next(new ErrorResponse("password confirmation failed", 401));
+      return res.status(403).json({ error: "password confirmation failed" });
     }
 
     try {
       const userExist = await User.findOne({ email });
       if (userExist) {
-        return next(new ErrorResponse("User already exist"), 401);
+        return res.status(403).json({ error: "User already exist" });
       }
       const newUser = await User.create({
         nickname,
@@ -24,14 +39,16 @@ export default class UserControllers {
         password,
       });
 
-      res.status(200).json({ success: true, newUser });
+      const token = signToken(newUser);
+      res.status(200).json({ success: true, newUser, token });
     } catch (err) {
       next(err);
     }
   }
 
   static async login(req, res, next) {
-    res.status(200).json({ message: "success" });
+    const token = signToken(req.user);
+    res.status(200).json({ message: "success", token });
   }
 
   static async logout(req, res, next) {
