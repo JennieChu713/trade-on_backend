@@ -1,5 +1,5 @@
-import db from "../config/mongoose.js";
-import User from "./user.js";
+import db from "../../config/mongoose.js";
+import User from "../user.js";
 import bcrypt from "bcrypt";
 
 // seeder data (with password bcrypt)

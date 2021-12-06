@@ -7,7 +7,11 @@ const { register, logout, login } = UserControllers;
 const router = express.Router();
 
 // handle LOGIN
-router.post("/login", passport.authenticate("local"), login);
+router.post(
+  "/login",
+  passport.authenticate("local", { session: false }),
+  login
+);
 
 //handle REGISTER
 router.post("/register", register);
