@@ -6,20 +6,11 @@ import Transaction from "../models/transaction.js";
 import User from "../models/user.js";
 
 export default class AuthenticationMiddleware {
-  static async verifyToken(req, res, next) {
-    const token = req.headers.authorization.split(" ")[1];
-    const { sub } = JWT.verify(token, process.env.JWT_SECRET);
-    if (!res.locals.user) {
-      res.locals.user = sub;
-    }
-    next();
-  }
-
   static async isPostAuthor(req, res, next) {
     const { id } = req.params;
     try {
       const post = await Post.findById(id);
-      if (!post.owner.equals(res.locals.user._id)) {
+      if (!post.owner.equals(res.locals.user)) {
         return res.status(401).json({ error: "Unauthorized" });
       }
     } catch (err) {
@@ -32,7 +23,7 @@ export default class AuthenticationMiddleware {
     const { id } = req.params;
     try {
       const message = await Message.findById(id);
-      if (!message.owner.equals(res.locals.user._id)) {
+      if (!message.owner.equals(res.locals.user)) {
         return res.status(401).json({ error: "Unauthorized" });
       }
     } catch (err) {
@@ -43,7 +34,7 @@ export default class AuthenticationMiddleware {
 
   static async postPermission(req, res, next) {
     try {
-      const checkUser = await User.findById(res.locals.user._id).select(
+      const checkUser = await User.findById(res.locals.user).select(
         "+isAllowPost"
       );
       const { isAllowPost } = checkUser;
@@ -58,7 +49,7 @@ export default class AuthenticationMiddleware {
 
   static async messagePermission(req, res, next) {
     try {
-      const checkUser = await User.findById(res.locals.user._id).select(
+      const checkUser = await User.findById(res.locals.user).select(
         "+isAllowMessage"
       );
       const { isAllowMessage } = checkUser;
@@ -76,15 +67,15 @@ export default class AuthenticationMiddleware {
     try {
       const transaction = await Transaction.findById(id);
       if (!transaction.owner && transaction.dealer) {
-        if (transaction.dealer.equals(res.locals.user._id)) {
+        if (transaction.dealer.equals(res.locals.user)) {
           return next();
         }
       }
       if (transaction.owner && transaction.dealer) {
-        if (transaction.owner.equals(res.locals.user._id)) {
+        if (transaction.owner.equals(res.locals.user)) {
           return next();
         }
-        if (transaction.dealer.equals(res.locals.user._id)) {
+        if (transaction.dealer.equals(res.locals.user)) {
           return next();
         }
       }
@@ -96,7 +87,7 @@ export default class AuthenticationMiddleware {
 
   static async permissionCheck(req, res, next) {
     try {
-      const checkUser = await User.findById(res.locals.user._id).select(
+      const checkUser = await User.findById(res.locals.user).select(
         "+accountAuthority"
       );
 
@@ -117,7 +108,7 @@ export default class AuthenticationMiddleware {
     if (!user) {
       return next();
     }
-    if (!res.locals.user || user !== String(res.locals.user._id)) {
+    if (!res.locals.user || user !== res.locals.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
     next();
@@ -132,7 +123,7 @@ export default class AuthenticationMiddleware {
       return res.status(401).json({ error: "Unauthorized" });
     }
     try {
-      const checkUser = await User.findById(res.locals.user._id).select(
+      const checkUser = await User.findById(res.locals.user).select(
         "+accountAuthority"
       );
       if (checkUser.accountAuthority !== "admin") {
@@ -148,14 +139,11 @@ export default class AuthenticationMiddleware {
     const { id } = req.params;
     try {
       const post = await Post.findById(id);
-      const checkUser = await User.findById(res.locals.user._id).select(
+      const checkUser = await User.findById(res.locals.user).select(
         "+accountAuthority"
       );
       const { accountAuthority } = checkUser;
-      if (
-        post.owner.equals(res.locals.user._id) ||
-        accountAuthority === "admin"
-      ) {
+      if (post.owner.equals(res.locals.user) || accountAuthority === "admin") {
         return next();
       }
     } catch (err) {

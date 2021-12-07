@@ -13,23 +13,29 @@ export default class TransactionControllers {
     const { page, size, progress } = req.query;
 
     const progressFilters = {
-      isFilled: false,
-      isPaid: false,
-      isSent: false,
-      isCompleted: false,
+      // isFilled: false,
+      // isPaid: false,
+      // isSent: false,
+      // isCompleted: false,
     };
     switch (progress) {
       case "isFilled":
         progressFilters.isFilled = true;
+        progressFilters.isPaid = false;
+        progressFilters.isSent = false;
+        progressFilters.isCompleted = false;
         break;
       case "isPaid":
         progressFilters.isFilled = true;
         progressFilters.isPaid = true;
+        progressFilters.isSent = false;
+        progressFilters.isCompleted = false;
         break;
       case "isSent":
         progressFilters.isFilled = true;
         progressFilters.isPaid = true;
         progressFilters.isSent = true;
+        progressFilters.isCompleted = false;
         break;
       case "isCompleted":
         progressFilters.isFilled = true;
@@ -39,22 +45,18 @@ export default class TransactionControllers {
         break;
     }
     // TEMPORARY userfilled userID
-    const owner = await User.find({ email: "owner@mail.com" });
-    const dealer = await User.find({ email: "dealer@mail.com" });
+    const owner = await User.findOne({ email: "owner@mail.com" });
+    const dealer = await User.findOne({ email: "dealer@mail.com" });
 
     const progressQuery = {
-      $or: [{ owner: owner._id }, { dealer: dealer._id }], // $or: [{ owner: res.locals.user._id }, { dealer: res.locals.user._id }],
+      $or: [{ owner: owner._id }, { dealer: dealer._id }],
+      // $or: [{ owner: res.locals.user }, { dealer: res.locals.user }],
       ...progressFilters,
     };
-    const options = optionsSetup(
-      page,
-      size,
-      "-isFilled -isPaid -isSent -isCompleted -expiredAt",
-      {
-        path: "post owner dealer",
-        select: "_id itemName quantity givenAmount email name",
-      }
-    );
+    const options = optionsSetup(page, size, "-expiredAt", {
+      path: "post owner dealer",
+      select: "_id itemName quantity givenAmount imgUrls email name",
+    });
     const { limit } = options;
     try {
       const getAllTrans = await Transaction.paginate(progressQuery, options);
@@ -80,7 +82,7 @@ export default class TransactionControllers {
     try {
       const trans = await Transaction.findById(id)
         .select("-expiredAt")
-        .populate("post owner dealer", "itemName account name email");
+        .populate("post owner dealer", "itemName account name email imgUrls");
 
       if (trans) {
         res.status(200).json({ message: "success", dealInfo: trans });
@@ -320,14 +322,14 @@ export default class TransactionControllers {
 
       const getTrans = await Transaction.findOne({
         _id: id,
-        dealer: dealer._id, // dealer: res.locals.user._id,
+        dealer: dealer._id, // dealer: res.locals.user,
       });
       if (!getTrans) {
         return res.status(403).json({ message: "Permission denied." });
       }
       if (getTrans.dealMethod.faceToFace) {
         const updateProcess = await Transaction.findOneAndUpdate(
-          { _id: id, dealer: ObjectId(dealer._id) }, // { _id: id, dealer: ObjectId(res.locals.user._id) },
+          { _id: id, dealer: ObjectId(dealer._id) }, // { _id: id, dealer: ObjectId(res.locals.user) },
           { isFilled: true, isPaid: true },
           { runValidators: true, new: true }
         );
@@ -346,7 +348,7 @@ export default class TransactionControllers {
       };
       dataStructure.isFilled = true;
       const updateProcess = await Transaction.findOneAndUpdate(
-        { _id: id, dealer: ObjectId(dealer._id) }, // { _id: id, dealer: ObjectId(res.locals.user._id) },
+        { _id: id, dealer: ObjectId(dealer._id) }, // { _id: id, dealer: ObjectId(res.locals.user) },
         dataStructure,
         { runValidators: true, new: true }
       );
@@ -361,8 +363,8 @@ export default class TransactionControllers {
     const { id } = req.params;
     const { accountName, accountNum, bankCode, bankName } = req.body;
     try {
-      const checkUser = await User.find({ email: "owner@mail.com" }); // const checkUser = await User.findById(res.locals.user._id);
-      if (!checkUser || String(res.locals.user._id) !== id) {
+      const checkUser = await User.find({ email: "owner@mail.com" }); // const checkUser = await User.findById(res.locals.user);
+      if (!checkUser || String(res.locals.user) !== id) {
         return res.status(403).json({ message: "Permission denied" });
       }
 
@@ -386,7 +388,7 @@ export default class TransactionControllers {
 
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        dealer: dealer._id, // dealer: res.locals.user._id,
+        dealer: dealer._id, // dealer: res.locals.user,
       });
 
       if (!checkProcess) {
@@ -417,7 +419,7 @@ export default class TransactionControllers {
 
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        owner: owner._id, // owner: res.locals.user._id,
+        owner: owner._id, // owner: res.locals.user,
       });
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });
@@ -450,7 +452,7 @@ export default class TransactionControllers {
 
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
-        dealer: dealer._id, // dealer: res.locals.user._id,
+        dealer: dealer._id, // dealer: res.locals.user,
       });
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });

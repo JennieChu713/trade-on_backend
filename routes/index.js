@@ -1,9 +1,9 @@
 import express from "express";
-import AuthenticationMiddleware from "../middleware/auth.js";
-
-const { authenticator } = AuthenticationMiddleware;
+// import AuthenticationMiddleware from "../middleware/auth.js";
 
 const router = express.Router();
+
+// const { checkToken } = AuthenticationMiddleware;
 
 import commonQA from "./modules/commonQA.js";
 import category from "./modules/category.js";
@@ -16,7 +16,7 @@ import auth from "./modules/auth.js";
 router.use("/category", category);
 router.use("/posts", posts);
 router.use("/transactions", transactions);
-// router.use("/transactions", authenticator, transactions);
+// router.use("/transactions", checkToken, transactions);
 router.use("/messages", message);
 router.use("/commonqnas", commonQA);
 router.use("/users", users);

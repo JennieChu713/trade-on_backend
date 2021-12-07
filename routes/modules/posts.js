@@ -3,7 +3,7 @@ import express from "express";
 import AuthenticationMiddleware from "../../middleware/auth.js";
 
 const {
-  authenticator,
+  checkToken,
   isPostAuthor,
   postPermission,
   hasQueryUser,
@@ -30,7 +30,7 @@ router.get("/all", getAllPosts);
 
 // CREATE a post
 router.post("/new", createPost);
-// router.post("/new", authenticator, postPermission, createPost);
+// router.post("/new", checkToken, postPermission, createPost);
 
 // READ a post
 router.get("/:id", getOnePost);
@@ -39,7 +39,7 @@ router.get("/:id", getOnePost);
 router.put("/:id/status", updatePostStatus);
 // router.put(
 //   "/:id/status",
-//   authenticator,
+//   checkToken,
 //   postPermission,
 //   isAdminOrOwner,
 //   updatePostStatus
@@ -47,10 +47,10 @@ router.put("/:id/status", updatePostStatus);
 
 //UPDATE a post
 router.put("/:id", updatePost);
-// router.put("/:id", authenticator, isPostAuthor, updatePost);
+// router.put("/:id", checkToken, isPostAuthor, updatePost);
 
 // DELETE a post
 router.delete("/:id", deletePost);
-// router.delete("/:id", authenticator, isPostAuthor, deletePost);
+// router.delete("/:id", checkToken, isPostAuthor, deletePost);
 
 export default router;
