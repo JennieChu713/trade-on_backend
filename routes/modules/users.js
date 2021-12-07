@@ -1,7 +1,7 @@
 import express from "express";
 import AuthenticationMiddleware from "../../middleware/auth.js";
 
-const { authenticator, permissionCheck, verifyLogin, checkToken } =
+const { verifyToken, permissionCheck, verifyLogin, checkToken } =
   AuthenticationMiddleware;
 
 import UserControllers from "../../controllers/users.js";
@@ -20,7 +20,7 @@ const {
 const router = express.Router();
 
 // get all users (admin)
-router.get("/all", authenticator, permissionCheck, getAllUsers);
+router.get("/all", verifyToken, permissionCheck, getAllUsers);
 
 // handle LOGIN
 router.post("/login", verifyLogin, login);
@@ -34,6 +34,9 @@ router.get("/logout", logout);
 // get cookie route
 router.get("/me", checkToken, getMe);
 
+//TEMPORARY test token route
+router.get("/tokenTest", checkToken, testing);
+
 // READ userInfo
 router.get("/:id", getUserInfo);
 
@@ -42,8 +45,5 @@ router.put("/:id", checkToken, updateUserInfo);
 
 // DELETE user
 router.delete("/:id/delete", checkToken, deleteUser);
-
-//TEMPORARY test token route
-router.get("/tokenTest", checkToken, testing);
 
 export default router;

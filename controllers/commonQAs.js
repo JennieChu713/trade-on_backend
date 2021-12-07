@@ -1,11 +1,5 @@
 import CommonQA from "../models/commonQA.js";
 
-// paginate option setup function
-import {
-  optionsSetup,
-  paginateObject,
-} from "../utils/paginateOptionSetup.common.js";
-
 export default class CommonQAsControllers {
   static async getAllCommonQAs(req, res, next) {
     const { sortBy } = req.query;

@@ -1,10 +1,7 @@
 import Post from "../models/post.js";
 import User from "../models/user.js";
 import mongoose from "mongoose";
-import {
-  optionsSetup,
-  paginateObject,
-} from "../utils/paginateOptionSetup.common.js";
+import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 
 const { ObjectId } = mongoose.Types;
 

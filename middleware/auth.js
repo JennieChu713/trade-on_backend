@@ -1,16 +1,17 @@
 import passport from "passport";
+import JWT from "jsonwebtoken";
 import Post from "../models/post.js";
 import Message from "../models/message.js";
 import Transaction from "../models/transaction.js";
 import User from "../models/user.js";
 
 export default class AuthenticationMiddleware {
-  static authenticator(req, res, next) {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ error: "Unauthorized" });
+  static async verifyToken(req, res, next) {
+    const token = req.headers.authorization.split(" ")[1];
+    const { sub } = JWT.verify(token, process.env.JWT_SECRET);
+    if (!res.locals.user) {
+      res.locals.user = sub;
     }
-    res.locals.user = req.user;
-
     next();
   }
 
@@ -172,7 +173,6 @@ export default class AuthenticationMiddleware {
           return next(err);
         }
         if (!user) {
-          console.log("!user");
           return res.json(info);
         }
         req.logIn(user, function (err) {
@@ -202,6 +202,11 @@ export default class AuthenticationMiddleware {
         if (!user) {
           return res.json(info);
         }
+
+        const token = req.headers.authorization.split(" ")[1];
+        const { sub } = JWT.verify(token, process.env.JWT_SECRET);
+        res.locals.user = sub;
+
         next();
       }
     )(req, res, next);

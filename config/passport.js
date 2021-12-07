@@ -21,7 +21,9 @@ export default function usePassport(app) {
       },
       async (payload, done) => {
         try {
-          const user = await User.findById(payload.sub);
+          const user = await User.findById(payload.sub).select(
+            "+accountAuthority +avatarUrl -__v"
+          );
 
           if (!user) {
             return done(null, false, { message: "Not a valid token" });
@@ -46,7 +48,7 @@ export default function usePassport(app) {
       async (email, password, done) => {
         try {
           const user = await User.findOne({ email }).select(
-            "+password +accountAuthority +avatarUrl"
+            "+password +accountAuthority +avatarUrl -__v"
           );
           if (!user) {
             return done(null, false, {
@@ -70,55 +72,55 @@ export default function usePassport(app) {
   );
 
   //setup facebook strategy
-  passport.use(
-    new FacebookStrategy(
-      {
-        clientID: process.env.FACEBOOK_ID,
-        clientSecret: process.env.FACEBOOK_SECRET,
-        callbackURL: process.env.FACEBOOK_CALLBACK,
-        profileFields: ["email", "displayName"],
-      },
-      async (accessToken, refreshToken, profile, done) => {
-        const { email, name } = profile._json;
-        const { provider } = profile.provider;
-        try {
-          // login
-          const user = await User.findOne({ email });
-          if (user) {
-            return done(null, user);
-          }
+  // passport.use(
+  //   new FacebookStrategy(
+  //     {
+  //       clientID: process.env.FACEBOOK_ID,
+  //       clientSecret: process.env.FACEBOOK_SECRET,
+  //       callbackURL: process.env.FACEBOOK_CALLBACK,
+  //       profileFields: ["email", "displayName"],
+  //     },
+  //     async (accessToken, refreshToken, profile, done) => {
+  //       const { email, name } = profile._json;
+  //       const { provider } = profile.provider;
+  //       try {
+  //         // login
+  //         const user = await User.findOne({ email });
+  //         if (user) {
+  //           return done(null, user);
+  //         }
 
-          //register
-          const randomPassword = Math.random().toString(36).slice(-8);
+  //         //register
+  //         const randomPassword = Math.random().toString(36).slice(-8);
 
-          const newUser = await User.create({
-            email,
-            name,
-            password: randomPassword,
-            provider,
-          });
-          if (newUser) {
-            return done(null, newUser);
-          }
-        } catch (err) {
-          (err) => done(err, false);
-        }
-      }
-    )
-  );
+  //         const newUser = await User.create({
+  //           email,
+  //           name,
+  //           password: randomPassword,
+  //           provider,
+  //         });
+  //         if (newUser) {
+  //           return done(null, newUser);
+  //         }
+  //       } catch (err) {
+  //         (err) => done(err, false);
+  //       }
+  //     }
+  //   )
+  // );
 
   //setup serialize and deserialize
   passport.serializeUser((user, done) => {
     done(null, user._id);
   });
-  // passport.deserializeUser(async (id, done) => {
-  //   try {
-  //     const findUser = await User.findById(id).lean();
-  //     if (findUser) {
-  //       return done(null, findUser);
-  //     }
-  //   } catch (err) {
-  //     return done(err, false);
-  //   }
-  // });
+  passport.deserializeUser(async (id, done) => {
+    try {
+      const findUser = await User.findById(id);
+      if (findUser) {
+        return done(null, findUser);
+      }
+    } catch (err) {
+      return done(err, false);
+    }
+  });
 }

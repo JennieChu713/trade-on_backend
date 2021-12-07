@@ -2,10 +2,7 @@ import JWT from "jsonwebtoken";
 import mongoose from "mongoose";
 
 import User from "../models/user.js";
-import {
-  optionsSetup,
-  paginateObject,
-} from "../utils/paginateOptionSetup.common.js";
+import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 
 const { ObjectId } = mongoose.Types;
 
@@ -117,25 +114,14 @@ export default class UserControllers {
     if (!nickname) {
       return res.status(400).json({ message: "nickname is required" });
     }
-    let onlyImgUrl = "";
-    if (typeof avatarUrl === "object") {
-      const {
-        data: { link },
-      } = avatarUrl;
 
-      onlyImgUrl = link;
-    }
-    if (typeof avatarUrl === "string" && avatarUrl.length) {
-      const jsonfied = JSON.parse(avatarUrl);
-      onlyImgUrl = jsonfied.data.link;
-    }
     try {
       const updateUser = await User.findByIdAndUpdate(
         id,
         {
           nickname,
           introduction,
-          avatarUrl: onlyImgUrl,
+          avatarUrl,
           account,
         },
         { runValidators: true, new: true }
@@ -149,7 +135,7 @@ export default class UserControllers {
 
   static async deleteUser(req, res, next) {
     const { id } = req.params;
-    if (String(res.locals.user._id) !== id) {
+    if (res.locals.user !== id) {
       return res.status(401).json({ error: "Unauthorized." });
     }
 
@@ -163,8 +149,8 @@ export default class UserControllers {
 
   static async getMe(req, res, next) {
     try {
-      const user = await User.findById(res.locals.user._id).select(
-        "-account +accountAuthority"
+      const user = await User.findById(res.locals.user).select(
+        "-account +accountAuthority -__v"
       );
 
       if (!user) {

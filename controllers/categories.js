@@ -3,10 +3,7 @@ import Post from "../models/post.js";
 import mongoose from "mongoose";
 
 // paginate option setup function
-import {
-  optionsSetup,
-  paginateObject,
-} from "../utils/paginateOptionSetup.common.js";
+import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 
 export default class CategoryControllers {
   static async getAllCategories(req, res, next) {

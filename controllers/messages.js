@@ -5,10 +5,7 @@ import mongoose from "mongoose";
 //TEMPORARY
 import User from "../models/user.js";
 
-import {
-  optionsSetup,
-  paginateObject,
-} from "../utils/paginateOptionSetup.common.js";
+import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 const { ObjectId } = mongoose.Types;
 
 export default class MessageControllers {
