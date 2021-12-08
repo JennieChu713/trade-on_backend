@@ -13,8 +13,9 @@ const {
   updateFillingProgress,
   updateUserAccount,
   updatePaymentProgress,
-  updateSendoutProgress,
+  //updateSendoutProgress,
   updateCompleteProgress,
+  updateCancelTrans,
 } = TransactionControllers;
 
 const router = express.Router();
@@ -51,12 +52,19 @@ router.put("/:id/payment", updatePaymentProgress);
 // router.put("/:id/payment", transactionInvolved, updatePaymentProgress);
 
 // UPDATE transaction - is sent
-router.put("/:id/sendout", updateSendoutProgress);
+// router.put("/:id/sendout", updateSendoutProgress);
 // router.put("/:id/sendout", transactionInvolved, updateSendoutProgress);
 
 // UPDATE transaction - is complete
 router.put("/:id/complete", updateCompleteProgress);
 // router.put("/:id/complete", transactionInvolved, updateCompleteProgress);
+
+// UPDATE transaction - cancel
+router.put("/:id/cancel", updateCancelTrans);
+
+// UPDATE transaction - cancel
+router.put("/:id/cancel", updateCancelTrans);
+// router.put("/:id", transactionInvolved, updateCancelTrans);
 
 // UPDATE a deal transaction - step 3: from dealer (add ownerId and dealMethod)
 // a transaction deal is confirmed

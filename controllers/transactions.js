@@ -12,36 +12,34 @@ export default class TransactionControllers {
   static async getAllTransactions(req, res, next) {
     const { page, size, progress } = req.query;
 
-    const progressFilters = {
-      // isFilled: false,
-      // isPaid: false,
-      // isSent: false,
-      // isCompleted: false,
-    };
+    const progressFilters = {};
     switch (progress) {
       case "isFilled":
         progressFilters.isFilled = true;
         progressFilters.isPaid = false;
-        progressFilters.isSent = false;
+        // progressFilters.isSent = false;
         progressFilters.isCompleted = false;
         break;
       case "isPaid":
         progressFilters.isFilled = true;
         progressFilters.isPaid = true;
-        progressFilters.isSent = false;
+        // progressFilters.isSent = false;
         progressFilters.isCompleted = false;
         break;
-      case "isSent":
-        progressFilters.isFilled = true;
-        progressFilters.isPaid = true;
-        progressFilters.isSent = true;
-        progressFilters.isCompleted = false;
-        break;
+      // case "isSent":
+      //   progressFilters.isFilled = true;
+      //   progressFilters.isPaid = true;
+      //   // progressFilters.isSent = true;
+      //   progressFilters.isCompleted = false;
+      //   break;
       case "isCompleted":
         progressFilters.isFilled = true;
         progressFilters.isPaid = true;
-        progressFilters.isSent = true;
+        // progressFilters.isSent = true;
         progressFilters.isCompleted = true;
+        break;
+      case "isCanceled":
+        progressFilters.isCanceled = true;
         break;
     }
     // TEMPORARY userfilled userID
@@ -318,7 +316,7 @@ export default class TransactionControllers {
 
     try {
       //TEMPORARY userfilled userID
-      const dealer = await User.find({ email: "dealer@mail.com" });
+      const dealer = await User.findOne({ email: "dealer@mail.com" });
 
       const getTrans = await Transaction.findOne({
         _id: id,
@@ -363,7 +361,7 @@ export default class TransactionControllers {
     const { id } = req.params;
     const { accountName, accountNum, bankCode, bankName } = req.body;
     try {
-      const checkUser = await User.find({ email: "owner@mail.com" }); // const checkUser = await User.findById(res.locals.user);
+      const checkUser = await User.findOne({ email: "owner@mail.com" }); // const checkUser = await User.findById(res.locals.user);
       if (!checkUser || String(res.locals.user) !== id) {
         return res.status(403).json({ message: "Permission denied" });
       }
@@ -384,7 +382,7 @@ export default class TransactionControllers {
     const { id } = req.params;
     try {
       // TEMPORARY userfilled userID
-      const dealer = User.find({ email: "dealer@mail.com" });
+      const dealer = User.findOne({ email: "dealer@mail.com" });
 
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
@@ -411,35 +409,35 @@ export default class TransactionControllers {
   }
 
   // UPDATE a transaction deal: is send out
-  static async updateSendoutProgress(req, res, next) {
-    const { id } = req.params;
-    try {
-      // TEMPORARY userfilled userID
-      const owner = await User.find({ email: "owner@mail.com" });
+  // static async updateSendoutProgress(req, res, next) {
+  //   const { id } = req.params;
+  //   try {
+  //     // TEMPORARY userfilled userID
+  //     const owner = await User.findOne({ email: "owner@mail.com" });
 
-      const checkProcess = await Transaction.findOne({
-        _id: ObjectId(id),
-        owner: owner._id, // owner: res.locals.user,
-      });
-      if (!checkProcess) {
-        return res.status(403).json({ message: "Permission denied" });
-      }
-      if (checkProcess.isFilled && checkProcess.isPaid) {
-        const updateProcess = await Transaction.findByIdAndUpdate(
-          id,
-          { isSent: true },
-          { runValidators: true, new: true }
-        );
-        if (updateProcess) {
-          res.status(200).json({ message: "success", update: updateProcess });
-        }
-      } else {
-        return res.status(403).json({ error: "Permission denied" });
-      }
-    } catch (err) {
-      res.status(500).json(err.message);
-    }
-  }
+  //     const checkProcess = await Transaction.findOne({
+  //       _id: ObjectId(id),
+  //       owner: owner._id, // owner: res.locals.user,
+  //     });
+  //     if (!checkProcess) {
+  //       return res.status(403).json({ message: "Permission denied" });
+  //     }
+  //     if (checkProcess.isFilled && checkProcess.isPaid) {
+  //       const updateProcess = await Transaction.findByIdAndUpdate(
+  //         id,
+  //         { isSent: true },
+  //         { runValidators: true, new: true }
+  //       );
+  //       if (updateProcess) {
+  //         res.status(200).json({ message: "success", update: updateProcess });
+  //       }
+  //     } else {
+  //       return res.status(403).json({ error: "Permission denied" });
+  //     }
+  //   } catch (err) {
+  //     res.status(500).json(err.message);
+  //   }
+  // }
 
   // UPDATE a transaction deal: is complete
   static async updateCompleteProgress(req, res, next) {
@@ -448,7 +446,7 @@ export default class TransactionControllers {
 
     try {
       // TEMPORARY userfilled userID
-      const dealer = await User.find({ email: "dealer@mail.com" });
+      const dealer = await User.findOne({ email: "dealer@mail.com" });
 
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
@@ -499,6 +497,35 @@ export default class TransactionControllers {
       } else {
         return res.status(403).json({ message: "Permission denied" });
       }
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  // UPDATE a transaction status: cancel
+  static async updateCancelTrans(req, res, next) {
+    const { id } = req.params;
+    try {
+      // check Progress
+      const checkTrans = await Transaction.findById(id);
+      if (!checkTrans) {
+        return res.status(404).json({
+          message: "The Transaction you are looking for does not exist.",
+        });
+      }
+
+      if (!checkTrans.isCancelable && checkTrans.isPaid) {
+        return res.status(403).json({
+          message:
+            "The progress has gone through payment period, it can not be canceled.",
+        });
+      }
+
+      checkTrans.isCanceled = !checkTrans.isCanceled;
+
+      checkTrans.save();
+
+      res.status(200).json({ message: "success" });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

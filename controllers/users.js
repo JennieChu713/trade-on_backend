@@ -69,7 +69,7 @@ export default class UserControllers {
 
   static async getAllUsers(req, res, next) {
     const { page, size } = req.query;
-    const options = optionsSetup(page, size);
+    const options = optionsSetup(page, size, "+accountAuthority");
     const { limit } = options;
     try {
       const getAllUsers = await User.paginate({}, options);
@@ -77,6 +77,26 @@ export default class UserControllers {
       const paginate = paginateObject(totalDocs, limit, page);
       const allUsers = docs;
       res.status(200).json({ message: "success", paginate, allUsers });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async updateAccountRole(req, res, next) {
+    const { id } = req.params;
+    const { role } = req.body;
+    try {
+      const user = await User.findByIdAndUpdate(
+        id,
+        { accountAuthority: role },
+        { runValidators: true, new: true }
+      );
+      if (!user) {
+        return res
+          .status(404)
+          .json({ message: "The user you are looking for does not found." });
+      }
+      res.status(200).json({ message: "success", updated: user });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -135,9 +155,6 @@ export default class UserControllers {
 
   static async deleteUser(req, res, next) {
     const { id } = req.params;
-    if (res.locals.user !== id) {
-      return res.status(401).json({ error: "Unauthorized." });
-    }
 
     try {
       await User.findByIdAndDelete(id);
@@ -162,12 +179,5 @@ export default class UserControllers {
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
-  }
-
-  //TEMPORARY testing route
-  static testing(req, res, next) {
-    res.status(200).json({
-      message: "you can read this message, meaning the token is working",
-    });
   }
 }

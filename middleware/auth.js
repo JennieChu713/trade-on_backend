@@ -152,6 +152,14 @@ export default class AuthenticationMiddleware {
     res.status(401).json({ error: "Unauthorized" });
   }
 
+  static isUserSelf(req, res, next) {
+    const { id } = req.params;
+    if (res.locals.user !== id) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    next();
+  }
+
   static verifyLogin(req, res, next) {
     passport.authenticate(
       "local",

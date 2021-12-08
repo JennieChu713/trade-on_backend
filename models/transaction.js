@@ -22,10 +22,10 @@ const transactSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  isSent: {
-    type: Boolean,
-    default: false,
-  },
+  // isSent: {
+  //   type: Boolean,
+  //   default: false,
+  // },
   isCompleted: {
     type: Boolean,
     default: false,
@@ -33,6 +33,10 @@ const transactSchema = new Schema({
   isCancelable: {
     type: Boolean,
     default: true,
+  },
+  isCanceled: {
+    type: Boolean,
+    default: false,
   },
   post: {
     type: Schema.Types.ObjectId,
