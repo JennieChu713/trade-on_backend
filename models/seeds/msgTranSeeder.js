@@ -82,9 +82,10 @@ db.once("open", async () => {
   Array.from({ length: 3 }, async (_, i) => {
     const post = checkPosts[pickRandom(checkPosts.length)];
     const convenientStoresOptions = post.tradingOptions.convenientStores;
-    const dealMethod = convenientStoresOptions
-      ? convenientStoresOptions[pickRandom(convenientStoresOptions.length)]
-      : post.tradingOptions.faceToFace;
+    const dealMethod =
+      convenientStoresOptions && convenientStoresOptions.length
+        ? convenientStoresOptions[pickRandom(convenientStoresOptions.length)]
+        : post.tradingOptions.faceToFace;
 
     try {
       const trans = await Transaction.create({
