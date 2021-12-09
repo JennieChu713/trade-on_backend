@@ -8,8 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "devStart": "nodemon server.js",
-    "postTranSeed": "node models/seeds/postnTransSeeder.js",
-    "postMsgSeed": "node models/seeds/postMsgSeeder.js",
+    "catePostSeed": "node models/seeds/catePostsSeeder.js",
+    "msgTranSeed": "node models/seeds/msgTranSeeder.js",
     "commonQASeed": "node models/seeds/commonQASeeder.js"
   },
   "author": "jc",

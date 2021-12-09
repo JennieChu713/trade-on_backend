@@ -5,8 +5,8 @@ const { Schema } = mongoose;
 const msgSchema = new Schema({
   content: {
     type: String,
-    required: true,
   },
+  applyDealMethod: Object,
   relatedMsg: {
     type: Schema.Types.ObjectId,
     ref: "Message",

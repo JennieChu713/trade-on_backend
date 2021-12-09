@@ -5,10 +5,10 @@ const { transactionInvolved, isPostAuthor } = AuthenticationMiddleware;
 import TransactionControllers from "../../controllers/transactions.js";
 const {
   getAllTransactions,
-  getTransactionDealerAndPost,
-  createRequestTransaction,
-  getTransactionOwnerRequest,
-  updateAcceptTransaction,
+  // getTransactionDealerAndPost,
+  // createRequestTransaction,
+  // getTransactionOwnerRequest,
+  // updateAcceptTransaction,
   getOneTransaction,
   updateFillingProgress,
   updateUserAccount,
@@ -16,6 +16,7 @@ const {
   //updateSendoutProgress,
   updateCompleteProgress,
   updateCancelTrans,
+  createTransaction,
 } = TransactionControllers;
 
 const router = express.Router();
@@ -23,10 +24,14 @@ const router = express.Router();
 // READ all transactions (from a user)
 router.get("/all", getAllTransactions);
 
+// CREATE a transaction
+router.get("/message/:id/accept", createTransaction);
+
 // READ a transaction
 router.get("/:id", getOneTransaction);
 // router.get("/:id", transactionInvolved, getOneTransaction);
 
+/*
 // READ start a deal transaction - step 0: get dealer info and post info for owner
 router.get("/post/:id/request", getTransactionDealerAndPost);
 // router.get("/post/:id/request", isPostAuthor, getTransactionDealerAndPost);
@@ -38,8 +43,9 @@ router.post("/post/:id", createRequestTransaction);
 // READ a request deal transaction info from owner - step 2: get for dealer
 router.get("/:id/accept", getTransactionOwnerRequest);
 // router.get("/:id/accept", transactionInvolved, getTransactionOwnerRequest);
+*/
 
-// UPDATE transaction - filling sending info and isFilled
+// UPDATE transaction - filling sending info and isFilled for other than faceToFace
 router.put("/:id/filling-info", updateFillingProgress);
 // router.put("/:id/filling-info", transactionInvolved, updateFillingProgress);
 
@@ -61,14 +67,11 @@ router.put("/:id/complete", updateCompleteProgress);
 
 // UPDATE transaction - cancel
 router.put("/:id/cancel", updateCancelTrans);
-
-// UPDATE transaction - cancel
-router.put("/:id/cancel", updateCancelTrans);
 // router.put("/:id", transactionInvolved, updateCancelTrans);
 
 // UPDATE a deal transaction - step 3: from dealer (add ownerId and dealMethod)
 // a transaction deal is confirmed
-router.put("/:id", updateAcceptTransaction);
+// router.put("/:id", updateAcceptTransaction);
 // router.put("/:id", transactionInvolved, updateAcceptTransaction);
 
 export default router;

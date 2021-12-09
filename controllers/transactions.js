@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Transaction from "../models/transaction.js";
 import Post from "../models/post.js";
 import User from "../models/user.js";
+import Message from "../models/message.js";
 
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 
@@ -53,7 +54,8 @@ export default class TransactionControllers {
     };
     const options = optionsSetup(page, size, "-expiredAt", {
       path: "post owner dealer",
-      select: "_id itemName quantity givenAmount imgUrls email name",
+      select:
+        "_id itemName quantity givenAmount imgUrls email nickname avatarUrl",
     });
     const { limit } = options;
     try {
@@ -80,7 +82,10 @@ export default class TransactionControllers {
     try {
       const trans = await Transaction.findById(id)
         .select("-expiredAt")
-        .populate("post owner dealer", "itemName account name email imgUrls");
+        .populate(
+          "post owner dealer",
+          "itemName account nickname email imgUrls avatarUrl"
+        );
 
       if (trans) {
         res.status(200).json({ message: "success", dealInfo: trans });
@@ -93,7 +98,7 @@ export default class TransactionControllers {
       res.status(500).json({ error: err.message });
     }
   }
-
+  /*
   // READ a pre-transaction for dealer info and available amount steps : step 1-1
   static async getTransactionDealerAndPost(req, res, next) {
     const { user } = req.query; // 欲發出交易邀請的索取者id
@@ -308,6 +313,93 @@ export default class TransactionControllers {
       res.status(500).json({ error: err.message });
     }
   }
+  */
+
+  // CREATE a transaction (base on apply message)
+  static async createTransaction(req, res, next) {
+    const { id } = req.params;
+    const { amount, accountName, accountNum, bankCode, bankName } = req.body;
+
+    if (!amount) {
+      return res.status(200).json({ message: "amount is required." });
+    }
+    try {
+      const applyMsg = await Message.findById(id);
+
+      if (!applyMsg) {
+        return res
+          .status(404)
+          .json({ message: "The message you are looking for does not exist." });
+      }
+
+      // get present transaction deals' total amount as reservedTransAmount
+      const presentDeals = await Transaction.aggregate([
+        { $match: { post: ObjectId(applyMsg.post) } },
+        {
+          $group: {
+            _id: { transId: "$id", owner: "$owner", post: "$post" },
+            dealers: { $push: "$dealer" },
+            reservedTransAmount: { $sum: "$amount" },
+            includedTrans: { $sum: 1 },
+          },
+        },
+      ]);
+
+      // get post of actual amount as remain
+      const remainAmount = await Post.aggregate([
+        { $match: { _id: ObjectId(applyMsg.post) } },
+        {
+          $project: {
+            id: 1,
+            owner: 1,
+            remain: { $subtract: ["$quantity", "$givenAmount"] },
+          },
+        },
+      ]);
+
+      //check if required amount is over actual quantities
+      if (presentDeals.length && remainAmount) {
+        const { remain } = remainAmount[0];
+        const { reservedTransAmount } = presentDeals[0];
+        if (remain - reservedTransAmount < amount) {
+          return res
+            .status(200)
+            .json({ message: "Amount is over remain quantities." });
+        }
+      }
+
+      //create transaction : no account-info required as faceToFace
+      const isFace = applyMsg.applyDealMethod.faceToFace ? true : false;
+      if (!isFace) {
+        if (!accountName || !accountNum || !bankCode || !bankName) {
+          return res.status(404).json({ message: "All fields is required" });
+        }
+        const account = { accountName, accountNum, bankCode, bankName };
+        //TMEPORARY userFilled ID
+        const owner = await User.findOne({ email: "owner@mail.com" }); // const owner = await User.findById(res.locals.user)
+
+        const updateAccount = await User.findByIdAndUpdate(
+          owner._id,
+          { account },
+          { runValidators: true, new: true }
+        );
+      }
+
+      const newTrans = await Transaction.create({
+        amount,
+        dealMethod: { ...applyMsg["applyDealMethod"] },
+        post: applyMsg.post,
+        owner: owner._id,
+        dealer: applyMsg.owner,
+        isFilled: isFace,
+        isPaid: isFace,
+      });
+
+      res.status(200).json({ message: "success", transaction: newTrans });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
 
   // UPDATE transaction deal: filling sending info
   static async updateFillingProgress(req, res, next) {
@@ -455,7 +547,7 @@ export default class TransactionControllers {
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });
       }
-      if (checkProcess.isFilled && checkProcess.isPaid && checkProcess.isSent) {
+      if (checkProcess.isFilled && checkProcess.isPaid) {
         const updateProcess = await Transaction.findByIdAndUpdate(
           id,
           { isCompleted: true },
@@ -523,7 +615,7 @@ export default class TransactionControllers {
 
       checkTrans.isCanceled = !checkTrans.isCanceled;
 
-      checkTrans.save();
+      await checkTrans.save();
 
       res.status(200).json({ message: "success" });
     } catch (err) {

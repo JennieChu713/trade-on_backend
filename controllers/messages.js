@@ -1,6 +1,6 @@
+import mongoose from "mongoose";
 import Message from "../models/message.js";
 import Post from "../models/post.js";
-import mongoose from "mongoose";
 
 //TEMPORARY
 import User from "../models/user.js";
@@ -56,6 +56,7 @@ export default class MessageControllers {
             "ownerInfo.nickname": 1,
             relatedMsg: 1,
             messageType: 1,
+            updatedAt: 1,
           },
         },
         {
@@ -65,6 +66,27 @@ export default class MessageControllers {
           },
         },
       ]);
+
+      // change time to zh-tw
+      const timeOptions = {
+        timeZone: "Asia/Taipei",
+        hour12: false,
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+      };
+      for (const msg of allMsgs) {
+        const { messages } = msg;
+        for (const mes of messages) {
+          mes.updatedAt = new Date(mes.updatedAt).toLocaleString(
+            "zh-TW",
+            timeOptions
+          );
+        }
+      }
+
       res.status(200).json({ message: "success", postMessages: allMsgs });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -103,33 +125,72 @@ export default class MessageControllers {
 
   // CREATE a message (transaction or post)
   static async createMessage(req, res, next) {
-    const { content, messageType, relatedId } = req.body; // relatedId is a post or transaction
+    const {
+      content,
+      sevenEleven,
+      familyMart,
+      faceToFace,
+      messageType,
+      relatedId,
+    } = req.body; // relatedId is a post or transaction
     try {
-      const { _id, dealer } =
+      const { _id, dealer, tradingOptions } =
         (await Post.findById(relatedId)) ||
         (await Transaction.findById(relatedId));
 
       if (!_id) {
-        return res.status(401).json({ message: "Permission denied" });
+        return res
+          .status(404)
+          .json({ message: "The subject You are looking for does not exist." });
       }
 
       // TEMPORARY self-filled userID
-      const user = await User.find({ email: "dealer@mail.com" });
+      const user = await User.findOne({ email: "dealer@mail.com" });
 
       let newMessage;
-      if (messageType !== "transaction" && !dealer) {
+      if (messageType === "question") {
         newMessage = await Message.create({
           content,
           messageType,
           post: ObjectId(_id),
-          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user._id),
+          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
         });
-      } else {
+      } else if (messageType === "apply") {
+        if (!sevenEleven && !familyMart && !faceToFace) {
+          return res
+            .status(401)
+            .json({ error: "Must choose one deal method to proceed." });
+        }
+
+        let applyDealMethod;
+        if (!tradingOptions.convenientStores.length) {
+          applyDealMethod = tradingOptions.faceToFace;
+        }
+
+        for (let store of tradingOptions.convenientStores) {
+          if (sevenEleven && store.storeBrand === "7-11") {
+            applyDealMethod = { convenientStore: store };
+            break;
+          }
+          if (familyMart && store.storeBrand === "全家") {
+            applyDealMethod = { convenientStore: store };
+            break;
+          }
+        }
+
+        newMessage = await Message.create({
+          content,
+          messageType,
+          applyDealMethod,
+          post: ObjectId(_id),
+          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
+        });
+      } else if (messageType === "transaction" && dealer) {
         newMessage = await Message.create({
           content,
           messageType,
           deal: ObjectId(_id),
-          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user._id),
+          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
         });
       }
       res.status(200).json({ message: "success", new: newMessage });
@@ -161,7 +222,7 @@ export default class MessageControllers {
           messageType,
           relatedMsg: ObjectId(id),
           post: ObjectId(relatedId),
-          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user._id),
+          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
         });
       } else {
         newReply = await Message.create({
@@ -169,7 +230,7 @@ export default class MessageControllers {
           messageType,
           relatedMsg: ObjectId(id),
           deal: ObjectId(relatedId),
-          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user._id),
+          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
         });
       }
       res.status(200).json({ message: "success", new: newReply });

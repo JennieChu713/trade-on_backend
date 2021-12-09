@@ -1,7 +1,6 @@
 import db from "../../config/mongoose.js";
 import Post from "../post.js";
 import Category from "../category.js";
-import Transaction from "../transaction.js";
 import User from "../user.js";
 
 // seeder data
@@ -27,10 +26,7 @@ const items = [
 
 const tradings = [
   {
-    convenientStore: {
-      storeCode: 174833,
-      storeName: "建中",
-    },
+    convenientStores: ["7-11"],
     faceToFace: {
       region: "新北市",
       district: "新莊區",
@@ -38,10 +34,7 @@ const tradings = [
   },
 
   {
-    convenientStore: {
-      storeCode: 194217,
-      storeName: "莊捷",
-    },
+    convenientStores: ["7-11", "全家"],
   },
 
   {
@@ -51,10 +44,7 @@ const tradings = [
     },
   },
   {
-    convenientStore: {
-      storeCode: 115882,
-      storeName: "全家善化興華店",
-    },
+    convenientStores: ["全家"],
     faceToFace: {
       region: "臺南市",
       district: "善化區",
@@ -62,10 +52,7 @@ const tradings = [
   },
 
   {
-    convenientStore: {
-      storeCode: 16719,
-      storeName: "全家平鎮南東店",
-    },
+    convenientStores: ["全家"],
   },
   {
     faceToFace: {
@@ -74,6 +61,7 @@ const tradings = [
     },
   },
 ];
+
 const descripts = [
   "一直維持很乾淨的狀態，如果願意的話請收下。",
   "雖然舊但堪用",
@@ -81,6 +69,7 @@ const descripts = [
   "買來之後就完全沒開過，所以給需要的人。",
   "遺忘很久的東西，不過狀態還不錯，所以就送給需要的人。\n所索取請留言聯絡。",
 ];
+
 function pickRandom(num, mode = "pick") {
   if (mode === "qnt") {
     return Math.floor(Math.random() * num) + 1;
@@ -88,9 +77,9 @@ function pickRandom(num, mode = "pick") {
   return Math.floor(Math.random() * num);
 }
 
-// generate seed data
+// generate data
 db.once("open", async () => {
-  console.log("generating seed data for posts with category and transaction");
+  console.log("generating seed data of category and post");
 
   //clearout collection past data if exist
   const categoryDataExist = await Category.find();
@@ -102,11 +91,6 @@ db.once("open", async () => {
   if (postDataExist.length) {
     await Post.deleteMany({});
     console.log("clearout origin document data of posts.");
-  }
-  const transExist = await Transaction.find();
-  if (transExist.length) {
-    await Transaction.deleteMany({});
-    console.log("clearout origin document data of transaction.");
   }
 
   // generate dummy data of Categories
@@ -125,7 +109,7 @@ db.once("open", async () => {
           console.log(
             "generate post relation seeder data failed: no user exist, you need to have user data to proceed. (run 'node models/userSeeder.js')"
           );
-          process.exit();
+          process.exit(1);
         }
 
         // generate 30 dummy data of Posts
@@ -153,32 +137,7 @@ db.once("open", async () => {
 
           if (i === 29) {
             console.log("post seeder data complete.");
-            const allPosts = await Post.find();
-            const findDealer = await User.findOne({ email: "dealer@mail.com" });
-
-            // generate 3 transaction dummy data
-            Array.from({ length: 3 }, async (_, i) => {
-              const post = allPosts[pickRandom(allPosts.length)];
-              await Transaction.create({
-                amount: pickRandom(post.quantity, "qnt"),
-                post: post._id,
-                dealMethod: {
-                  [post.tradingOptions.convenientStore.storeCode
-                    ? "convenientStore"
-                    : "faceToFace"]: post.tradingOptions.convenientStore
-                    .storeCode
-                    ? post.tradingOptions.convenientStore
-                    : post.tradingOptions.faceToFace,
-                },
-                dealer: findDealer._id,
-                owner: _id,
-              });
-
-              if ((await Transaction.countDocuments()) === 3) {
-                console.log("transaction seeder data complete.");
-                process.exit();
-              }
-            });
+            process.exit(1);
           }
         });
       }

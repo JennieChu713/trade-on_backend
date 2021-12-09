@@ -1,9 +1,3 @@
-<<<<<<< HEAD:models/seeds/userSeeder.js
-=======
-import db from "../../config/mongoose.js";
-import User from "../user.js";
->>>>>>> user:models/userSeeder.js
-import bcrypt from "bcrypt";
 import db from "../../config/mongoose.js";
 import User from "../user.js";
 
@@ -76,7 +70,7 @@ db.once("open", async () => {
         process.exit(1);
       }
     } catch (err) {
-      (err) => console.error(err.message);
+      console.error(err.message);
     }
   });
 });

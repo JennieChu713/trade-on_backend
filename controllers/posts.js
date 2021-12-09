@@ -71,9 +71,7 @@ export default class PostControllers {
       quantity,
       itemStatus,
       description,
-      storeCode,
-      storeName,
-      storeFee,
+      convenientStores, //array contain string
       region,
       district,
       imgUrl,
@@ -81,11 +79,16 @@ export default class PostControllers {
     } = req.body;
 
     const allImgUrls = [];
-    if (imgUrl.length && typeof imgUrl !== "string") {
-      allImgUrls = [...imgUrl];
-    } else if (typeof imgUrl === "string") {
-      allImgUrls.push(imgUrl);
+    if (imgUrl) {
+      if (imgUrl.length && typeof imgUrl !== "string") {
+        allImgUrls = [...imgUrl];
+      } else if (typeof imgUrl === "string") {
+        allImgUrls.push(imgUrl);
+      }
     }
+
+    //TEMPORARY userfilled ID
+    const owner = await User.findOne({ email: "owner@mail.com" });
 
     const dataStructure = {
       itemName,
@@ -94,21 +97,17 @@ export default class PostControllers {
       description,
       imgUrls: allImgUrls,
       category: ObjectId(categoryId),
-      owner: ObjectId(res.locals.user._id),
+      owner: ObjectId(owner._id), // owner: ObjectId(res.locals.user),
     };
     let tradingOptions = {};
-    if ((storeCode && storeName) || (region && district)) {
-      if (storeCode && storeName) {
-        tradingOptions.convenientStore = {
-          storeCode,
-          storeName,
-          fee: storeFee,
-        };
-      }
-      if (region && district) {
-        tradingOptions.faceToFace = { region, district };
-      }
+    if (convenientStores && convenientStores.length) {
+      tradingOptions.convenientStores = [...convenientStores];
     }
+
+    if (region && district) {
+      tradingOptions.faceToFace = { region, district };
+    }
+
     dataStructure.tradingOptions = tradingOptions;
     try {
       const addPost = await Post.create(dataStructure);
@@ -127,8 +126,7 @@ export default class PostControllers {
       quantity,
       itemStatus,
       description,
-      storeCode,
-      storeName,
+      convenientStores, //array contain stringify objects
       region,
       district,
       imgUrl,
@@ -157,14 +155,14 @@ export default class PostControllers {
     };
 
     let tradingOptions = {};
-    if ((storeCode && storeName) || (region && district)) {
-      if (storeCode && storeName) {
-        tradingOptions.convenientStore = { storeCode, storeName };
-      }
-      if (region && district) {
-        tradingOptions.faceToFace = { region, district };
-      }
+    if (convenientStores && convenientStores.length) {
+      tradingOptions.convenientStores = [...convenientStores];
     }
+
+    if (region && district) {
+      tradingOptions.faceToFace = { region, district };
+    }
+
     dataStructure.tradingOptions = tradingOptions;
     try {
       const updatePost = await Post.findByIdAndUpdate(
@@ -185,25 +183,8 @@ export default class PostControllers {
   static async updatePostStatus(req, res, next) {
     const { id } = req.params;
     try {
-      // const checkUserAuth = await User.findById(res.locals.user._id).select(
-      //   "+accountAuthority"
-      // );
-
       const checkPost = await Post.findById(id);
       if (checkPost) {
-        // if (
-        //   accountAuthority === "admin" &&
-        //   !checkPost.owner.equals(res.locals.user._id)
-        // ) {
-        //   await User.findByIdAndUpdate(
-        //     checkPost.owner,
-        //     { isAllowPost: false },
-        //     {
-        //       runValidators: true,
-        //       new: true,
-        //     }
-        //   );
-        // }
         checkPost.isPublic = !checkPost.isPublic;
       }
       const updatePost = await checkPost.save();
