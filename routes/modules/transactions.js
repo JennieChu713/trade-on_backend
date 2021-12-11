@@ -5,15 +5,10 @@ const { transactionInvolved, isPostAuthor } = AuthenticationMiddleware;
 import TransactionControllers from "../../controllers/transactions.js";
 const {
   getAllTransactions,
-  // getTransactionDealerAndPost,
-  // createRequestTransaction,
-  // getTransactionOwnerRequest,
-  // updateAcceptTransaction,
   getOneTransaction,
   updateFillingProgress,
   updateUserAccount,
   updatePaymentProgress,
-  //updateSendoutProgress,
   updateCompleteProgress,
   updateCancelTrans,
   createTransaction,
@@ -25,25 +20,11 @@ const router = express.Router();
 router.get("/all", getAllTransactions);
 
 // CREATE a transaction
-router.get("/message/:id/accept", createTransaction);
+router.post("/message/:id/accept", createTransaction);
 
 // READ a transaction
 router.get("/:id", getOneTransaction);
 // router.get("/:id", transactionInvolved, getOneTransaction);
-
-/*
-// READ start a deal transaction - step 0: get dealer info and post info for owner
-router.get("/post/:id/request", getTransactionDealerAndPost);
-// router.get("/post/:id/request", isPostAuthor, getTransactionDealerAndPost);
-
-// CREATE start a deal transaction - step 1 :send from owner (add dealer and postId)
-router.post("/post/:id", createRequestTransaction);
-// router.post("/post/:id", isPostAuthor, createRequestTransaction);
-
-// READ a request deal transaction info from owner - step 2: get for dealer
-router.get("/:id/accept", getTransactionOwnerRequest);
-// router.get("/:id/accept", transactionInvolved, getTransactionOwnerRequest);
-*/
 
 // UPDATE transaction - filling sending info and isFilled for other than faceToFace
 router.put("/:id/filling-info", updateFillingProgress);
@@ -57,10 +38,6 @@ router.put("/user/:id/account-info", updateUserAccount);
 router.put("/:id/payment", updatePaymentProgress);
 // router.put("/:id/payment", transactionInvolved, updatePaymentProgress);
 
-// UPDATE transaction - is sent
-// router.put("/:id/sendout", updateSendoutProgress);
-// router.put("/:id/sendout", transactionInvolved, updateSendoutProgress);
-
 // UPDATE transaction - is complete
 router.put("/:id/complete", updateCompleteProgress);
 // router.put("/:id/complete", transactionInvolved, updateCompleteProgress);
@@ -68,10 +45,5 @@ router.put("/:id/complete", updateCompleteProgress);
 // UPDATE transaction - cancel
 router.put("/:id/cancel", updateCancelTrans);
 // router.put("/:id", transactionInvolved, updateCancelTrans);
-
-// UPDATE a deal transaction - step 3: from dealer (add ownerId and dealMethod)
-// a transaction deal is confirmed
-// router.put("/:id", updateAcceptTransaction);
-// router.put("/:id", transactionInvolved, updateAcceptTransaction);
 
 export default router;

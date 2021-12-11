@@ -386,6 +386,8 @@ const allDistricts = [
   "東引鄉",
 ];
 
+function changeDefault() {}
+
 const postSchema = new Schema({
   itemName: {
     type: String,
@@ -455,6 +457,16 @@ const postSchema = new Schema({
 });
 
 postSchema.set("timestamps", true);
+
+postSchema.pre("save", function (next) {
+  if (!this.tradingOptions.faceToFace.region) {
+    this.tradingOptions.faceToFace = undefined;
+  }
+  if (!this.tradingOptions.convenientStores.length) {
+    this.tradingOptions.convenientStores = undefined;
+  }
+  next();
+});
 
 postSchema.method("toJSON", function () {
   const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();

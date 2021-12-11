@@ -52,17 +52,18 @@ export default function usePassport(app) {
           );
           if (!user) {
             return done(null, false, {
+              error: true,
               message: "Not a registered email",
             });
           } else {
             const isMatch = await user.matchPasswords(password);
             if (!isMatch) {
               return done(null, false, {
+                error: true,
                 message: "Email or password incorrect",
               });
             }
           }
-          user.password = "";
           done(null, user);
         } catch (err) {
           done(err, false);

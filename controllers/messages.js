@@ -56,6 +56,7 @@ export default class MessageControllers {
             "ownerInfo.nickname": 1,
             relatedMsg: 1,
             messageType: 1,
+            applyDealMethod: 1,
             updatedAt: 1,
           },
         },
@@ -168,13 +169,18 @@ export default class MessageControllers {
         }
 
         for (let store of tradingOptions.convenientStores) {
-          if (sevenEleven && store.storeBrand === "7-11") {
+          if (sevenEleven && store === "7-11") {
             applyDealMethod = { convenientStore: store };
             break;
           }
-          if (familyMart && store.storeBrand === "全家") {
+          if (familyMart && store === "全家") {
             applyDealMethod = { convenientStore: store };
             break;
+          } else {
+            return res.status(403).json({
+              error:
+                "the deal method you choose is does not provide from the post",
+            });
           }
         }
 
@@ -242,17 +248,50 @@ export default class MessageControllers {
   // UPDATE a message (transaction or post)
   static async updateMessage(req, res, next) {
     const { id } = req.params;
-    const { content } = req.body;
+    const { content, sevenEleven, familyMart, faceToFace } = req.body;
 
     try {
-      const editMsg = await Message.findByIdAndUpdate(
-        id,
-        { content },
-        {
-          runValidators: true,
-          new: true,
+      const checkMsg = await Message.findById(id);
+      const getPost = await Post.findById(checkMsg.post);
+
+      if (!checkMsg) {
+        return res
+          .status(404)
+          .json({ error: "The subject you are looking for does not exist." });
+      }
+      const { messageType } = checkMsg;
+
+      if (messageType === "question" || messageType === "transaction") {
+        checkMsg.content = content;
+      }
+      if (messageType === "apply") {
+        let applyDealMethod;
+        if (!getPost.tradingOptions.convenientStores.length) {
+          applyDealMethod = getPost.tradingOptions.faceToFace;
         }
-      );
+
+        for (let store of getPost.tradingOptions.convenientStores) {
+          if (sevenEleven && store === "7-11") {
+            applyDealMethod = { convenientStore: store };
+            break;
+          }
+          if (familyMart && store === "全家") {
+            applyDealMethod = { convenientStore: store };
+            break;
+          } else {
+            return res.status(403).json({
+              error:
+                "the deal method you choose is does not provide from the post",
+            });
+          }
+        }
+
+        checkMsg.content = content;
+        checkMsg.applyDealMethod = applyDealMethod;
+      }
+
+      const editMsg = await checkMsg.save();
+
       if (editMsg) {
         res.status(200).json({ message: "success", update: editMsg });
       } else {

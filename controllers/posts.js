@@ -20,7 +20,9 @@ export default class PostControllers {
         break;
     }
 
-    const filterQuery = user ? { owner: ObjectId(user) } : publicValue;
+    const filterQuery = user
+      ? { owner: ObjectId(user), ...publicValue }
+      : publicValue;
     const selecting = "-tradingOptions";
     //const selecting = user ? "-tradingOptions" : "-tradingOptions -isPublic";
     const options = optionsSetup(page, size, selecting, {
@@ -53,6 +55,12 @@ export default class PostControllers {
         select: "email nickname categoryName",
       });
       if (post) {
+        if (!post.tradingOptions.faceToFace.region) {
+          post.tradingOptions.faceToFace = undefined;
+        }
+        if (!post.tradingOptions.convenientStores.length) {
+          post.tradingOptions.convenientStores = undefined;
+        }
         res.status(200).json({ message: "success", post });
       } else {
         return res

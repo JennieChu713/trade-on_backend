@@ -95,13 +95,15 @@ db.once("open", async () => {
         dealer,
         owner,
       });
-
-      await Message.create({
-        ...startAMsgs[pickRandom(startAMsgs.length)],
-        applyDealMethod: dealMethod,
-        post: post._id,
-        owner: dealer,
-      });
+      if (trans) {
+        // settled transaction with related apply messages
+        await Message.create({
+          ...startAMsgs[pickRandom(startAMsgs.length)],
+          applyDealMethod: dealMethod,
+          post: post._id,
+          owner: dealer,
+        });
+      }
 
       // random transaction message data and reply
       if (pickRandom(4) % 2) {
@@ -134,7 +136,6 @@ db.once("open", async () => {
           } = checkPosts[pickRandom(checkPosts.length)];
 
           const messageType = pickRandom(4) % 2 ? "question" : "apply";
-
           let dataStruct;
           switch (messageType) {
             case "question":
@@ -147,7 +148,7 @@ db.once("open", async () => {
             case "apply":
               dataStruct = {
                 ...startAMsgs[pickRandom(startAMsgs.length)],
-                applyDealMethod: convenientStores
+                applyDealMethod: convenientStores.length
                   ? convenientStores[pickRandom(convenientStores.length)]
                   : faceToFace,
                 post: _id,

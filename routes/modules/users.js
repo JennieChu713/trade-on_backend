@@ -15,6 +15,8 @@ const {
   deleteUser,
   getMe,
   updateAccountRole,
+  updatePassword,
+  getAllRecords,
 } = UserControllers;
 
 const router = express.Router();
@@ -34,6 +36,12 @@ router.get("/logout", logout);
 
 // GET token user route
 router.get("/me", checkToken, getMe);
+
+// GET records
+router.get("/:id/record", getAllRecords);
+
+// UPDATE password
+router.put("/:id/password", checkToken, isUserSelf, updatePassword);
 
 // UPDATE userRole
 router.put("/:id/role", checkToken, permissionCheck, updateAccountRole);
