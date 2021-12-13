@@ -267,9 +267,12 @@ export const resetting = async (req, res, next) => {
         const convenientStoresOptions = post.tradingOptions.convenientStores;
         const dealMethod =
           convenientStoresOptions && convenientStoresOptions.length
-            ? convenientStoresOptions[
-                pickRandom(convenientStoresOptions.length)
-              ]
+            ? {
+                convenientStore:
+                  convenientStoresOptions[
+                    pickRandom(convenientStoresOptions.length)
+                  ],
+              }
             : post.tradingOptions.faceToFace;
 
         try {
@@ -334,7 +337,12 @@ export const resetting = async (req, res, next) => {
                   dataStruct = {
                     ...startAMsgs[pickRandom(startAMsgs.length)],
                     applyDealMethod: convenientStores.length
-                      ? convenientStores[pickRandom(convenientStores.length)]
+                      ? {
+                          convenientStore:
+                            convenientStores[
+                              pickRandom(convenientStores.length)
+                            ],
+                        }
                       : faceToFace,
                     post: _id,
                     owner: dealer,

@@ -54,11 +54,6 @@ const transactSchema = new Schema({
     ref: "User",
     index: true,
   },
-  // expiredAt: {
-  //   type: Date,
-  //   default: Date.now,
-  //   expires: "3d",
-  // },
 });
 transactSchema.set("timestamps", true);
 transactSchema.method("toJSON", function () {

@@ -126,14 +126,7 @@ export default class MessageControllers {
 
   // CREATE a message (transaction or post)
   static async createMessage(req, res, next) {
-    const {
-      content,
-      sevenEleven,
-      familyMart,
-      faceToFace,
-      messageType,
-      relatedId,
-    } = req.body; // relatedId is a post or transaction
+    const { content, chooseDealMethod, messageType, relatedId } = req.body; // relatedId is a post or transaction
     try {
       const { _id, dealer, tradingOptions } =
         (await Post.findById(relatedId)) ||
@@ -157,23 +150,26 @@ export default class MessageControllers {
           owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
         });
       } else if (messageType === "apply") {
-        if (!sevenEleven && !familyMart && !faceToFace) {
+        if (!chooseDealMethod) {
           return res
             .status(401)
             .json({ error: "Must choose one deal method to proceed." });
         }
 
         let applyDealMethod;
-        if (!tradingOptions.convenientStores.length) {
+        if (
+          !tradingOptions.convenientStores.length ||
+          chooseDealMethod === "faceToFace"
+        ) {
           applyDealMethod = tradingOptions.faceToFace;
         }
 
         for (let store of tradingOptions.convenientStores) {
-          if (sevenEleven && store === "7-11") {
+          if (chooseDealMethod === "sevenEleven" && store === "7-11") {
             applyDealMethod = { convenientStore: store };
             break;
           }
-          if (familyMart && store === "全家") {
+          if (chooseDealMethod === "familyMart" && store === "全家") {
             applyDealMethod = { convenientStore: store };
             break;
           } else {
@@ -208,7 +204,13 @@ export default class MessageControllers {
   // CREATE a reply message (transaction or post)
   static async createReply(req, res, next) {
     const { id } = req.params; // message id
-    const { content, messageType, relatedId } = req.body; // related id could be the post or transaction
+    const { content, messageType, relatedId, relatedMsg } = req.body; // related id could be the post or transaction
+
+    if (id !== relatedMsg) {
+      return res
+        .status(404)
+        .json({ message: "The message to reply does not confirm." });
+    }
 
     try {
       // check if the message is the related subject
@@ -248,7 +250,7 @@ export default class MessageControllers {
   // UPDATE a message (transaction or post)
   static async updateMessage(req, res, next) {
     const { id } = req.params;
-    const { content, sevenEleven, familyMart, faceToFace } = req.body;
+    const { content, chooseDealMethod } = req.body;
 
     try {
       const checkMsg = await Message.findById(id);
@@ -259,23 +261,30 @@ export default class MessageControllers {
           .status(404)
           .json({ error: "The subject you are looking for does not exist." });
       }
-      const { messageType } = checkMsg;
+      const { messageType, relatedMsg } = checkMsg;
 
-      if (messageType === "question" || messageType === "transaction") {
+      if (
+        messageType === "question" ||
+        messageType === "transaction" ||
+        relatedMsg
+      ) {
         checkMsg.content = content;
       }
-      if (messageType === "apply") {
+      if (messageType === "apply" && !relatedMsg) {
         let applyDealMethod;
-        if (!getPost.tradingOptions.convenientStores.length) {
+        if (
+          !getPost.tradingOptions.convenientStores.length ||
+          chooseDealMethod === "faceToFace"
+        ) {
           applyDealMethod = getPost.tradingOptions.faceToFace;
         }
 
         for (let store of getPost.tradingOptions.convenientStores) {
-          if (sevenEleven && store === "7-11") {
+          if (chooseDealMethod === "sevenEleven" && store === "7-11") {
             applyDealMethod = { convenientStore: store };
             break;
           }
-          if (familyMart && store === "全家") {
+          if (chooseDealMethod === "familyMart" && store === "全家") {
             applyDealMethod = { convenientStore: store };
             break;
           } else {
@@ -287,7 +296,9 @@ export default class MessageControllers {
         }
 
         checkMsg.content = content;
-        checkMsg.applyDealMethod = applyDealMethod;
+        if (applyDealMethod) {
+          checkMsg.applyDealMethod = applyDealMethod;
+        }
       }
 
       const editMsg = await checkMsg.save();
