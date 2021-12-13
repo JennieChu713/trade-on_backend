@@ -34,7 +34,7 @@ const qas = [
   },
 ];
 
-// Posts with categories and transactions
+// Posts with categories
 const categories = [
   "生活雜貨",
   "家居裝飾",
@@ -57,10 +57,7 @@ const items = [
 
 const tradings = [
   {
-    convenientStore: {
-      storeCode: 174833,
-      storeName: "建中",
-    },
+    convenientStores: ["7-11"],
     faceToFace: {
       region: "新北市",
       district: "新莊區",
@@ -68,10 +65,7 @@ const tradings = [
   },
 
   {
-    convenientStore: {
-      storeCode: 194217,
-      storeName: "莊捷",
-    },
+    convenientStores: ["7-11", "全家"],
   },
 
   {
@@ -81,10 +75,7 @@ const tradings = [
     },
   },
   {
-    convenientStore: {
-      storeCode: 115882,
-      storeName: "全家善化興華店",
-    },
+    convenientStores: ["全家"],
     faceToFace: {
       region: "臺南市",
       district: "善化區",
@@ -92,10 +83,7 @@ const tradings = [
   },
 
   {
-    convenientStore: {
-      storeCode: 16719,
-      storeName: "全家平鎮南東店",
-    },
+    convenientStores: ["全家"],
   },
   {
     faceToFace: {
@@ -113,8 +101,8 @@ const descripts = [
   "遺忘很久的東西，不過狀態還不錯，所以就送給需要的人。\n所索取請留言聯絡。",
 ];
 
-// messages
-const startMsgs = [
+// messages with transactions
+const startAMsgs = [
   { content: "想要J個酷東西", messageType: "apply" },
   {
     content: "我是這個牌子的大粉絲！請問可以給我嗎？\n我會非常珍惜地使用的！",
@@ -122,6 +110,9 @@ const startMsgs = [
   },
   { content: "希望能夠得到這個，非常感謝:)", messageType: "apply" },
   { content: "真的非常需要這個，希望你願意送我> <", messageType: "apply" },
+];
+
+const startQMsgs = [
   { content: "請問這上面有期限嗎？", messageType: "question" },
   { content: "請問這個還有嗎？", messageType: "question" },
   {
@@ -133,7 +124,7 @@ const startMsgs = [
 
 const replyMsgs = [
   { content: "OK沒問題喔！", messageType: "apply" },
-  { content: "已經送出，請你記得按一下確定來進入流程喔", messageType: "apply" },
+  { content: "已經送出，請你記得進入流程填資訊喔", messageType: "apply" },
   { content: "沒有耶，不好意思", messageType: "question" },
   { content: "好，先等一下喔", messageType: "question" },
 ];
@@ -151,7 +142,7 @@ export const resetting = async (req, res, next) => {
   let dataExist;
   switch (type) {
     case "commonqnas":
-      dataExist = await CommonQA.find();
+      dataExist = await CommonQA.findOne();
       if (dataExist) {
         await CommonQA.deleteMany({});
       }
@@ -167,19 +158,19 @@ export const resetting = async (req, res, next) => {
         .json({ message: "success; reset commonQAs as 20 samples." });
 
     case "posts":
-      dataExist = await Post.find();
-      const categoryDataExist = await Category.find();
-      const transExist = await Transaction.find();
-
-      if (dataExist) {
-        await Post.deleteMany({});
-      }
-      if (categoryDataExist.length) {
+      //clearout collection past data if exist
+      const categoryDataExist = await Category.findOne();
+      if (categoryDataExist) {
         await Category.deleteMany({});
+        console.log("clearout origin document data of categories.");
       }
-      if (transExist.length) {
-        await Transaction.deleteMany({});
+      const postDataExist = await Post.findOne();
+      if (postDataExist) {
+        await Post.deleteMany({});
+        console.log("clearout origin document data of posts.");
       }
+
+      // generate dummy data of Categories
       categories.forEach(async (category, i) => {
         try {
           await Category.create({
@@ -187,12 +178,15 @@ export const resetting = async (req, res, next) => {
           });
 
           if (i === categories.length - 1) {
+            console.log("complete seed data of category.");
+
             // check users data
             const findUser = await User.findOne({ email: "owner@mail.com" });
             if (!findUser) {
-              return res
-                .status(500)
-                .json({ error: "You need to generate users data first." });
+              return res.status(404).json({
+                message:
+                  "generate post relation seeder data failed: no user exist, you need to have user data to proceed. (run 'node models/userSeeder.js')",
+              });
             }
 
             // generate 30 dummy data of Posts
@@ -204,10 +198,14 @@ export const resetting = async (req, res, next) => {
 
               const itemStatus = pickRandom(15) % 2 === 0 ? "全新" : "二手";
               const { _id } = findUser;
+              const imgUrls = [
+                "https://images.unsplash.com/photo-1558276561-95e31d860c4b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
+              ];
               const newPost = await Post.create({
                 itemName: items[pickRandom(items.length)],
                 quantity: pickRandom(10, "qnt"),
                 itemStatus,
+                imgUrls,
                 description: descripts[pickRandom(descripts.length)],
                 tradingOptions: tradings[pickRandom(tradings.length)],
                 category,
@@ -215,28 +213,7 @@ export const resetting = async (req, res, next) => {
               });
 
               if (i === 29) {
-                const allPosts = await Post.find();
-                const findDealer = await User.findOne({
-                  email: "dealer@mail.com",
-                });
-                // generate 3 transaction dummy data
-                Array.from({ length: 3 }, async (_, i) => {
-                  const post = allPosts[pickRandom(allPosts.length)];
-                  await Transaction.create({
-                    amount: pickRandom(post.quantity, "qnt"),
-                    post: post._id,
-                    dealMethod: {
-                      [post.tradingOptions.convenientStore.storeCode
-                        ? "convenientStore"
-                        : "faceToFace"]: post.tradingOptions.convenientStore
-                        .storeCode
-                        ? post.tradingOptions.convenientStore
-                        : post.tradingOptions.faceToFace,
-                    },
-                    dealer: findDealer._id,
-                    owner: _id,
-                  });
-                });
+                console.log("post seeder data complete.");
               }
             });
           }
@@ -246,28 +223,37 @@ export const resetting = async (req, res, next) => {
       });
       return res.status(200).json({
         message:
-          "success; reset posts of 30 samples, categories of 7 samples, and transactions of 3 samples.",
+          "success; reset posts of 30 samples and categories of 7 samples.",
       });
 
     case "messages":
-      dataExist = await Message.find();
-      if (dataExist) {
+      const msgExist = await Message.findOne();
+      if (msgExist) {
         await Message.deleteMany({});
+        console.log("clearout origin document data of message");
+      }
+
+      const transExist = await Transaction.findOne();
+      if (transExist) {
+        await Transaction.deleteMany({});
+        console.log("clearout origin document data of transaction.");
       }
 
       //check user and post data
-      const checkUser = await User.find({
+      const checkUsers = await User.find({
         $or: [{ email: "dealer@mail.com" }, { email: "owner@mail.com" }],
       });
+      const checkPosts = await Post.find();
 
-      const checkPost = await Post.findOne();
-      const checkTrans = await Transaction.findOne();
-      if (!checkUser || !checkPost || !checkTrans) {
-        return res.status(401).json({ error: "must generate post first" });
+      if (!checkUsers.length || !checkPosts.length) {
+        console.log(
+          "generate message seed data failed: post and user data required. run 'node model/userSeeder.js' then 'node model/catePostsSeeder.js'"
+        );
+        process.exit(1);
       }
 
       let owner, dealer;
-      checkUser.forEach((user) => {
+      checkUsers.forEach((user) => {
         if (user.nickname === "dealer") {
           dealer = user._id;
         } else {
@@ -275,53 +261,112 @@ export const resetting = async (req, res, next) => {
         }
       });
 
-      let created = false;
-      // generate 7 dummy data (only post messages)
-      Array.from({ length: 7 }, async (_, i) => {
+      //generating 3 dummy transaction data
+      Array.from({ length: 3 }, async (_, i) => {
+        const post = checkPosts[pickRandom(checkPosts.length)];
+        const convenientStoresOptions = post.tradingOptions.convenientStores;
+        const dealMethod =
+          convenientStoresOptions && convenientStoresOptions.length
+            ? convenientStoresOptions[
+                pickRandom(convenientStoresOptions.length)
+              ]
+            : post.tradingOptions.faceToFace;
+
         try {
-          let message;
-          message = await Message.create({
-            ...startMsgs[pickRandom(startMsgs.length)],
-            post: checkPost._id,
-            owner: dealer,
+          const trans = await Transaction.create({
+            amount: pickRandom(post.quantity, "qnt"),
+            post: post._id,
+            dealMethod,
+            dealer,
+            owner,
           });
-          // random generate reply message
-          if (message) {
-            const { _id, messageType } = message;
-            const addReply = replyMsgs[pickRandom(replyMsgs.length)];
-            if (addReply.messageType === messageType) {
+          if (trans) {
+            // settled transaction with related apply messages
+            await Message.create({
+              ...startAMsgs[pickRandom(startAMsgs.length)],
+              applyDealMethod: dealMethod,
+              post: post._id,
+              owner: dealer,
+            });
+          }
+
+          // random transaction message data and reply
+          if (pickRandom(4) % 2) {
+            const msg = await Message.create({
+              content: "寄送資料已經填寫好囉！再請你確認～",
+              messageType: "transaction",
+              deal: trans._id,
+              owner: dealer,
+            });
+
+            if (msg && pickRandom(4) % 2) {
               await Message.create({
-                ...addReply,
-                post: checkPost._id,
-                relatedMsg: _id,
+                content: "好的，確認後我再回覆您！",
+                messageType: "transaction",
+                deal: trans._id,
+                relatedMsg: msg._id,
                 owner,
               });
             }
           }
 
-          if (i === 6) {
-            await Message.create({
-              content: "寄送資料已經填寫好囉！再請你確認～",
-              messageType: "transaction",
-              deal: checkTrans._id,
-              owner: dealer,
+          if (i === 2) {
+            console.log("transaction seeder data complete.");
+
+            // generating 11 dummy data for post messages
+            Array.from({ length: 11 }, async (_, i) => {
+              const {
+                _id,
+                tradingOptions: { convenientStores, faceToFace },
+              } = checkPosts[pickRandom(checkPosts.length)];
+
+              const messageType = pickRandom(4) % 2 ? "question" : "apply";
+              let dataStruct;
+              switch (messageType) {
+                case "question":
+                  dataStruct = {
+                    ...startQMsgs[pickRandom(startQMsgs.length)],
+                    post: _id,
+                    owner: dealer,
+                  };
+                  break;
+                case "apply":
+                  dataStruct = {
+                    ...startAMsgs[pickRandom(startAMsgs.length)],
+                    applyDealMethod: convenientStores.length
+                      ? convenientStores[pickRandom(convenientStores.length)]
+                      : faceToFace,
+                    post: _id,
+                    owner: dealer,
+                  };
+                  break;
+              }
+
+              const newMsg = await Message.create({ ...dataStruct });
+              if (newMsg) {
+                const addReply = replyMsgs[pickRandom(replyMsgs.length)];
+                if (addReply.messageType === newMsg.messageType) {
+                  await Message.create({
+                    ...addReply,
+                    post: _id,
+                    relatedMsg: newMsg._id,
+                    owner,
+                  });
+                }
+              }
+
+              if (i === 10) {
+                console.log("complete seed data of message");
+              }
             });
-            if (transMsg) {
-              await Message.create({
-                content: "好的，確認後我再回覆您！",
-                messageType: "transaction",
-                deal: checkTrans._id,
-                relatedMsg: transMsg._id,
-                owner,
-              });
-            }
           }
         } catch (err) {
-          res.status(500).json({ error: err.message });
+          console.error(err.message);
         }
       });
       return res.status(200).json({
-        message: "success; reset messages of 6 samples with random reply.",
+        message:
+          "success; reset messages of 14 samples with random reply and 3 transactions.",
       });
   }
 };

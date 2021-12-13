@@ -168,6 +168,9 @@ export default class AuthenticationMiddleware {
         if (err) {
           return next(err);
         }
+        if (info) {
+          return res.json({ error: true, message: info.message });
+        }
         if (!user) {
           return res.json(info);
         }
@@ -189,20 +192,13 @@ export default class AuthenticationMiddleware {
         if (err) {
           return next(err);
         }
-        if (req.headers.authorization.split(" ").length === 1) {
-          return res.json({
-            message: "No token provided; login or register first",
-          });
-        }
-
-        if (!user) {
-          return res.json(info);
+        if (info) {
+          return res.json({ error: true, message: info.message });
         }
 
         const token = req.headers.authorization.split(" ")[1];
         const { sub } = JWT.verify(token, process.env.JWT_SECRET);
-        res.locals.user = sub;
-
+        res.locals.user = sub.id;
         next();
       }
     )(req, res, next);

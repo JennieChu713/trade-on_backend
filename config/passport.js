@@ -21,18 +21,19 @@ export default function usePassport(app) {
       },
       async (payload, done) => {
         try {
-          const user = await User.findById(payload.sub).select(
-            "+accountAuthority +avatarUrl -__v"
+          const user = await User.findById(payload.sub.id).select(
+            "accountAuthority"
           );
 
           if (!user) {
-            return done(null, false, { message: "Not a valid token" });
+            return done(null, false, {
+              message: "No token provided",
+            });
           }
 
           if (payload.exp < new Date().getTime()) {
             return done(null, false, { message: "token has expired" });
           }
-
           done(null, user);
         } catch (err) {
           done(err, false);

@@ -38,8 +38,8 @@ db.once("open", async () => {
   console.log("generating seed data for common QAs");
 
   // clearout common_qas collection data if exist.
-  const dataExist = await CommonQA.find();
-  if (dataExist.length) {
+  const dataExist = await CommonQA.findOne();
+  if (dataExist) {
     await CommonQA.deleteMany({});
     console.log("clearout origin document data.");
   }

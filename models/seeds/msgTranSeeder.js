@@ -44,14 +44,14 @@ db.once("open", async () => {
   console.log("generate seed data of message and transaction");
 
   //clearout data if exist
-  const msgExist = await Message.find();
-  if (msgExist.length) {
+  const msgExist = await Message.findOne();
+  if (msgExist) {
     await Message.deleteMany({});
     console.log("clearout origin document data of message");
   }
 
-  const transExist = await Transaction.find();
-  if (transExist.length) {
+  const transExist = await Transaction.findOne();
+  if (transExist) {
     await Transaction.deleteMany({});
     console.log("clearout origin document data of transaction.");
   }

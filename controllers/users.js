@@ -13,7 +13,7 @@ const signToken = (user) => {
   return JWT.sign(
     {
       iss: "tradeon",
-      sub: user.id,
+      sub: { id: user.id, accountAuthority: user.accountAuthority },
       iat: new Date().getTime(),
       exp: new Date().setTime(
         new Date().getTime() + Number(process.env.JWT_EXPIRE)
@@ -176,7 +176,6 @@ export default class UserControllers {
       const user = await User.findById(res.locals.user).select(
         "-account +accountAuthority -__v"
       );
-
       if (!user) {
         return res
           .status(404)

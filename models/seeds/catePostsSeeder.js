@@ -82,13 +82,13 @@ db.once("open", async () => {
   console.log("generating seed data of category and post");
 
   //clearout collection past data if exist
-  const categoryDataExist = await Category.find();
-  if (categoryDataExist.length) {
+  const categoryDataExist = await Category.findOne();
+  if (categoryDataExist) {
     await Category.deleteMany({});
     console.log("clearout origin document data of categories.");
   }
-  const postDataExist = await Post.find();
-  if (postDataExist.length) {
+  const postDataExist = await Post.findOne();
+  if (postDataExist) {
     await Post.deleteMany({});
     console.log("clearout origin document data of posts.");
   }
