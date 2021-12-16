@@ -102,16 +102,11 @@ export default class AuthenticationMiddleware {
 
   static async permissionCheck(req, res, next) {
     try {
-      const checkUser = await User.findById(res.locals.user).select(
-        "+accountAuthority"
-      );
-
-      if (checkUser) {
-        const { accountAuthority } = checkUser;
-        if (accountAuthority !== "admin") {
-          return res.status(401).json({ error: "Unauthorized" });
+      if (res.locals.auth) {
+        if (res.locals.auth === "admin") {
+          return next();
         }
-        next();
+        res.status(401).json({ error: "Unauthorized" });
       }
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -137,28 +132,17 @@ export default class AuthenticationMiddleware {
     if (!res.locals.user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    try {
-      const checkUser = await User.findById(res.locals.user).select(
-        "+accountAuthority"
-      );
-      if (checkUser.accountAuthority !== "admin") {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      next();
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+    if (res.locals.auth !== "admin") {
+      return res.status(401).json({ error: "Unauthorized" });
     }
+    next();
   }
 
   static async isAdminOrOwner(req, res, next) {
     const { id } = req.params;
     try {
       const post = await Post.findById(id);
-      const checkUser = await User.findById(res.locals.user).select(
-        "+accountAuthority"
-      );
-      const { accountAuthority } = checkUser;
-      if (post.owner.equals(res.locals.user) || accountAuthority === "admin") {
+      if (post.owner.equals(res.locals.user) || res.locals.auth === "admin") {
         return next();
       }
     } catch (err) {
@@ -183,11 +167,11 @@ export default class AuthenticationMiddleware {
         if (err) {
           return next(err);
         }
-        if (info) {
-          return res.json({ error: true, message: info.message });
-        }
         if (!user) {
           return res.json(info);
+        }
+        if (info) {
+          return res.json({ error: true, message: info.message });
         }
         req.logIn(user, function (err) {
           if (err) {
@@ -214,6 +198,7 @@ export default class AuthenticationMiddleware {
         const token = req.headers.authorization.split(" ")[1];
         const { sub } = JWT.verify(token, process.env.JWT_SECRET);
         res.locals.user = sub.id;
+        res.locals.auth = sub.accountAuthority;
         next();
       }
     )(req, res, next);

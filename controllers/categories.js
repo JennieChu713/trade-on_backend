@@ -154,7 +154,7 @@ export default class CategoryControllers {
       }
 
       const relatedPosts = await Post.find({ category: ObjectId(id) });
-      if (relatedPosts) {
+      if (relatedPosts.length) {
         relatedPosts.forEach(async (post) => {
           const checkUpdatePosts = await Post.updateOne(
             { _id: post._id },
