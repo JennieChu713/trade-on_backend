@@ -16,12 +16,13 @@ const {
   getMe,
   updateAccountRole,
   updatePassword,
+  updateAvatar,
   getAllRecords,
 } = UserControllers;
 
 const router = express.Router();
 
-// get all users (admin)
+// READ all users (admin)
 router.get("/all", getAllUsers);
 // router.get("/all", checkToken, permissionCheck, getAllUsers);
 
@@ -37,11 +38,14 @@ router.get("/logout", logout);
 // GET token user route
 router.get("/me", checkToken, getMe);
 
-// GET records
+// READ records
 router.get("/:id/record", getAllRecords);
 
 // UPDATE password
 router.put("/:id/password", checkToken, isUserSelf, updatePassword);
+
+// UPDATE avatarUrl
+router.put("/:id/avatar", checkToken, isUserSelf, updateAvatar);
 
 // UPDATE userRole
 router.put("/:id/role", checkToken, permissionCheck, updateAccountRole);

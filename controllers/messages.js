@@ -325,7 +325,8 @@ export default class MessageControllers {
       let count = findMsgs.length;
 
       findMsgs.forEach(async (msg) => {
-        await Message.deleteOne(msg);
+        msg.isDeleted = true;
+        await msg.save();
       });
 
       if (count > 1) {

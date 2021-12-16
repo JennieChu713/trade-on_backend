@@ -79,21 +79,22 @@ export default class AuthenticationMiddleware {
   static async transactionInvolved(req, res, next) {
     const { id } = req.params;
     try {
-      const transaction = await Transaction.findById(id);
-      if (!transaction.owner && transaction.dealer) {
-        if (transaction.dealer.equals(res.locals.user)) {
-          return next();
-        }
+      const transaction = id
+        ? await Transaction.findById(id)
+        : await Transaction.find({
+            $or: [{ owner: res.locals.user }, { dealer: res.locals.user }],
+          });
+      if (transaction.length) {
+        return next();
       }
-      if (transaction.owner && transaction.dealer) {
-        if (transaction.owner.equals(res.locals.user)) {
-          return next();
-        }
-        if (transaction.dealer.equals(res.locals.user)) {
-          return next();
-        }
+      if (
+        transaction.owner.equals(res.locals.user) ||
+        transaction.dealer.equals(res.locals.user)
+      ) {
+        return next();
       }
-      return res.status(401).json({ error: "Unauthorized" });
+
+      res.status(401).json({ error: "Unauthorized" });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }

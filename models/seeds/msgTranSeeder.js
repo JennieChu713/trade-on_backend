@@ -79,7 +79,7 @@ db.once("open", async () => {
   });
 
   //generating 3 dummy transaction data
-  Array.from({ length: 3 }, async (_, i) => {
+  Array.from({ length: 12 }, async (_, i) => {
     const post = checkPosts[pickRandom(checkPosts.length)];
     const convenientStoresOptions = post.tradingOptions.convenientStores;
     const dealMethod =
@@ -90,13 +90,16 @@ db.once("open", async () => {
                 pickRandom(convenientStoresOptions.length)
               ],
           }
-        : post.tradingOptions.faceToFace;
+        : { faceToFace: post.tradingOptions.faceToFace };
+    const isFace = dealMethod.faceToFace ? true : false;
 
     try {
       const trans = await Transaction.create({
         amount: pickRandom(post.quantity, "qnt"),
         post: post._id,
         dealMethod,
+        isFilled: isFace,
+        isPaid: isFace,
         dealer,
         owner,
       });
@@ -130,11 +133,11 @@ db.once("open", async () => {
         }
       }
 
-      if (i === 2) {
+      if (i === 11) {
         console.log("transaction seeder data complete.");
 
-        // generating 11 dummy data for post messages
-        Array.from({ length: 11 }, async (_, i) => {
+        // generating 7 dummy data for post messages
+        Array.from({ length: 7 }, async (_, i) => {
           const {
             _id,
             tradingOptions: { convenientStores, faceToFace },
@@ -178,7 +181,7 @@ db.once("open", async () => {
             }
           }
 
-          if (i === 10) {
+          if (i === 6) {
             console.log("complete seed data of message");
             process.exit(1);
           }

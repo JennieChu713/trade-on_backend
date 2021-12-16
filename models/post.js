@@ -443,6 +443,7 @@ const postSchema = new Schema({
   },
   imgUrls: [String],
   owner: {
+    // author?
     type: Schema.Types.ObjectId,
     ref: "User",
     index: true,

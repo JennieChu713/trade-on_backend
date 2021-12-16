@@ -130,29 +130,29 @@ export default class UserControllers {
     const {
       nickname,
       introduction,
-      avatarUrl,
       accountName,
       bankCode,
       bankName,
       accountNum,
     } = req.body;
 
-    const account = { accountName, accountNum, bankCode, bankName };
+    let account;
+    if (accountName && bankCode && bankName && accountNum) {
+      account = { accountName, accountNum, bankCode, bankName };
+    }
     if (!nickname) {
       return res.status(400).json({ message: "nickname is required" });
     }
 
+    const dataStruct = account
+      ? { nickname, introduction, account }
+      : { nickname, introduction };
+
     try {
-      const updateUser = await User.findByIdAndUpdate(
-        id,
-        {
-          nickname,
-          introduction,
-          avatarUrl,
-          account,
-        },
-        { runValidators: true, new: true }
-      );
+      const updateUser = await User.findByIdAndUpdate(id, dataStruct, {
+        runValidators: true,
+        new: true,
+      });
 
       res.status(200).json({ message: "success", update: updateUser });
     } catch (err) {
@@ -206,6 +206,20 @@ export default class UserControllers {
       await checkUser.save();
 
       res.status(200).json({ message: "success; password changed." });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  static async updateAvatar(req, res, next) {
+    const { id } = req.params;
+    const { avatarUrl } = req.body;
+    try {
+      const user = await User.findByIdAndUpdate(id, avatarUrl, {
+        runValidators: true,
+        new: true,
+      });
+      res.status(200).json({ message: success, update: user });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

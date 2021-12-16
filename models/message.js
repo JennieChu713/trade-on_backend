@@ -25,10 +25,15 @@ const msgSchema = new Schema({
     ref: "Transaction",
   },
   owner: {
+    // author?
     type: Schema.Types.ObjectId,
     ref: "User",
     index: true,
     required: true,
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false,
   },
 });
 
