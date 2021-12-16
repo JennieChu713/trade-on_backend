@@ -14,8 +14,7 @@ import users from "./modules/users.js";
 
 router.use("/category", category);
 router.use("/posts", posts);
-router.use("/transactions", transactions);
-// router.use("/transactions", checkToken, transactions);
+router.use("/transactions", checkToken, transactions);
 router.use("/messages", message);
 router.use("/commonqnas", commonQA);
 router.use("/users", users);

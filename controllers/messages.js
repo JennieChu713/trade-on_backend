@@ -221,7 +221,7 @@ export default class MessageControllers {
       }
 
       // TEMPORARY self-filled userID
-      const user = await User.find({ name: "owner" });
+      const user = await User.findOne({ name: "owner" });
 
       let newReply;
       if (messageType !== "transaction" && !checkMsg.deal) {

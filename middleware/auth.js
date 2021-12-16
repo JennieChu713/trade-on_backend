@@ -19,6 +19,20 @@ export default class AuthenticationMiddleware {
     next();
   }
 
+  static async isPostAuthorFromMsg(req, res, next) {
+    const { id } = req.params;
+    try {
+      const msg = await Message.findById(id);
+      const post = await Post.findById(msg.post);
+      if (!post.owner.equals(res.locals.user)) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+    } catch (err) {
+      next(err);
+    }
+    next();
+  }
+
   static async isMessageAuthor(req, res, next) {
     const { id } = req.params;
     try {
