@@ -2,9 +2,6 @@ import mongoose from "mongoose";
 import Message from "../models/message.js";
 import Post from "../models/post.js";
 
-//TEMPORARY
-import User from "../models/user.js";
-
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 const { ObjectId } = mongoose.Types;
 
@@ -139,16 +136,13 @@ export default class MessageControllers {
           .json({ message: "The subject You are looking for does not exist." });
       }
 
-      // TEMPORARY self-filled userID
-      const user = await User.findOne({ email: "dealer@mail.com" });
-
       let newMessage;
       if (messageType === "question") {
         newMessage = await Message.create({
           content,
           messageType,
           post: ObjectId(_id),
-          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
+          owner: ObjectId(res.locals.user),
         });
       } else if (messageType === "apply") {
         if (!chooseDealMethod) {
@@ -205,7 +199,7 @@ export default class MessageControllers {
   // CREATE a reply message (transaction or post)
   static async createReply(req, res, next) {
     const { id } = req.params; // message id
-    const { content, messageType, relatedId, relatedMsg } = req.body; // related id could be the post or transaction
+    const { content, messageType, relatedId, relatedMsg } = req.body; // relatedId could be the post or transaction
 
     if (id !== relatedMsg) {
       return res
@@ -221,9 +215,6 @@ export default class MessageControllers {
         return res.status(200).json({ message: "No permission." });
       }
 
-      // TEMPORARY self-filled userID
-      const user = await User.findOne({ name: "owner" });
-
       let newReply;
       if (messageType !== "transaction" && !checkMsg.deal) {
         newReply = await Message.create({
@@ -231,7 +222,7 @@ export default class MessageControllers {
           messageType,
           relatedMsg: ObjectId(id),
           post: ObjectId(relatedId),
-          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
+          owner: ObjectId(res.locals.user),
         });
       } else {
         newReply = await Message.create({
@@ -239,7 +230,7 @@ export default class MessageControllers {
           messageType,
           relatedMsg: ObjectId(id),
           deal: ObjectId(relatedId),
-          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
+          owner: ObjectId(res.locals.user),
         });
       }
       res.status(200).json({ message: "success", new: newReply });
@@ -257,7 +248,7 @@ export default class MessageControllers {
       const checkMsg = await Message.findById(id);
       const getPost = await Post.findById(checkMsg.post);
 
-      if (!checkMsg) {
+      if (!checkMsg || checkMsg.isDeleted) {
         return res
           .status(404)
           .json({ error: "The subject you are looking for does not exist." });

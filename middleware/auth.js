@@ -67,7 +67,7 @@ export default class AuthenticationMiddleware {
         "+isAllowMessage"
       );
       const { isAllowMessage } = checkUser;
-      if (!isAllowPost) {
+      if (!isAllowMessage) {
         return res.status(401).json({ error: "Permission has been denied." });
       }
       next();
@@ -101,16 +101,12 @@ export default class AuthenticationMiddleware {
   }
 
   static async permissionCheck(req, res, next) {
-    try {
-      if (res.locals.auth) {
-        if (res.locals.auth === "admin") {
-          return next();
-        }
-        res.status(401).json({ error: "Unauthorized" });
+    if (res.locals.auth) {
+      if (res.locals.auth === "admin") {
+        return next();
       }
-    } catch (err) {
-      res.status(500).json({ error: err.message });
     }
+    res.status(401).json({ error: "Unauthorized" });
   }
 
   static async hasQueryUser(req, res, next) {
