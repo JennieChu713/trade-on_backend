@@ -8,8 +8,6 @@ import Transaction from "../models/transaction.js";
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 import { errorResponse } from "../utils/errorMsgs.js";
 
-const { ObjectId } = mongoose.Types;
-
 const signToken = (user) => {
   return JWT.sign(
     {
