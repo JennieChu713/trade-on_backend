@@ -5,6 +5,7 @@ import User from "../models/user.js";
 import Message from "../models/message.js";
 
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
+import { errorResponse } from "../utils/errorMsgs.js";
 
 const { ObjectId } = mongoose.Types;
 
@@ -50,13 +51,16 @@ export default class TransactionControllers {
     const { limit } = options;
     try {
       const getAllTrans = await Transaction.paginate(progressQuery, options);
+
+      if (!getAllTrans.totalDocs) {
+        return res
+          .status(200)
+          .json({ message: "No deal submitted yet. - 目前尚未成立交易" });
+      }
+
       const { totalDocs, page, docs } = getAllTrans;
       const paginate = paginateObject(totalDocs, limit, page);
       const allTrans = docs;
-
-      if (!allTrans.length) {
-        return res.status(200).json({ message: "No deal submitted yet." });
-      }
 
       res
         .status(200)
@@ -70,12 +74,10 @@ export default class TransactionControllers {
   static async getOneTransaction(req, res, next) {
     const { id } = req.params;
     try {
-      const trans = await Transaction.findById(id)
-        .select("-expiredAt")
-        .populate(
-          "post owner dealer",
-          "itemName account nickname email imgUrls avatarUrl"
-        );
+      const trans = await Transaction.findById(id).populate(
+        "post owner dealer",
+        "itemName account nickname email imgUrls avatarUrl"
+      );
 
       if (trans) {
         res.status(200).json({ message: "success", dealInfo: trans });
@@ -95,15 +97,15 @@ export default class TransactionControllers {
     const { amount, accountName, accountNum, bankCode, bankName } = req.body;
 
     if (!amount) {
-      return res.status(200).json({ message: "amount is required." });
+      errorResponse(res, 400);
+      return;
     }
     try {
       const applyMsg = await Message.findById(id);
 
       if (!applyMsg) {
-        return res
-          .status(404)
-          .json({ message: "The message you are looking for does not exist." });
+        errorResponse(res, 404);
+        return;
       }
 
       // get present transaction deals' total amount as reservedTransAmount
@@ -147,7 +149,8 @@ export default class TransactionControllers {
       const isFace = applyMsg.applyDealMethod.faceToFace ? true : false;
       if (!isFace) {
         if (!accountName || !accountNum || !bankCode || !bankName) {
-          return res.status(404).json({ message: "All fields is required" });
+          errorResponse(res, 400);
+          return;
         }
         const account = { accountName, accountNum, bankCode, bankName };
 
@@ -176,15 +179,12 @@ export default class TransactionControllers {
     const { id } = req.params;
     const { name, cellPhone, storeCode, storeName } = req.body;
 
-    try {
-      const getTrans = await Transaction.findOne({
-        _id: id,
-        dealer: res.locals.user,
-      }).lean();
-      if (!getTrans) {
-        return res.status(403).json({ message: "Permission denied." });
-      }
+    if (!name || !cellPhone || !storeCode || !storeName) {
+      errorResponse(res, 400);
+      return;
+    }
 
+    try {
       const dataStructure = {
         sendingInfo: {
           name,
@@ -210,14 +210,13 @@ export default class TransactionControllers {
   static async updateUserAccount(req, res, next) {
     const { id } = req.params;
     const { accountName, accountNum, bankCode, bankName } = req.body;
-    try {
-      const checkUser = await User.findById(res.locals.user)
-        .select("id")
-        .lean();
-      if (!checkUser || String(res.locals.user) !== id) {
-        return res.status(403).json({ message: "Permission denied" });
-      }
 
+    if (!accountName || !accountNum || !bankCode || !bankName) {
+      errorResponse(res, 400);
+      return;
+    }
+
+    try {
       const updateUser = await User.findByIdAndUpdate(
         id,
         { account: { accountName, accountNum, bankCode, bankName } },
@@ -238,10 +237,6 @@ export default class TransactionControllers {
         dealer: res.locals.user,
       }).lean();
 
-      if (!checkProcess) {
-        return res.status(403).json({ message: "Permission denied" });
-      }
-
       if (checkProcess.isFilled) {
         const updateProcess = await Transaction.findByIdAndUpdate(
           id,
@@ -249,8 +244,6 @@ export default class TransactionControllers {
           { runValidators: true, new: true }
         );
         res.status(200).json({ message: "success", update: updateProcess });
-      } else {
-        return res.status(403).json({ error: "Permission denied" });
       }
     } catch (err) {
       res.status(500).json(err.message);
@@ -259,7 +252,6 @@ export default class TransactionControllers {
 
   // UPDATE a transaction deal: is complete
   static async updateCompleteProgress(req, res, next) {
-    //TODO: user authentication
     const { id } = req.params;
 
     try {
@@ -269,9 +261,7 @@ export default class TransactionControllers {
       })
         .select("isFilled isPaid")
         .lean();
-      if (!checkProcess) {
-        return res.status(403).json({ message: "Permission denied" });
-      }
+
       if (checkProcess.isFilled && checkProcess.isPaid) {
         const updateProcess = await Transaction.findByIdAndUpdate(
           id,
@@ -311,8 +301,6 @@ export default class TransactionControllers {
         if (updateProcess) {
           res.status(200).json({ message: "success", update: updateProcess });
         }
-      } else {
-        return res.status(403).json({ message: "Permission denied" });
       }
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -327,11 +315,6 @@ export default class TransactionControllers {
       const checkTrans = await Transaction.findById(id)
         .select("isCanceled isPaid")
         .lean();
-      if (!checkTrans) {
-        return res.status(404).json({
-          message: "The Transaction you are looking for does not exist.",
-        });
-      }
 
       if (!checkTrans.isCancelable && checkTrans.isPaid) {
         return res.status(403).json({

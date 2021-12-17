@@ -6,6 +6,7 @@ import Message from "../models/message.js";
 import Post from "../models/post.js";
 import Transaction from "../models/transaction.js";
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
+import { errorResponse } from "../utils/errorMsgs.js";
 
 const { ObjectId } = mongoose.Types;
 
@@ -29,10 +30,11 @@ export default class UserControllers {
 
     //prevention before storing data
     if (!email || !nickname || !password || !confirmPassword) {
-      return res.status(400).json({ error: "All field(s) required" });
+      errorResponse(res, 400);
+      return;
     }
     if (password !== confirmPassword) {
-      return res.status(403).json({ error: "password confirmation failed" });
+      return res.status(400).json({ error: "password confirmation failed" });
     }
 
     try {
@@ -45,11 +47,14 @@ export default class UserControllers {
         email,
         password,
       });
+
       newUser.password = undefined;
       newUser.isAllowPost = undefined;
       newUser.isAllowMessage = undefined;
       newUser.provider = undefined;
+
       const token = signToken(newUser);
+
       res.status(200).json({ success: true, newUser, token });
     } catch (err) {
       next(err);
@@ -70,8 +75,12 @@ export default class UserControllers {
   }
 
   static async logout(req, res, next) {
-    req.logout();
-    res.status(200).json({ message: "success" });
+    if (req.isAuthenticated()) {
+      req.logout();
+      res.status(200).json({ message: "success" });
+    } else {
+      res.status(200).json({ message: "already logout" });
+    }
   }
 
   static async getAllUsers(req, res, next) {
@@ -83,6 +92,7 @@ export default class UserControllers {
       const { totalDocs, docs, page } = getAllUsers;
       const paginate = paginateObject(totalDocs, limit, page);
       const allUsers = docs;
+
       res.status(200).json({ message: "success", paginate, allUsers });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -99,10 +109,10 @@ export default class UserControllers {
         { runValidators: true, new: true }
       );
       if (!user) {
-        return res
-          .status(404)
-          .json({ message: "The user you are looking for does not found." });
+        errorResponse(res, 404);
+        return;
       }
+
       res.status(200).json({ message: "success", updated: user });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -115,10 +125,10 @@ export default class UserControllers {
       const user = await User.findById(id).select("-account");
 
       if (!user) {
-        return res
-          .status(404)
-          .json({ error: "The user you are looking for does not exist." });
+        errorResponse(res, 404);
+        return;
       }
+
       res.status(200).json({ message: "success", userInfo: user });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -141,7 +151,8 @@ export default class UserControllers {
       account = { accountName, accountNum, bankCode, bankName };
     }
     if (!nickname) {
-      return res.status(400).json({ message: "nickname is required" });
+      errorResponse(res, 400);
+      return;
     }
 
     const dataStruct = account
@@ -177,9 +188,8 @@ export default class UserControllers {
         "-account +accountAuthority -__v"
       );
       if (!user) {
-        return res
-          .status(404)
-          .json({ error: "The user you are looking for does not exist." });
+        errorResponse(res, 404);
+        return;
       }
       res.status(200).json({ message: "success", userInfo: user });
     } catch (err) {
@@ -219,6 +229,7 @@ export default class UserControllers {
         runValidators: true,
         new: true,
       });
+
       res.status(200).json({ message: success, update: user });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -281,6 +292,12 @@ export default class UserControllers {
     const { limit } = options;
 
     try {
+      const checkUser = await User.findById(id);
+      if (!checkUser) {
+        errorResponse(res, 404);
+        return;
+      }
+
       let getAll;
 
       if (filterQuery.isPublic && filterQuery.owner) {

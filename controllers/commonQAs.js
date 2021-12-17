@@ -1,5 +1,7 @@
 import CommonQA from "../models/commonQA.js";
 
+import { errorResponse } from "../utils/errorMsgs.js";
+
 export default class CommonQAsControllers {
   static async getAllCommonQAs(req, res, next) {
     const { sortBy } = req.query;
@@ -15,6 +17,12 @@ export default class CommonQAsControllers {
     try {
       const allQAs = await CommonQA.find().sort({ updatedAt });
 
+      if (!allQAs.length) {
+        return res.status(200).json({
+          message: "common QnA is empty in present. - 目前尚未建立常見問題資料",
+        });
+      }
+
       res.status(200).json({ message: "success", allQAs });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -25,13 +33,12 @@ export default class CommonQAsControllers {
     const { id } = req.params;
     try {
       const qna = await CommonQA.findById(id);
-      if (qna) {
-        res.status(200).json({ message: "success", QnA: qna });
-      } else {
-        return res
-          .status(404)
-          .json({ error: "The question you are looking for does not exist." });
+      if (!qna) {
+        errorResponse(res, 404);
+        return;
       }
+
+      res.status(200).json({ message: "success", QnA: qna });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -57,9 +64,12 @@ export default class CommonQAsControllers {
         { question, answer },
         { runValidators: true, new: true }
       );
-      if (editQA) {
-        res.status(200).json({ message: "success", update: editQA });
+      if (!editQA) {
+        errorResponse(res, 404);
+        return;
       }
+
+      res.status(200).json({ message: "success", update: editQA });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

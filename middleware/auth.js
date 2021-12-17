@@ -5,13 +5,20 @@ import Message from "../models/message.js";
 import Transaction from "../models/transaction.js";
 import User from "../models/user.js";
 
+import { errorResponse } from "../utils/errorMsgs.js";
+
 export default class AuthenticationMiddleware {
   static async isPostAuthor(req, res, next) {
     const { id } = req.params;
     try {
       const post = await Post.findById(id).select("owner").lean();
+      if (!post) {
+        errorResponse(res, 404);
+        return;
+      }
       if (!post.owner.equals(res.locals.user)) {
-        return res.status(401).json({ error: "Unauthorized" });
+        errorResponse(res, 401);
+        return;
       }
     } catch (err) {
       next(err);
@@ -23,9 +30,14 @@ export default class AuthenticationMiddleware {
     const { id } = req.params;
     try {
       const msg = await Message.findById(id).select("post").lean();
+      if (!msg) {
+        errorResponse(res, 404);
+        return;
+      }
       const post = await Post.findById(msg.post).select("owner").lean();
       if (!post.owner.equals(res.locals.user)) {
-        return res.status(401).json({ error: "Unauthorized" });
+        errorResponse(res, 401);
+        return;
       }
     } catch (err) {
       next(err);
@@ -37,8 +49,13 @@ export default class AuthenticationMiddleware {
     const { id } = req.params;
     try {
       const message = await Message.findById(id).select("owner").lean();
+      if (!message) {
+        errorResponse(res, 404);
+        return;
+      }
       if (!message.owner.equals(res.locals.user)) {
-        return res.status(401).json({ error: "Unauthorized" });
+        errorResponse(res, 401);
+        return;
       }
     } catch (err) {
       next(err);
@@ -53,7 +70,8 @@ export default class AuthenticationMiddleware {
         .lean();
       const { isAllowPost } = checkUser;
       if (!isAllowPost) {
-        return res.status(401).json({ error: "Permission has been denied." });
+        errorResponse(res, 403);
+        return;
       }
       next();
     } catch (err) {
@@ -68,7 +86,8 @@ export default class AuthenticationMiddleware {
         .lean();
       const { isAllowMessage } = checkUser;
       if (!isAllowMessage) {
-        return res.status(401).json({ error: "Permission has been denied." });
+        errorResponse(res, 403);
+        return;
       }
       next();
     } catch (err) {
@@ -96,19 +115,22 @@ export default class AuthenticationMiddleware {
         return next();
       }
 
-      res.status(401).json({ error: "Unauthorized" });
+      if (!transaction) {
+        errorResponse(res, 404);
+        return;
+      }
+
+      errorResponse(res, 401);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   }
 
   static async permissionCheck(req, res, next) {
-    if (res.locals.auth) {
-      if (res.locals.auth === "admin") {
-        return next();
-      }
+    if (res.locals.auth === "admin") {
+      return next();
     }
-    res.status(401).json({ error: "Unauthorized" });
+    errorResponse(res, 401);
   }
 
   static async hasQueryUser(req, res, next) {
@@ -123,7 +145,8 @@ export default class AuthenticationMiddleware {
       return next();
     }
     if (!id || user !== id) {
-      return res.status(401).json({ error: "Unauthorized" });
+      errorResponse(res, 401);
+      return;
     }
   }
 
@@ -139,10 +162,12 @@ export default class AuthenticationMiddleware {
       return next();
     }
     if (!token) {
-      return res.status(401).json({ error: "Unauthorized" });
+      errorResponse(res, 401);
+      return;
     }
     if (accountAuthority !== "admin") {
-      return res.status(401).json({ error: "Unauthorized" });
+      errorResponse(res, 401);
+      return;
     }
     next();
   }
@@ -151,6 +176,11 @@ export default class AuthenticationMiddleware {
     const { id } = req.params;
     try {
       const post = await Post.findById(id).select("owner").lean();
+      if (!post) {
+        errorResponse(res, 404);
+        return;
+      }
+
       if (post.owner.equals(res.locals.user) || res.locals.auth === "admin") {
         return next();
       }
@@ -163,7 +193,8 @@ export default class AuthenticationMiddleware {
   static isUserSelf(req, res, next) {
     const { id } = req.params;
     if (res.locals.user !== id) {
-      return res.status(403).json({ message: "Unauthorized" });
+      errorResponse(res, 401);
+      return;
     }
     next();
   }

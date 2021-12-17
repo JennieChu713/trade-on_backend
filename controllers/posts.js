@@ -1,7 +1,10 @@
+import mongoose from "mongoose";
+
 import Post from "../models/post.js";
 import Category from "../models/category.js";
-import mongoose from "mongoose";
+
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
+import { errorResponse } from "../utils/errorMsgs.js";
 
 const { ObjectId } = mongoose.Types;
 
@@ -33,6 +36,13 @@ export default class PostControllers {
 
     try {
       const getAllPosts = await Post.paginate(filterQuery, options);
+
+      if (getAllPosts.totalDocs) {
+        return res
+          .status(200)
+          .json({ message: "No post in present. - 目前尚未建立刊登資料" });
+      }
+
       const { totalDocs, docs } = getAllPosts;
       const current = getAllPosts.page;
       const paginate = paginateObject(totalDocs, limit, current);
@@ -54,6 +64,12 @@ export default class PostControllers {
         path: "owner category",
         select: "email nickname categoryName",
       });
+
+      if (!post) {
+        errorResponse(res, 404);
+        return;
+      }
+
       if (post) {
         if (!post.tradingOptions.faceToFace.region) {
           post.tradingOptions.faceToFace = undefined;
@@ -117,9 +133,8 @@ export default class PostControllers {
     try {
       const checkCategory = await Category.findById(categoryId).lean();
       if (!checkCategory) {
-        return res
-          .status(404)
-          .json({ error: "The category attempt to assign does not exist." });
+        errorResponse(res, 404);
+        return;
       }
 
       const addPost = await Post.create(dataStructure);
@@ -147,7 +162,8 @@ export default class PostControllers {
     } = req.body;
 
     if (id !== postId) {
-      return res.status(401).json({ error: "Permission denied" });
+      errorResponse(res, 400);
+      return;
     }
 
     let allImgUrls = [];
@@ -179,10 +195,10 @@ export default class PostControllers {
     try {
       const checkCategory = await Category.findById(categoryId).lean();
       if (!checkCategory) {
-        return res
-          .status(404)
-          .json({ error: "The category attempt to assign does not exist." });
+        errorResponse(res, 404);
+        return;
       }
+
       const updatePost = await Post.findByIdAndUpdate(
         id,
         { ...dataStructure },

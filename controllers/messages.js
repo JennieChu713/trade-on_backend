@@ -3,6 +3,7 @@ import Message from "../models/message.js";
 import Post from "../models/post.js";
 
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
+import { errorResponse } from "../utils/errorMsgs.js";
 const { ObjectId } = mongoose.Types;
 
 export default class MessageControllers {
@@ -18,6 +19,13 @@ export default class MessageControllers {
 
     try {
       const getAllMsgs = await Message.paginate(matchQuery, options);
+
+      if (!getAllMsgs.totalDocs) {
+        return res
+          .status(200)
+          .json({ message: "No message in present - 尚未建立留言資料" });
+      }
+
       const { totalDocs, page, docs } = getAllMsgs;
       const paginate = paginateObject(totalDocs, limit, page);
       const allMsgs = docs;
@@ -66,6 +74,12 @@ export default class MessageControllers {
         },
       ]);
 
+      if (!allMsgs.length) {
+        return res.status(200).json({
+          message: "No related message in present. - 目前沒有相關留言",
+        });
+      }
+
       // change time to zh-tw
       const timeOptions = {
         timeZone: "Asia/Taipei",
@@ -101,6 +115,13 @@ export default class MessageControllers {
         "owner deal",
         "email nickname post"
       );
+
+      if (!allMsgs.length) {
+        return res.status(200).json({
+          message: "No related message in present. - 目前沒有相關留言",
+        });
+      }
+
       res.status(200).json({ message: "success", dealMessages: allMsgs });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -131,9 +152,8 @@ export default class MessageControllers {
         (await Transaction.findById(relatedId));
 
       if (!_id) {
-        return res
-          .status(404)
-          .json({ message: "The subject You are looking for does not exist." });
+        errorResponse(res, 404);
+        return;
       }
 
       let newMessage;
@@ -146,9 +166,8 @@ export default class MessageControllers {
         });
       } else if (messageType === "apply") {
         if (!chooseDealMethod) {
-          return res
-            .status(401)
-            .json({ error: "Must choose one deal method to proceed." });
+          errorResponse(res, 400);
+          return;
         }
 
         let applyDealMethod;
@@ -168,10 +187,8 @@ export default class MessageControllers {
             applyDealMethod = { convenientStore: store };
             break;
           } else {
-            return res.status(403).json({
-              error:
-                "the deal method you choose is does not provide from the post",
-            });
+            errorResponse(res, 404);
+            return;
           }
         }
 
@@ -180,14 +197,14 @@ export default class MessageControllers {
           messageType,
           applyDealMethod,
           post: ObjectId(_id),
-          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
+          owner: ObjectId(res.locals.user),
         });
       } else if (messageType === "transaction" && dealer) {
         newMessage = await Message.create({
           content,
           messageType,
           deal: ObjectId(_id),
-          owner: ObjectId(user._id), // owner: ObjectId(res.locals.user),
+          owner: ObjectId(res.locals.user),
         });
       }
       res.status(200).json({ message: "success", new: newMessage });
@@ -212,7 +229,8 @@ export default class MessageControllers {
       const checkMsg = await Message.findById(id);
       const related = checkMsg.post || checkMsg.deal;
       if (String(related) !== relatedId) {
-        return res.status(200).json({ message: "No permission." });
+        errorResponse(res, 400);
+        return;
       }
 
       let newReply;
@@ -248,10 +266,9 @@ export default class MessageControllers {
       const checkMsg = await Message.findById(id);
       const getPost = await Post.findById(checkMsg.post);
 
-      if (!checkMsg || checkMsg.isDeleted) {
-        return res
-          .status(404)
-          .json({ error: "The subject you are looking for does not exist." });
+      if (!checkMsg.isDeleted) {
+        errorResponse(res, 404);
+        return;
       }
       const { messageType, relatedMsg } = checkMsg;
 
@@ -280,10 +297,8 @@ export default class MessageControllers {
             applyDealMethod = { convenientStore: store };
             break;
           } else {
-            return res.status(403).json({
-              error:
-                "the deal method you choose is does not provide from the post",
-            });
+            errorResponse(res, 404);
+            return;
           }
         }
 
@@ -297,8 +312,6 @@ export default class MessageControllers {
 
       if (editMsg) {
         res.status(200).json({ message: "success", update: editMsg });
-      } else {
-        return res.status(403).json({ error: "permission denied" });
       }
     } catch (err) {
       res.status(500).json({ error: err.message });
