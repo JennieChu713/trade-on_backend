@@ -9,7 +9,7 @@ export default class AuthenticationMiddleware {
   static async isPostAuthor(req, res, next) {
     const { id } = req.params;
     try {
-      const post = await Post.findById(id);
+      const post = await Post.findById(id).select("owner").lean();
       if (!post.owner.equals(res.locals.user)) {
         return res.status(401).json({ error: "Unauthorized" });
       }
@@ -22,8 +22,8 @@ export default class AuthenticationMiddleware {
   static async isPostAuthorFromMsg(req, res, next) {
     const { id } = req.params;
     try {
-      const msg = await Message.findById(id);
-      const post = await Post.findById(msg.post);
+      const msg = await Message.findById(id).select("post").lean();
+      const post = await Post.findById(msg.post).select("owner").lean();
       if (!post.owner.equals(res.locals.user)) {
         return res.status(401).json({ error: "Unauthorized" });
       }
@@ -36,7 +36,7 @@ export default class AuthenticationMiddleware {
   static async isMessageAuthor(req, res, next) {
     const { id } = req.params;
     try {
-      const message = await Message.findById(id);
+      const message = await Message.findById(id).select("owner").lean();
       if (!message.owner.equals(res.locals.user)) {
         return res.status(401).json({ error: "Unauthorized" });
       }
@@ -48,9 +48,9 @@ export default class AuthenticationMiddleware {
 
   static async postPermission(req, res, next) {
     try {
-      const checkUser = await User.findById(res.locals.user).select(
-        "+isAllowPost"
-      );
+      const checkUser = await User.findById(res.locals.user)
+        .select("isAllowPost")
+        .lean();
       const { isAllowPost } = checkUser;
       if (!isAllowPost) {
         return res.status(401).json({ error: "Permission has been denied." });
@@ -63,9 +63,9 @@ export default class AuthenticationMiddleware {
 
   static async messagePermission(req, res, next) {
     try {
-      const checkUser = await User.findById(res.locals.user).select(
-        "+isAllowMessage"
-      );
+      const checkUser = await User.findById(res.locals.user)
+        .select("isAllowMessage")
+        .lean();
       const { isAllowMessage } = checkUser;
       if (!isAllowMessage) {
         return res.status(401).json({ error: "Permission has been denied." });
@@ -80,10 +80,12 @@ export default class AuthenticationMiddleware {
     const { id } = req.params;
     try {
       const transaction = id
-        ? await Transaction.findById(id)
+        ? await Transaction.findById(id).select("owner dealer").lean()
         : await Transaction.find({
             $or: [{ owner: res.locals.user }, { dealer: res.locals.user }],
-          });
+          })
+            .select("owner dealer")
+            .lean();
       if (transaction.length) {
         return next();
       }
@@ -111,24 +113,35 @@ export default class AuthenticationMiddleware {
 
   static async hasQueryUser(req, res, next) {
     const { user } = req.query;
+
+    const token = req.headers.authorization.split(" ")[1];
+    const {
+      sub: { id },
+    } = JWT.verify(token, process.env.JWT_SECRET);
+
     if (!user) {
       return next();
     }
-    if (!res.locals.user || user !== res.locals.user) {
+    if (!id || user !== id) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    next();
   }
 
   static async hasQueryPublic(req, res, next) {
     const { isPublic } = req.query;
+
+    const token = req.headers.authorization.split(" ")[1];
+    const {
+      sub: { accountAuthority },
+    } = JWT.verify(token, process.env.JWT_SECRET);
+
     if (!isPublic) {
       return next();
     }
-    if (!res.locals.user) {
+    if (!token) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    if (res.locals.auth !== "admin") {
+    if (accountAuthority !== "admin") {
       return res.status(401).json({ error: "Unauthorized" });
     }
     next();
@@ -137,7 +150,7 @@ export default class AuthenticationMiddleware {
   static async isAdminOrOwner(req, res, next) {
     const { id } = req.params;
     try {
-      const post = await Post.findById(id);
+      const post = await Post.findById(id).select("owner").lean();
       if (post.owner.equals(res.locals.user) || res.locals.auth === "admin") {
         return next();
       }

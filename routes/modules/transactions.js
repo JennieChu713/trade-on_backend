@@ -33,8 +33,7 @@ router.put("/:id/filling-info", transactionInvolved, updateFillingProgress);
 router.put("/user/:id/account-info", isUserSelf, updateUserAccount);
 
 // UPDATE transaction - is paid
-router.put("/:id/payment", updatePaymentProgress);
-// router.put("/:id/payment", transactionInvolved, updatePaymentProgress);
+router.put("/:id/payment", transactionInvolved, updatePaymentProgress);
 
 // UPDATE transaction - is complete
 router.put("/:id/complete", transactionInvolved, updateCompleteProgress);

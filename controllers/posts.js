@@ -1,5 +1,5 @@
 import Post from "../models/post.js";
-import User from "../models/user.js";
+import Category from "../models/category.js";
 import mongoose from "mongoose";
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 
@@ -86,7 +86,7 @@ export default class PostControllers {
       categoryId,
     } = req.body;
 
-    const allImgUrls = [];
+    let allImgUrls = [];
     if (imgUrl) {
       if (imgUrl.length && typeof imgUrl !== "string") {
         allImgUrls = [...imgUrl];
@@ -95,9 +95,6 @@ export default class PostControllers {
       }
     }
 
-    //TEMPORARY userfilled ID
-    const owner = await User.findOne({ email: "owner@mail.com" });
-
     const dataStructure = {
       itemName,
       quantity,
@@ -105,7 +102,7 @@ export default class PostControllers {
       description,
       imgUrls: allImgUrls,
       category: ObjectId(categoryId),
-      owner: ObjectId(owner._id), // owner: ObjectId(res.locals.user),
+      owner: ObjectId(res.locals.user),
     };
     let tradingOptions = {};
     if (convenientStores && convenientStores.length) {
@@ -118,6 +115,13 @@ export default class PostControllers {
 
     dataStructure.tradingOptions = tradingOptions;
     try {
+      const checkCategory = await Category.findById(categoryId).lean();
+      if (!checkCategory) {
+        return res
+          .status(404)
+          .json({ error: "The category attempt to assign does not exist." });
+      }
+
       const addPost = await Post.create(dataStructure);
       res.status(200).json({ message: "success", new: addPost });
     } catch (err) {
@@ -146,7 +150,7 @@ export default class PostControllers {
       return res.status(401).json({ error: "Permission denied" });
     }
 
-    const allImgUrls = [];
+    let allImgUrls = [];
     if (imgUrl.length && typeof imgUrl !== "string") {
       allImgUrls = [...imgUrl];
     } else if (typeof imgUrl === "string") {
@@ -173,6 +177,12 @@ export default class PostControllers {
 
     dataStructure.tradingOptions = tradingOptions;
     try {
+      const checkCategory = await Category.findById(categoryId).lean();
+      if (!checkCategory) {
+        return res
+          .status(404)
+          .json({ error: "The category attempt to assign does not exist." });
+      }
       const updatePost = await Post.findByIdAndUpdate(
         id,
         { ...dataStructure },
