@@ -38,7 +38,7 @@ export default class CommonQAsControllers {
   }
 
   static async createCommonQA(req, res, next) {
-    const { question, answer, imgUrls } = req.body;
+    const { question, answer } = req.body;
     try {
       const newQA = { question, answer };
       const addQA = await CommonQA.create(newQA);

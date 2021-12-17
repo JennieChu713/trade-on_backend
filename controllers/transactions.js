@@ -42,7 +42,7 @@ export default class TransactionControllers {
       $or: [{ owner: res.locals.user }, { dealer: res.locals.user }],
       ...progressFilters,
     };
-    const options = optionsSetup(page, size, "-expiredAt", {
+    const options = optionsSetup(page, size, "", {
       path: "post owner dealer",
       select:
         "_id itemName quantity givenAmount imgUrls email nickname avatarUrl",
@@ -180,7 +180,7 @@ export default class TransactionControllers {
       const getTrans = await Transaction.findOne({
         _id: id,
         dealer: res.locals.user,
-      });
+      }).lean();
       if (!getTrans) {
         return res.status(403).json({ message: "Permission denied." });
       }
@@ -211,7 +211,9 @@ export default class TransactionControllers {
     const { id } = req.params;
     const { accountName, accountNum, bankCode, bankName } = req.body;
     try {
-      const checkUser = await User.findById(res.locals.user);
+      const checkUser = await User.findById(res.locals.user)
+        .select("id")
+        .lean();
       if (!checkUser || String(res.locals.user) !== id) {
         return res.status(403).json({ message: "Permission denied" });
       }
@@ -234,7 +236,7 @@ export default class TransactionControllers {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
         dealer: res.locals.user,
-      });
+      }).lean();
 
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });
@@ -264,7 +266,9 @@ export default class TransactionControllers {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
         dealer: res.locals.user,
-      });
+      })
+        .select("isFilled isPaid")
+        .lean();
       if (!checkProcess) {
         return res.status(403).json({ message: "Permission denied" });
       }
@@ -320,7 +324,9 @@ export default class TransactionControllers {
     const { id } = req.params;
     try {
       // check Progress
-      const checkTrans = await Transaction.findById(id);
+      const checkTrans = await Transaction.findById(id)
+        .select("isCanceled isPaid")
+        .lean();
       if (!checkTrans) {
         return res.status(404).json({
           message: "The Transaction you are looking for does not exist.",

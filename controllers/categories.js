@@ -94,7 +94,7 @@ export default class CategoryControllers {
     const { categoryName, compareId } = req.body;
     try {
       // check if category name is duplicated
-      const categoryExist = await Category.findOne({ categoryName });
+      const categoryExist = await Category.findOne({ categoryName }).lean();
       if (categoryExist) {
         return res
           .status(200)
@@ -134,7 +134,7 @@ export default class CategoryControllers {
     try {
       // check if primary category "未分類" exist
       const categoryName = "未分類";
-      let primaryCategory = await Category.findOne({ categoryName });
+      let primaryCategory = await Category.findOne({ categoryName }).lean();
       if (!primaryCategory) {
         // create primary category if not exist
         primaryCategory = await Category.create({ categoryName });
@@ -146,7 +146,7 @@ export default class CategoryControllers {
         });
       }
 
-      const categoryExist = await Category.findById(id);
+      const categoryExist = await Category.findById(id).lean();
       if (!categoryExist) {
         return res.status(200).json({
           message: "The category you are attend to delete does not exist.",
