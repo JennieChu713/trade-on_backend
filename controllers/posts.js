@@ -37,7 +37,7 @@ export default class PostControllers {
     try {
       const getAllPosts = await Post.paginate(filterQuery, options);
 
-      if (getAllPosts.totalDocs) {
+      if (!getAllPosts.totalDocs) {
         return res
           .status(200)
           .json({ message: "No post in present. - 目前尚未建立刊登資料" });

@@ -157,59 +157,59 @@ export default class MessageControllers {
         return;
       }
 
-      const { _id, dealer, tradingOptions } = related;
+      const { id, dealer, tradingOptions } = related;
 
-      let newMessage;
+      let dataStructure;
       if (messageType === "question") {
-        newMessage = await Message.create({
+        dataStructure = {
           content,
           messageType,
-          post: ObjectId(_id),
-          owner: ObjectId(res.locals.user),
-        });
+          post: ObjectId(id),
+        };
       } else if (messageType === "apply") {
         if (!chooseDealMethod) {
           errorResponse(res, 400);
           return;
         }
+        dataStructure = {
+          content,
+          messageType,
+          post: ObjectId(id),
+        };
 
-        let applyDealMethod;
         if (
           !tradingOptions.convenientStores.length ||
           chooseDealMethod === "faceToFace"
         ) {
-          applyDealMethod = tradingOptions.faceToFace;
-        }
-
-        for (let store of tradingOptions.convenientStores) {
-          if (chooseDealMethod === "sevenEleven" && store === "7-11") {
-            applyDealMethod = { convenientStore: store };
-            break;
+          dataStructure.applyDealMethod = {
+            faceToFace: tradingOptions.faceToFace,
+          };
+        } else {
+          for (let store of tradingOptions.convenientStores) {
+            if (chooseDealMethod === "sevenEleven" && store === "7-11") {
+              dataStructure.applyDealMethod = { convenientStore: store };
+              break;
+            }
+            if (chooseDealMethod === "familyMart" && store === "全家") {
+              dataStructure.applyDealMethod = { convenientStore: store };
+              break;
+            } else {
+              errorResponse(res, 404);
+              return;
+            }
           }
-          if (chooseDealMethod === "familyMart" && store === "全家") {
-            applyDealMethod = { convenientStore: store };
-            break;
-          } else {
-            errorResponse(res, 404);
-            return;
-          }
         }
-
-        newMessage = await Message.create({
-          content,
-          messageType,
-          applyDealMethod,
-          post: ObjectId(_id),
-          owner: ObjectId(res.locals.user),
-        });
       } else if (messageType === "transaction" && dealer) {
-        newMessage = await Message.create({
+        dataStructure = {
           content,
           messageType,
-          deal: ObjectId(_id),
-          owner: ObjectId(res.locals.user),
-        });
+          deal: ObjectId(id),
+        };
       }
+      const newMessage = await Message.create({
+        ...dataStructure,
+        owner: ObjectId(res.locals.user),
+      });
       res.status(200).json({ message: "success", new: newMessage });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -236,24 +236,16 @@ export default class MessageControllers {
         return;
       }
 
-      let newReply;
+      let dataStructure = { content, messageType, relatedMsg: ObjectId(id) };
       if (messageType !== "transaction" && !checkMsg.deal) {
-        newReply = await Message.create({
-          content,
-          messageType,
-          relatedMsg: ObjectId(id),
-          post: ObjectId(relatedId),
-          owner: ObjectId(res.locals.user),
-        });
+        dataStructure.post = ObjectId(relatedId);
       } else {
-        newReply = await Message.create({
-          content,
-          messageType,
-          relatedMsg: ObjectId(id),
-          deal: ObjectId(relatedId),
-          owner: ObjectId(res.locals.user),
-        });
+        dataStructure.deal = ObjectId(relatedId);
       }
+      const newReply = await Message.create({
+        ...dataStructure,
+        owner: ObjectId(res.locals.user),
+      });
       res.status(200).json({ message: "success", new: newReply });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -269,45 +261,34 @@ export default class MessageControllers {
       const checkMsg = await Message.findById(id);
       const getPost = await Post.findById(checkMsg.post);
 
-      if (!checkMsg.isDeleted) {
+      if (!checkMsg || checkMsg.isDeleted) {
         errorResponse(res, 404);
         return;
       }
       const { messageType, relatedMsg } = checkMsg;
 
-      if (
-        messageType === "question" ||
-        messageType === "transaction" ||
-        relatedMsg
-      ) {
-        checkMsg.content = content;
-      }
+      // for every type of message in common
+      checkMsg.content = content;
+
       if (messageType === "apply" && !relatedMsg) {
-        let applyDealMethod;
-        if (
-          !getPost.tradingOptions.convenientStores.length ||
-          chooseDealMethod === "faceToFace"
-        ) {
-          applyDealMethod = getPost.tradingOptions.faceToFace;
-        }
-
-        for (let store of getPost.tradingOptions.convenientStores) {
-          if (chooseDealMethod === "sevenEleven" && store === "7-11") {
-            applyDealMethod = { convenientStore: store };
-            break;
+        if (chooseDealMethod === "faceToFace") {
+          checkMsg.applyDealMethod = {
+            [chooseDealMethod]: getPost.tradingOptions.faceToFace,
+          };
+        } else {
+          for (let store of getPost.tradingOptions.convenientStores) {
+            if (chooseDealMethod === "sevenEleven" && store === "7-11") {
+              checkMsg.applyDealMethod = { convenientStore: store };
+              break;
+            }
+            if (chooseDealMethod === "familyMart" && store === "全家") {
+              checkMsg.applyDealMethod = { convenientStore: store };
+              break;
+            } else {
+              errorResponse(res, 404);
+              return;
+            }
           }
-          if (chooseDealMethod === "familyMart" && store === "全家") {
-            applyDealMethod = { convenientStore: store };
-            break;
-          } else {
-            errorResponse(res, 404);
-            return;
-          }
-        }
-
-        checkMsg.content = content;
-        if (applyDealMethod) {
-          checkMsg.applyDealMethod = applyDealMethod;
         }
       }
 
@@ -327,7 +308,7 @@ export default class MessageControllers {
 
     try {
       const findMsgs = await Message.find({
-        $or: [{ _id: id }, { relatedMsg: ObjectId(id) }],
+        $or: [{ id: id }, { relatedMsg: ObjectId(id) }],
       });
 
       let count = findMsgs.length;
