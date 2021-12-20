@@ -223,12 +223,16 @@ export default class UserControllers {
     const { id } = req.params;
     const { avatarUrl } = req.body;
     try {
-      const user = await User.findByIdAndUpdate(id, avatarUrl, {
-        runValidators: true,
-        new: true,
-      });
+      const user = await User.findByIdAndUpdate(
+        id,
+        { avatarUrl },
+        {
+          runValidators: true,
+          new: true,
+        }
+      );
 
-      res.status(200).json({ message: success, update: user });
+      res.status(200).json({ message: "success", update: user });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
