@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Message from "../models/message.js";
 import Post from "../models/post.js";
+import Transaction from "../models/transaction.js";
 
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 import { errorResponse } from "../utils/errorMsgs.js";
@@ -147,14 +148,16 @@ export default class MessageControllers {
   static async createMessage(req, res, next) {
     const { content, chooseDealMethod, messageType, relatedId } = req.body; // relatedId is a post or transaction
     try {
-      const { _id, dealer, tradingOptions } =
+      const related =
         (await Post.findById(relatedId)) ||
         (await Transaction.findById(relatedId));
 
-      if (!_id) {
+      if (!related) {
         errorResponse(res, 404);
         return;
       }
+
+      const { _id, dealer, tradingOptions } = related;
 
       let newMessage;
       if (messageType === "question") {
