@@ -386,8 +386,6 @@ const allDistricts = [
   "東引鄉",
 ];
 
-function changeDefault() {}
-
 const postSchema = new Schema({
   itemName: {
     type: String,

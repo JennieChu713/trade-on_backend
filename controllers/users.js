@@ -90,6 +90,12 @@ export default class UserControllers {
       const paginate = paginateObject(totalDocs, limit, page);
       const allUsers = docs;
 
+      for (const user of allUsers) {
+        if (!user.preferDealMethods.convenientStores.length) {
+          user.preferDealMethods.convenientStores = undefined;
+        }
+      }
+
       res.status(200).json({ message: "success", paginate, allUsers });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -126,6 +132,10 @@ export default class UserControllers {
         return;
       }
 
+      if (!user.preferDealMethods.convenientStores.length) {
+        user.preferDealMethods.convenientStores = undefined;
+      }
+
       res.status(200).json({ message: "success", userInfo: user });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -137,30 +147,46 @@ export default class UserControllers {
     const {
       nickname,
       introduction,
+      convenientStores,
+      region,
+      district,
       accountName,
       bankCode,
       bankName,
       accountNum,
     } = req.body;
 
-    let account;
-    if (accountName && bankCode && bankName && accountNum) {
-      account = { accountName, accountNum, bankCode, bankName };
-    }
     if (!nickname) {
       errorResponse(res, 400);
       return;
     }
+    const dataStructure = { nickname };
 
-    const dataStruct = account
-      ? { nickname, introduction, account }
-      : { nickname, introduction };
+    if (introduction) {
+      dataStructure.introduction = introduction;
+    }
+
+    if (accountName && bankCode && bankName && accountNum) {
+      dataStructure.account = { accountName, accountNum, bankCode, bankName };
+    }
+
+    const preferDealMethods = {};
+    if (convenientStores && convenientStores.length) {
+      preferDealMethods.convenientStores = [...convenientStores];
+    }
+    if (region && district) {
+      preferDealMethods.faceToFace = { region, district };
+    }
 
     try {
-      const updateUser = await User.findByIdAndUpdate(id, dataStruct, {
-        runValidators: true,
-        new: true,
-      });
+      const updateUser = await User.findByIdAndUpdate(
+        id,
+        { ...dataStructure, ...preferDealMethods },
+        {
+          runValidators: true,
+          new: true,
+        }
+      );
 
       res.status(200).json({ message: "success", update: updateUser });
     } catch (err) {

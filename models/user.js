@@ -51,6 +51,19 @@ const userSchema = new Schema({
     default: "user",
     select: false,
   },
+  preferDealMethods: {
+    convenientStores: [{ type: String, enum: ["7-11", "全家"] }],
+    faceToFace: {
+      region: {
+        type: String,
+        enum: allRegions,
+      },
+      district: {
+        type: String,
+        enum: allDistricts,
+      },
+    },
+  },
 });
 
 userSchema.set("timestamps", true);
@@ -84,6 +97,10 @@ userSchema.method("toJSON", function () {
 // save hashed password
 userSchema.pre("save", async function (next) {
   //must use function declaration
+  if (!this.preferDealMethods.convenientStores.length) {
+    this.preferDealMethods.convenientStores = undefined;
+  }
+
   if (!this.isModified("password")) {
     next();
   }
