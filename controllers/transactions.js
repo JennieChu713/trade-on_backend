@@ -239,14 +239,12 @@ export default class TransactionControllers {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
         dealer: res.locals.user,
-      }).lean();
+      });
 
       if (checkProcess.isFilled) {
-        const updateProcess = await Transaction.findByIdAndUpdate(
-          id,
-          { isPaid: true },
-          { runValidators: true, new: true }
-        );
+        checkProcess.isPaid = true;
+        const updateProcess = await checkProcess.save();
+
         res.status(200).json({ message: "success", update: updateProcess });
       }
     } catch (err) {
@@ -262,16 +260,12 @@ export default class TransactionControllers {
       const checkProcess = await Transaction.findOne({
         _id: ObjectId(id),
         dealer: res.locals.user,
-      })
-        .select("isFilled isPaid")
-        .lean();
+      });
 
       if (checkProcess.isFilled && checkProcess.isPaid) {
-        const updateProcess = await Transaction.findByIdAndUpdate(
-          id,
-          { isCompleted: true },
-          { runValidators: true, new: true }
-        );
+        checkProcess.isCompleted = true;
+        const updateProcess = await checkProcess.save();
+
         const givenRecord = await Post.findByIdAndUpdate(
           { _id: ObjectId(updateProcess.post) },
           { $inc: { givenAmount: updateProcess.amount } },
