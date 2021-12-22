@@ -197,7 +197,7 @@ export const resetting = async (req, res, next) => {
               const category = getCategory._id;
 
               const itemStatus = pickRandom(15) % 2 === 0 ? "全新" : "二手";
-              const { _id } = findUser;
+              const { id } = findUser;
               const imgUrls = [
                 "https://images.unsplash.com/photo-1558276561-95e31d860c4b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
               ];
@@ -209,7 +209,7 @@ export const resetting = async (req, res, next) => {
                 description: descripts[pickRandom(descripts.length)],
                 tradingOptions: tradings[pickRandom(tradings.length)],
                 category,
-                owner: _id,
+                author: id,
               });
 
               if (i === 29) {
@@ -292,7 +292,7 @@ export const resetting = async (req, res, next) => {
               ...startAMsgs[pickRandom(startAMsgs.length)],
               applyDealMethod: dealMethod,
               post: post._id,
-              owner: dealer,
+              author: dealer,
             });
           }
 
@@ -302,7 +302,7 @@ export const resetting = async (req, res, next) => {
               content: "寄送資料已經填寫好囉！再請你確認～",
               messageType: "transaction",
               deal: trans._id,
-              owner: dealer,
+              author: dealer,
             });
 
             if (msg && pickRandom(4) % 2) {
@@ -311,7 +311,7 @@ export const resetting = async (req, res, next) => {
                 messageType: "transaction",
                 deal: trans._id,
                 relatedMsg: msg._id,
-                owner,
+                author: owner,
               });
             }
           }
@@ -322,7 +322,7 @@ export const resetting = async (req, res, next) => {
             // generating 11 dummy data for post messages
             Array.from({ length: 7 }, async (_, i) => {
               const {
-                _id,
+                id,
                 tradingOptions: { convenientStores, faceToFace },
               } = checkPosts[pickRandom(checkPosts.length)];
 
@@ -332,8 +332,8 @@ export const resetting = async (req, res, next) => {
                 case "question":
                   dataStruct = {
                     ...startQMsgs[pickRandom(startQMsgs.length)],
-                    post: _id,
-                    owner: dealer,
+                    post: id,
+                    author: dealer,
                   };
                   break;
                 case "apply":
@@ -346,9 +346,9 @@ export const resetting = async (req, res, next) => {
                               pickRandom(convenientStores.length)
                             ],
                         }
-                      : faceToFace,
-                    post: _id,
-                    owner: dealer,
+                      : { faceToFace },
+                    post: id,
+                    author: dealer,
                   };
                   break;
               }
@@ -359,9 +359,9 @@ export const resetting = async (req, res, next) => {
                 if (addReply.messageType === newMsg.messageType) {
                   await Message.create({
                     ...addReply,
-                    post: _id,
+                    post: id,
                     relatedMsg: newMsg._id,
-                    owner,
+                    author: owner,
                   });
                 }
               }

@@ -150,9 +150,7 @@ export default class UserControllers {
       convenientStores,
       region,
       district,
-      accountName,
       bankCode,
-      bankName,
       accountNum,
     } = req.body;
 
@@ -166,8 +164,8 @@ export default class UserControllers {
       dataStructure.introduction = introduction;
     }
 
-    if (accountName && bankCode && bankName && accountNum) {
-      dataStructure.account = { accountName, accountNum, bankCode, bankName };
+    if (bankCode && accountNum) {
+      dataStructure.account = { accountNum, bankCode };
     }
 
     const preferDealMethods = {};
@@ -208,12 +206,17 @@ export default class UserControllers {
   static async getMe(req, res, next) {
     try {
       const user = await User.findById(res.locals.user).select(
-        "-account +accountAuthority -__v"
+        "+accountAuthority -__v"
       );
       if (!user) {
         errorResponse(res, 404);
         return;
       }
+
+      if (!user.preferDealMethods.convenientStores.length) {
+        user.preferDealMethods.convenientStores = undefined;
+      }
+
       res.status(200).json({ message: "success", userInfo: user });
     } catch (err) {
       res.status(500).json({ error: err.message });

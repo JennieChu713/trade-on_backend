@@ -24,12 +24,12 @@ export default class PostControllers {
     }
 
     const filterQuery = user
-      ? { owner: ObjectId(user), ...publicValue }
+      ? { author: ObjectId(user), ...publicValue }
       : publicValue;
     const selecting = "-tradingOptions";
     //const selecting = user ? "-tradingOptions" : "-tradingOptions -isPublic";
     const options = optionsSetup(page, size, selecting, {
-      path: "owner category",
+      path: "author category",
       select: "nickname email categoryName",
     });
     const { limit } = options;
@@ -61,7 +61,7 @@ export default class PostControllers {
     const { id } = req.params;
     try {
       const post = await Post.findById(id).populate({
-        path: "owner category",
+        path: "author category",
         select: "email nickname categoryName",
       });
 
@@ -118,7 +118,7 @@ export default class PostControllers {
       description,
       imgUrls: allImgUrls,
       category: ObjectId(categoryId),
-      owner: ObjectId(res.locals.user),
+      author: ObjectId(res.locals.user),
     };
     let tradingOptions = {};
     if (convenientStores && convenientStores.length) {

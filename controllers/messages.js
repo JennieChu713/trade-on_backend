@@ -13,7 +13,7 @@ export default class MessageControllers {
     const { page, size, type } = req.query;
     const matchQuery = type ? { messageType: type } : {};
     const options = optionsSetup(page, size, "", {
-      path: "owner post",
+      path: "author post",
       select: "email nickname itemName",
     });
     const { limit } = options;
@@ -49,17 +49,17 @@ export default class MessageControllers {
         {
           $lookup: {
             from: "users",
-            localField: "owner",
+            localField: "author",
             foreignField: "_id",
-            as: "ownerInfo",
+            as: "authorInfo",
           },
         },
         {
           $project: {
             content: 1,
-            owner: 1,
-            "ownerInfo.email": 1,
-            "ownerInfo.nickname": 1,
+            author: 1,
+            "authorInfo.email": 1,
+            "authorInfo.nickname": 1,
             relatedMsg: 1,
             messageType: 1,
             applyDealMethod: 1,
@@ -113,7 +113,7 @@ export default class MessageControllers {
 
     try {
       const allMsgs = await Message.find({ deal: ObjectId(id) }).populate(
-        "owner deal",
+        "author deal",
         "email nickname post"
       );
 
@@ -134,7 +134,7 @@ export default class MessageControllers {
     const { id } = req.params;
     try {
       const msg = await Message.findById(id).populate(
-        "owner post",
+        "author post",
         "email nickname itemName"
       );
 
@@ -208,7 +208,7 @@ export default class MessageControllers {
       }
       const newMessage = await Message.create({
         ...dataStructure,
-        owner: ObjectId(res.locals.user),
+        author: ObjectId(res.locals.user),
       });
       res.status(200).json({ message: "success", new: newMessage });
     } catch (err) {
@@ -244,7 +244,7 @@ export default class MessageControllers {
       }
       const newReply = await Message.create({
         ...dataStructure,
-        owner: ObjectId(res.locals.user),
+        author: ObjectId(res.locals.user),
       });
       res.status(200).json({ message: "success", new: newReply });
     } catch (err) {

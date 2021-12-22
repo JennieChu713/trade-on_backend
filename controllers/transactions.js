@@ -94,11 +94,13 @@ export default class TransactionControllers {
   // CREATE a transaction (base on apply message)
   static async createTransaction(req, res, next) {
     const { id } = req.params; //message id
-    const { amount, accountName, accountNum, bankCode, bankName } = req.body;
+    const { accountNum, bankCode } = req.body;
+    let { amount } = req.body;
 
     if (!amount) {
-      errorResponse(res, 400);
-      return;
+      amount = 1;
+      //errorResponse(res, 400);
+      //return;
     }
     try {
       const applyMsg = await Message.findById(id);
@@ -110,7 +112,7 @@ export default class TransactionControllers {
 
       // get present transaction deals' total amount as reservedTransAmount
       const presentDeals = await Transaction.aggregate([
-        { $match: { post: ObjectId(applyMsg.post) } },
+        { $match: { post: ObjectId(applyMsg.post), isCanceled: false } },
         {
           $group: {
             _id: { transId: "$id", owner: "$owner", post: "$post" },
@@ -137,10 +139,12 @@ export default class TransactionControllers {
       if (presentDeals.length && remainAmount) {
         const { remain } = remainAmount[0];
         const { reservedTransAmount } = presentDeals[0];
-        if (remain - reservedTransAmount < amount) {
-          return res
-            .status(200)
-            .json({ message: "Amount is over remain quantities." });
+        if (amount > remain - reservedTransAmount) {
+          return res.status(200).json({
+            message: `Amount is over remain quantities. remain: ${
+              remain - reservedTransAmount
+            }`,
+          });
         }
       }
 
@@ -148,11 +152,11 @@ export default class TransactionControllers {
       const owner = await User.findById(res.locals.user);
       const isFace = applyMsg.applyDealMethod.faceToFace ? true : false;
       if (!isFace) {
-        if (!accountName || !accountNum || !bankCode || !bankName) {
+        if (!accountNum || !bankCode) {
           errorResponse(res, 400);
           return;
         }
-        const account = { accountName, accountNum, bankCode, bankName };
+        const account = { accountNum, bankCode };
 
         owner.account = { ...account };
         await owner.save();
@@ -209,9 +213,9 @@ export default class TransactionControllers {
   // UPDATE user accountInfo if none;  for ATM usage
   static async updateUserAccount(req, res, next) {
     const { id } = req.params;
-    const { accountName, accountNum, bankCode, bankName } = req.body;
+    const { accountNum, bankCode } = req.body;
 
-    if (!accountName || !accountNum || !bankCode || !bankName) {
+    if (!accountNum || !bankCode) {
       errorResponse(res, 400);
       return;
     }
@@ -219,7 +223,7 @@ export default class TransactionControllers {
     try {
       const updateUser = await User.findByIdAndUpdate(
         id,
-        { account: { accountName, accountNum, bankCode, bankName } },
+        { account: { accountNum, bankCode } },
         { runValidators: true, new: true }
       );
       res.status(200).json({ message: "success", update: updateUser });

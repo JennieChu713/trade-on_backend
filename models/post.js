@@ -440,8 +440,7 @@ const postSchema = new Schema({
     default: true,
   },
   imgUrls: [String],
-  owner: {
-    // author?
+  author: {
     type: Schema.Types.ObjectId,
     ref: "User",
     index: true,

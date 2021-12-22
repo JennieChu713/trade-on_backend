@@ -24,8 +24,7 @@ const msgSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Transaction",
   },
-  owner: {
-    // author?
+  author: {
     type: Schema.Types.ObjectId,
     ref: "User",
     index: true,

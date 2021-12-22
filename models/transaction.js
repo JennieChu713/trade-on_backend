@@ -22,10 +22,6 @@ const transactSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  // isSent: {
-  //   type: Boolean,
-  //   default: false,
-  // },
   isCompleted: {
     type: Boolean,
     default: false,
@@ -55,7 +51,9 @@ const transactSchema = new Schema({
     index: true,
   },
 });
+
 transactSchema.set("timestamps", true);
+
 transactSchema.method("toJSON", function () {
   const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
   object.id = _id;

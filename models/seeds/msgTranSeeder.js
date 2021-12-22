@@ -109,7 +109,7 @@ db.once("open", async () => {
           ...startAMsgs[pickRandom(startAMsgs.length)],
           applyDealMethod: dealMethod,
           post: post._id,
-          owner: dealer,
+          author: dealer,
         });
       }
 
@@ -119,7 +119,7 @@ db.once("open", async () => {
           content: "寄送資料已經填寫好囉！再請你確認～",
           messageType: "transaction",
           deal: trans._id,
-          owner: dealer,
+          author: dealer,
         });
 
         if (msg && pickRandom(4) % 2) {
@@ -128,7 +128,7 @@ db.once("open", async () => {
             messageType: "transaction",
             deal: trans._id,
             relatedMsg: msg._id,
-            owner,
+            author: owner,
           });
         }
       }
@@ -139,7 +139,7 @@ db.once("open", async () => {
         // generating 7 dummy data for post messages
         Array.from({ length: 7 }, async (_, i) => {
           const {
-            _id,
+            id,
             tradingOptions: { convenientStores, faceToFace },
           } = checkPosts[pickRandom(checkPosts.length)];
 
@@ -149,8 +149,8 @@ db.once("open", async () => {
             case "question":
               dataStruct = {
                 ...startQMsgs[pickRandom(startQMsgs.length)],
-                post: _id,
-                owner: dealer,
+                post: id,
+                author: dealer,
               };
               break;
             case "apply":
@@ -161,9 +161,9 @@ db.once("open", async () => {
                       convenientStore:
                         convenientStores[pickRandom(convenientStores.length)],
                     }
-                  : faceToFace,
-                post: _id,
-                owner: dealer,
+                  : { faceToFace },
+                post: id,
+                author: dealer,
               };
               break;
           }
@@ -174,9 +174,9 @@ db.once("open", async () => {
             if (addReply.messageType === newMsg.messageType) {
               await Message.create({
                 ...addReply,
-                post: _id,
+                post: id,
                 relatedMsg: newMsg._id,
-                owner,
+                author: owner,
               });
             }
           }

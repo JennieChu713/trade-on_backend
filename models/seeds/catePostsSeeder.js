@@ -120,7 +120,7 @@ db.once("open", async () => {
           const category = getCategory._id;
 
           const itemStatus = pickRandom(15) % 2 === 0 ? "全新" : "二手";
-          const { _id } = findUser;
+          const { id } = findUser;
           const imgUrls = [
             "https://images.unsplash.com/photo-1558276561-95e31d860c4b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
           ];
@@ -132,7 +132,7 @@ db.once("open", async () => {
             description: descripts[pickRandom(descripts.length)],
             tradingOptions: tradings[pickRandom(tradings.length)],
             category,
-            owner: _id,
+            author: id,
           });
 
           if (i === 29) {

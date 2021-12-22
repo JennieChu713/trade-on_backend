@@ -11,12 +11,12 @@ export default class AuthenticationMiddleware {
   static async isPostAuthor(req, res, next) {
     const { id } = req.params;
     try {
-      const post = await Post.findById(id).select("owner").lean();
+      const post = await Post.findById(id).select("author").lean();
       if (!post) {
         errorResponse(res, 404);
         return;
       }
-      if (!post.owner.equals(res.locals.user)) {
+      if (!post.author.equals(res.locals.user)) {
         errorResponse(res, 401);
         return;
       }
@@ -48,12 +48,12 @@ export default class AuthenticationMiddleware {
   static async isMessageAuthor(req, res, next) {
     const { id } = req.params;
     try {
-      const message = await Message.findById(id).select("owner").lean();
+      const message = await Message.findById(id).select("author").lean();
       if (!message) {
         errorResponse(res, 404);
         return;
       }
-      if (!message.owner.equals(res.locals.user)) {
+      if (!message.author.equals(res.locals.user)) {
         errorResponse(res, 401);
         return;
       }
@@ -175,13 +175,13 @@ export default class AuthenticationMiddleware {
   static async isAdminOrOwner(req, res, next) {
     const { id } = req.params;
     try {
-      const post = await Post.findById(id).select("owner").lean();
+      const post = await Post.findById(id).select("author").lean();
       if (!post) {
         errorResponse(res, 404);
         return;
       }
 
-      if (post.owner.equals(res.locals.user) || res.locals.auth === "admin") {
+      if (post.author.equals(res.locals.user) || res.locals.auth === "admin") {
         return next();
       }
     } catch (err) {
