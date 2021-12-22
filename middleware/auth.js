@@ -29,13 +29,15 @@ export default class AuthenticationMiddleware {
   static async isPostAuthorFromMsg(req, res, next) {
     const { id } = req.params;
     try {
-      const msg = await Message.findById(id).select("post").lean();
+      const msg = await Message.findById(id)
+        .populate("post")
+        .select("author")
+        .lean();
       if (!msg) {
         errorResponse(res, 404);
         return;
       }
-      const post = await Post.findById(msg.post).select("owner").lean();
-      if (!post.owner.equals(res.locals.user)) {
+      if (!msg.post.author.equals(res.locals.user)) {
         errorResponse(res, 401);
         return;
       }
@@ -187,7 +189,7 @@ export default class AuthenticationMiddleware {
     } catch (err) {
       next(err);
     }
-    res.status(401).json({ error: "Unauthorized" });
+    errorResponse(res, 401);
   }
 
   static isUserSelf(req, res, next) {
