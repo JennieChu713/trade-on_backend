@@ -186,6 +186,10 @@ export default class UserControllers {
         }
       );
 
+      if (!updateUser.preferDealMethods.convenientStores.length) {
+        updateUser.preferDealMethods.convenientStores = undefined;
+      }
+
       res.status(200).json({ message: "success", update: updateUser });
     } catch (err) {
       res.status(500).json({ error: err.message });

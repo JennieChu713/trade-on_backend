@@ -14,8 +14,8 @@ const transactSchema = new Schema({
   },
   sendingInfo: {
     name: { type: String },
-    cellPhone: { type: Number, match: /^\d{4}[-]?\d{6}$/ },
-    storeCode: { type: Number, match: /^\d{5, 6}$/ },
+    cellPhone: { type: String, match: /^\d{4}[-]?\d{6}$/ },
+    storeCode: { type: String, match: /^\d{5, 6}$/ },
     storeName: { type: String },
   },
   isPaid: {

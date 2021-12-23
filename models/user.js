@@ -413,8 +413,8 @@ const userSchema = new Schema({
   },
   avatarUrl: String,
   account: {
-    bankCode: { type: Number, match: /^\d{3}$/ },
-    accountNum: { type: Number, match: /^\d{10,16}$/ },
+    bankCode: { type: String, match: /^\d{3}$/ },
+    accountNum: { type: String, match: /^\d{10,16}$/ },
     select: false,
   },
   isAllowPost: {
