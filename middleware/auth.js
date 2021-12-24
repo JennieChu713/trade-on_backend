@@ -111,8 +111,8 @@ export default class AuthenticationMiddleware {
         return next();
       }
       if (
-        transaction.owner.equals(res.locals.user) ||
-        transaction.dealer.equals(res.locals.user)
+        transaction[0].owner.equals(res.locals.user) ||
+        transaction[0].dealer.equals(res.locals.user)
       ) {
         return next();
       }
