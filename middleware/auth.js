@@ -102,7 +102,7 @@ export default class AuthenticationMiddleware {
     try {
       const transaction = id
         ? await Transaction.findById(id).select("owner dealer").lean()
-        : await Transaction.find({
+        : await Transaction.findOne({
             $or: [{ owner: res.locals.user }, { dealer: res.locals.user }],
           })
             .select("owner dealer")
@@ -111,8 +111,8 @@ export default class AuthenticationMiddleware {
         return next();
       }
       if (
-        transaction[0].owner.equals(res.locals.user) ||
-        transaction[0].dealer.equals(res.locals.user)
+        transaction.owner.equals(res.locals.user) ||
+        transaction.dealer.equals(res.locals.user)
       ) {
         return next();
       }
