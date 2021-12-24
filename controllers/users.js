@@ -59,14 +59,32 @@ export default class UserControllers {
   }
 
   static async login(req, res, next) {
-    const { email, nickname, _id, accountAuthority, avatarUrl } = req.user;
+    let preferDealMethods, account, avatarUrl;
+    if (!req.user.preferDealMethods.convenientStores.length) {
+      req.user.preferDealMethods.convenientStores = undefined;
+      if (req.user.preferDealMethods.faceToFace.region) {
+        preferDealMethods = req.user.preferDealMethods;
+      }
+    }
+
+    if (req.user.account) {
+      account = req.user.account;
+    }
+
+    if (req.user.avatarUrl) {
+      avatarUrl = req.user.avatarUrl;
+    }
+
     const userInfo = {
-      email,
-      nickname,
-      id: _id,
-      accountAuthority,
+      preferDealMethods,
+      account,
+      email: req.user.email,
+      nickname: req.user.nickname,
+      id: req.user._id,
+      accountAuthority: req.user.accountAuthority,
       avatarUrl,
     };
+
     const token = signToken(req.user);
     res.status(200).json({ message: "success", userInfo, token });
   }
