@@ -107,7 +107,7 @@ export default class AuthenticationMiddleware {
           })
             .select("owner dealer")
             .lean();
-      if (transaction.length >= 0) {
+      if (!transaction.length) {
         return next();
       }
       if (
