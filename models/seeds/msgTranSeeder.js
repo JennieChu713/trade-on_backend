@@ -71,7 +71,7 @@ db.once("open", async () => {
 
   let owner, dealer;
   checkUsers.forEach((user) => {
-    if (user.nickname === "dealer") {
+    if (user.email === "dealer@mail.com") {
       dealer = user._id;
     } else {
       owner = user._id;
