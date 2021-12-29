@@ -59,16 +59,22 @@ export default class UserControllers {
   }
 
   static async login(req, res, next) {
-    let preferDealMethods, account, avatarUrl;
+    let preferDealMethods, account, avatarUrl, introduction;
     if (!req.user.preferDealMethods.convenientStores.length) {
       req.user.preferDealMethods.convenientStores = undefined;
       if (req.user.preferDealMethods.faceToFace.region) {
         preferDealMethods = req.user.preferDealMethods;
       }
+    } else {
+      preferDealMethods = req.user.preferDealMethods;
     }
 
-    if (req.user.account) {
+    if (req.user.account.bankCode) {
       account = req.user.account;
+    }
+
+    if (req.user.introduction) {
+      introduction = req.user.introduction;
     }
 
     if (req.user.avatarUrl) {
@@ -78,6 +84,7 @@ export default class UserControllers {
     const userInfo = {
       preferDealMethods,
       account,
+      introduction,
       email: req.user.email,
       nickname: req.user.nickname,
       id: req.user._id,
