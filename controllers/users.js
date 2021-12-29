@@ -310,10 +310,16 @@ export default class UserControllers {
     //check whether is taker or giver
     switch (type) {
       case "give":
-        filterQuery.owner = id;
+        if (filterQuery.isCompleted) {
+          filterQuery.owner = id;
+        } else {
+          filterQuery.author = id;
+        }
         break;
       case "take":
-        status === "all" ? (filterQuery.owner = id) : (filterQuery.dealer = id);
+        status === "all"
+          ? (filterQuery.author = id)
+          : (filterQuery.dealer = id);
         break;
     }
 
