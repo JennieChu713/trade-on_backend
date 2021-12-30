@@ -94,11 +94,6 @@ export default class MessageControllers {
       for (const msg of allMsgs) {
         const { messages } = msg;
         for (const mes of messages) {
-          mes.updatedAt = new Date(mes.updatedAt).toLocaleString(
-            "zh-TW",
-            timeOptions
-          );
-
           //manually change _id, updateAt and authorInfo
           mes.author = mes.authorInfo[0];
           mes.authorInfo = undefined;
@@ -106,7 +101,10 @@ export default class MessageControllers {
           mes.id = mes._id;
           mes._id = undefined;
 
-          mes.lastModified = mes.updatedAt;
+          mes.lastModified = new Date(mes.updatedAt).toLocaleString(
+            "zh-TW",
+            timeOptions
+          );
           mes.updatedAt = undefined;
         }
       }
@@ -220,6 +218,9 @@ export default class MessageControllers {
         ...dataStructure,
         author: ObjectId(res.locals.user),
       });
+
+      await newMessage.populate("author", "nickname email");
+
       res.status(200).json({ message: "success", new: newMessage });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -256,6 +257,9 @@ export default class MessageControllers {
         ...dataStructure,
         author: ObjectId(res.locals.user),
       });
+
+      await newReply.populate("author", "nickname email");
+
       res.status(200).json({ message: "success", new: newReply });
     } catch (err) {
       res.status(500).json({ error: err.message });
