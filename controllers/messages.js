@@ -98,6 +98,16 @@ export default class MessageControllers {
             "zh-TW",
             timeOptions
           );
+
+          //manually change _id, updateAt and authorInfo
+          mes.author = mes.authorInfo[0];
+          mes.authorInfo = undefined;
+
+          mes.id = mes._id;
+          mes._id = undefined;
+
+          mes.lastModified = mes.updatedAt;
+          mes.updatedAt = undefined;
         }
       }
 

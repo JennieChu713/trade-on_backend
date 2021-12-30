@@ -129,6 +129,41 @@ const replyMsgs = [
   { content: "好，先等一下喔", messageType: "question" },
 ];
 
+// users
+const users = [
+  {
+    email: "owner@mail.com",
+    nickname: "owner",
+    password: "owner",
+  },
+  {
+    email: "dealer@mail.com",
+    nickname: "dealer",
+    password: "dealer",
+  },
+  {
+    email: "admin@mail.com",
+    nickname: "admin",
+    password: "admin",
+    accountAuthority: "admin",
+  },
+  {
+    email: "mango@mail.com",
+    nickname: "mango",
+    password: "mango",
+  },
+  {
+    email: "banana@mail.com",
+    nickname: "banana",
+    password: "banana",
+  },
+  {
+    email: "tomato@mail.com",
+    nickname: "tomato",
+    password: "tomato",
+  },
+];
+
 // random functions
 function pickRandom(num, mode = "pick") {
   if (mode === "qnt") {
@@ -378,6 +413,48 @@ export const resetting = async (req, res, next) => {
       return res.status(200).json({
         message:
           "success; reset messages of 14 samples with random reply and 3 transactions.",
+      });
+
+    case "users":
+      const dataExist = await User.findOne();
+      if (dataExist) {
+        await User.deleteMany({});
+        console.log("clearout origin user data.");
+      }
+
+      Array.from({ length: 6 }, async (_, i) => {
+        try {
+          const dataStructure = {
+            nickname: users[i].nickname,
+            email: users[i].email,
+            password: users[i].password,
+            avatarUrl:
+              "https://images.unsplash.com/photo-1558276561-95e31d860c4b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
+          };
+
+          if (users[i].accountAuthority) {
+            dataStructure.accountAuthority = users[i].accountAuthority;
+          }
+
+          if (
+            dataStructure.nickname !== "tomato" &&
+            dataStructure.nickname !== "admin"
+          ) {
+            dataStructure.preferDealMethods =
+              tradings[pickRandom(tradings.length)];
+          }
+
+          await User.create(dataStructure);
+
+          if (i === 5) {
+            console.log("user seeder completed.");
+            return res
+              .status(200)
+              .json({ message: "success; reset users as 6 samples." });
+          }
+        } catch (err) {
+          console.error(err.message);
+        }
       });
   }
 };
