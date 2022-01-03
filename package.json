@@ -10,7 +10,8 @@
     "devStart": "nodemon server.js",
     "catePostSeed": "node models/seeds/catePostsSeeder.js",
     "msgTranSeed": "node models/seeds/msgTranSeeder.js",
-    "commonQASeed": "node models/seeds/commonQASeeder.js"
+    "commonQASeed": "node models/seeds/commonQASeeder.js",
+    "userSeed": "node models/seeds/userSeeder.js"
   },
   "author": "jc",
   "license": "ISC",
