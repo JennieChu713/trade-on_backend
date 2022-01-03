@@ -5,6 +5,13 @@ const { Schema } = mongoose;
 const msgSchema = new Schema({
   content: {
     type: String,
+    required: function () {
+      if (this.messageType !== "apply" || this.relatedMsg) {
+        return true;
+      } else {
+        return false;
+      }
+    },
   },
   applyDealMethod: Object,
   relatedMsg: {
@@ -37,6 +44,18 @@ const msgSchema = new Schema({
 });
 
 msgSchema.set("timestamps", true);
+
+msgSchema.pre("save", async function (next) {
+  //must use function declaration
+  if (!this.isModified("content")) {
+    next();
+  }
+
+  if (!this.content && this.messageType === "apply" && !this.relatedMsg) {
+    this.content = undefined;
+  }
+  next();
+});
 
 msgSchema.method("toJSON", function () {
   const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();

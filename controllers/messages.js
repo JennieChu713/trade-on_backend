@@ -238,6 +238,11 @@ export default class MessageControllers {
         .json({ message: "The message to reply does not confirm." });
     }
 
+    if (!content) {
+      errorResponse(res, 400);
+      return;
+    }
+
     try {
       // check if the message is the related subject
       const checkMsg = await Message.findById(id);
@@ -282,7 +287,11 @@ export default class MessageControllers {
       const { messageType, relatedMsg } = checkMsg;
 
       // for every type of message in common
-      checkMsg.content = content;
+      if (content) {
+        checkMsg.content = content;
+      } else if (!content && messageType === "apply" && !relatedMsg) {
+        checkMsg.content = undefined;
+      }
 
       if (messageType === "apply" && !relatedMsg) {
         if (chooseDealMethod === "faceToFace") {

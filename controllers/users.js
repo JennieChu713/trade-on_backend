@@ -183,14 +183,20 @@ export default class UserControllers {
       errorResponse(res, 400);
       return;
     }
+
+    const blankFields = {};
     const dataStructure = { nickname };
 
     if (introduction) {
       dataStructure.introduction = introduction;
+    } else {
+      blankFields.introduction = "";
     }
 
     if (bankCode && accountNum) {
       dataStructure.account = { accountNum, bankCode };
+    } else {
+      blankFields.account = "";
     }
 
     const preferDealMethods = {};
@@ -199,12 +205,14 @@ export default class UserControllers {
     }
     if (region && district) {
       preferDealMethods.faceToFace = { region, district };
+    } else {
+      blankFields.faceToFace = "";
     }
 
     try {
       const updateUser = await User.findByIdAndUpdate(
         id,
-        { ...dataStructure, ...preferDealMethods },
+        { ...dataStructure, ...preferDealMethods, $unset: blankFields },
         {
           runValidators: true,
           new: true,

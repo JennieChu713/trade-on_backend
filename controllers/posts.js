@@ -173,14 +173,20 @@ export default class PostControllers {
       allImgUrls.push(imgUrl);
     }
 
+    const blankFields = {};
     const dataStructure = {
       itemName,
       quantity,
       itemStatus,
-      description,
       imgUrls: allImgUrls,
       category: ObjectId(categoryId),
     };
+
+    if (description) {
+      dataStructure.description = description;
+    } else {
+      blankFields.description = "";
+    }
 
     let tradingOptions = {};
     if (convenientStores && convenientStores.length) {
@@ -189,6 +195,8 @@ export default class PostControllers {
 
     if (region && district) {
       tradingOptions.faceToFace = { region, district };
+    } else {
+      blankFields.faceToFace = "";
     }
 
     dataStructure.tradingOptions = tradingOptions;
@@ -201,7 +209,7 @@ export default class PostControllers {
 
       const updatePost = await Post.findByIdAndUpdate(
         id,
-        { ...dataStructure },
+        { ...dataStructure, $unset: blankFields },
         {
           runValidators: true,
           new: true,
