@@ -94,12 +94,12 @@ export default class MessageControllers {
       for (const msg of allMsgs) {
         const { messages } = msg;
         for (const mes of messages) {
-          //manually change _id, updateAt and authorInfo
-          mes.author = mes.authorInfo[0];
-          mes.authorInfo = undefined;
-
+          // manually change _id, updateAt and authorInfo
           mes.id = mes._id;
           mes._id = undefined;
+
+          mes.author = mes.authorInfo[0];
+          mes.authorInfo = undefined;
 
           mes.lastModified = new Date(mes.updatedAt).toLocaleString(
             "zh-TW",
@@ -169,6 +169,10 @@ export default class MessageControllers {
 
       let dataStructure;
       if (messageType === "question") {
+        if (!content) {
+          errorResponse(res, 400);
+          return;
+        }
         dataStructure = {
           content,
           messageType,
@@ -186,14 +190,14 @@ export default class MessageControllers {
         };
 
         if (
-          !tradingOptions.convenientStores.length ||
+          tradingOptions.selectedMethods.indexOf("面交") > -1 &&
           chooseDealMethod === "faceToFace"
         ) {
           dataStructure.applyDealMethod = {
             faceToFace: tradingOptions.faceToFace,
           };
         } else {
-          for (let store of tradingOptions.convenientStores) {
+          for (let store of tradingOptions.selectedMethods) {
             if (chooseDealMethod === "sevenEleven" && store === "7-11") {
               dataStructure.applyDealMethod = { convenientStore: store };
               break;
@@ -201,10 +205,10 @@ export default class MessageControllers {
             if (chooseDealMethod === "familyMart" && store === "全家") {
               dataStructure.applyDealMethod = { convenientStore: store };
               break;
-            } else {
-              errorResponse(res, 404);
-              return;
             }
+          }
+          if (!dataStructure.applyDealMethod) {
+            errorResponse(res, 404);
           }
         }
       } else if (messageType === "transaction" && dealer) {
@@ -233,9 +237,8 @@ export default class MessageControllers {
     const { content, messageType, relatedId, relatedMsg } = req.body; // relatedId could be the post or transaction
 
     if (id !== relatedMsg) {
-      return res
-        .status(404)
-        .json({ message: "The message to reply does not confirm." });
+      errorResponse(res, 404);
+      return;
     }
 
     if (!content) {
@@ -294,12 +297,15 @@ export default class MessageControllers {
       }
 
       if (messageType === "apply" && !relatedMsg) {
-        if (chooseDealMethod === "faceToFace") {
+        if (
+          chooseDealMethod === "faceToFace" &&
+          getPost.tradingOptions.selectedMethods.indexOf("面交") > -1
+        ) {
           checkMsg.applyDealMethod = {
             [chooseDealMethod]: getPost.tradingOptions.faceToFace,
           };
         } else {
-          for (let store of getPost.tradingOptions.convenientStores) {
+          for (let store of getPost.tradingOptions.selectedMethods) {
             if (chooseDealMethod === "sevenEleven" && store === "7-11") {
               checkMsg.applyDealMethod = { convenientStore: store };
               break;
@@ -307,10 +313,11 @@ export default class MessageControllers {
             if (chooseDealMethod === "familyMart" && store === "全家") {
               checkMsg.applyDealMethod = { convenientStore: store };
               break;
-            } else {
-              errorResponse(res, 404);
-              return;
             }
+          }
+          if (!checkMsg.applyDealMethod) {
+            errorResponse(res, 404);
+            return;
           }
         }
       }

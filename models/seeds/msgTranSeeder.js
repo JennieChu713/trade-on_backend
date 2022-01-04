@@ -81,16 +81,16 @@ db.once("open", async () => {
   //generating 3 dummy transaction data
   Array.from({ length: 12 }, async (_, i) => {
     const post = checkPosts[pickRandom(checkPosts.length)];
-    const convenientStoresOptions = post.tradingOptions.convenientStores;
+    const providedOptions = post.tradingOptions.selectedMethods;
+    const decidedMethod = providedOptions[pickRandom(providedOptions.length)];
+
     const dealMethod =
-      convenientStoresOptions && convenientStoresOptions.length
-        ? {
-            convenientStore:
-              convenientStoresOptions[
-                pickRandom(convenientStoresOptions.length)
-              ],
-          }
-        : { faceToFace: post.tradingOptions.faceToFace };
+      decidedMethod === "面交"
+        ? { faceToFace: post.tradingOptions.faceToFace }
+        : {
+            convenientStore: decidedMethod,
+          };
+
     const isFace = dealMethod.faceToFace ? true : false;
 
     try {
@@ -139,8 +139,8 @@ db.once("open", async () => {
         // generating 7 dummy data for post messages
         Array.from({ length: 7 }, async (_, i) => {
           const {
-            id,
-            tradingOptions: { convenientStores, faceToFace },
+            _id,
+            tradingOptions: { selectedMethods, faceToFace },
           } = checkPosts[pickRandom(checkPosts.length)];
 
           const messageType = pickRandom(4) % 2 ? "question" : "apply";
@@ -149,20 +149,22 @@ db.once("open", async () => {
             case "question":
               dataStruct = {
                 ...startQMsgs[pickRandom(startQMsgs.length)],
-                post: id,
+                post: _id,
                 author: dealer,
               };
               break;
             case "apply":
+              const dealMethod =
+                selectedMethods[pickRandom(selectedMethods.length)];
               dataStruct = {
                 ...startAMsgs[pickRandom(startAMsgs.length)],
-                applyDealMethod: convenientStores.length
-                  ? {
-                      convenientStore:
-                        convenientStores[pickRandom(convenientStores.length)],
-                    }
-                  : { faceToFace },
-                post: id,
+                applyDealMethod:
+                  dealMethod !== "面交"
+                    ? {
+                        convenientStore: dealMethod,
+                      }
+                    : { faceToFace },
+                post: _id,
                 author: dealer,
               };
               break;
@@ -174,7 +176,7 @@ db.once("open", async () => {
             if (addReply.messageType === newMsg.messageType) {
               await Message.create({
                 ...addReply,
-                post: id,
+                post: _id,
                 relatedMsg: newMsg._id,
                 author: owner,
               });

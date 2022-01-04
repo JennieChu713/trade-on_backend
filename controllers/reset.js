@@ -57,7 +57,7 @@ const items = [
 
 const tradings = [
   {
-    convenientStores: ["7-11"],
+    selectedMethods: ["7-11", "面交"],
     faceToFace: {
       region: "新北市",
       district: "新莊區",
@@ -65,17 +65,18 @@ const tradings = [
   },
 
   {
-    convenientStores: ["7-11", "全家"],
+    selectedMethods: ["7-11", "全家"],
   },
 
   {
+    selectedMethods: ["面交"],
     faceToFace: {
       region: "南投縣",
       district: "埔里鎮",
     },
   },
   {
-    convenientStores: ["全家"],
+    selectedMethods: ["全家", "面交"],
     faceToFace: {
       region: "臺南市",
       district: "善化區",
@@ -83,9 +84,10 @@ const tradings = [
   },
 
   {
-    convenientStores: ["全家"],
+    selectedMethods: ["全家"],
   },
   {
+    selectedMethods: ["面交"],
     faceToFace: {
       region: "基隆市",
       district: "安樂區",
@@ -130,7 +132,7 @@ const replyMsgs = [
 ];
 
 // users
-const users = [
+const seedUsers = [
   {
     email: "owner@mail.com",
     nickname: "owner",
@@ -299,16 +301,17 @@ export const resetting = async (req, res, next) => {
       //generating 3 dummy transaction data
       Array.from({ length: 12 }, async (_, i) => {
         const post = checkPosts[pickRandom(checkPosts.length)];
-        const convenientStoresOptions = post.tradingOptions.convenientStores;
+        const providedOptions = post.tradingOptions.selectedMethods;
+        const decidedMethod =
+          providedOptions[pickRandom(providedOptions.length)];
+
         const dealMethod =
-          convenientStoresOptions && convenientStoresOptions.length
-            ? {
-                convenientStore:
-                  convenientStoresOptions[
-                    pickRandom(convenientStoresOptions.length)
-                  ],
-              }
-            : { faceToFace: post.tradingOptions.faceToFace };
+          decidedMethod === "面交"
+            ? { faceToFace: post.tradingOptions.faceToFace }
+            : {
+                convenientStore: decidedMethod,
+              };
+
         const isFace = dealMethod.faceToFace ? true : false;
 
         try {
@@ -357,8 +360,8 @@ export const resetting = async (req, res, next) => {
             // generating 11 dummy data for post messages
             Array.from({ length: 7 }, async (_, i) => {
               const {
-                id,
-                tradingOptions: { convenientStores, faceToFace },
+                _id,
+                tradingOptions: { selectedMethods, faceToFace },
               } = checkPosts[pickRandom(checkPosts.length)];
 
               const messageType = pickRandom(4) % 2 ? "question" : "apply";
@@ -367,22 +370,22 @@ export const resetting = async (req, res, next) => {
                 case "question":
                   dataStruct = {
                     ...startQMsgs[pickRandom(startQMsgs.length)],
-                    post: id,
+                    post: _id,
                     author: dealer,
                   };
                   break;
                 case "apply":
+                  const dealMethod =
+                    selectedMethods[pickRandom(selectedMethods.length)];
                   dataStruct = {
                     ...startAMsgs[pickRandom(startAMsgs.length)],
-                    applyDealMethod: convenientStores.length
-                      ? {
-                          convenientStore:
-                            convenientStores[
-                              pickRandom(convenientStores.length)
-                            ],
-                        }
-                      : { faceToFace },
-                    post: id,
+                    applyDealMethod:
+                      dealMethod !== "面交"
+                        ? {
+                            convenientStore: dealMethod,
+                          }
+                        : { faceToFace },
+                    post: _id,
                     author: dealer,
                   };
                   break;
@@ -394,7 +397,7 @@ export const resetting = async (req, res, next) => {
                 if (addReply.messageType === newMsg.messageType) {
                   await Message.create({
                     ...addReply,
-                    post: id,
+                    post: _id,
                     relatedMsg: newMsg._id,
                     author: owner,
                   });
@@ -412,7 +415,7 @@ export const resetting = async (req, res, next) => {
       });
       return res.status(200).json({
         message:
-          "success; reset messages of 14 samples with random reply and 3 transactions.",
+          "success; reset messages of 7+12 samples with random reply and 12 transactions.",
       });
 
     case "users":
@@ -423,30 +426,25 @@ export const resetting = async (req, res, next) => {
       }
 
       Array.from({ length: 6 }, async (_, i) => {
+        const { nickname, email, password, accountAuthority } = seedUsers[i];
+
+        const dataStructure = {
+          nickname,
+          email,
+          password,
+          accountAuthority,
+          avatarUrl:
+            "https://images.unsplash.com/photo-1558276561-95e31d860c4b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
+        };
+
+        if (nickname !== "tomato" && nickname !== "admin") {
+          dataStructure.preferDealMethods =
+            tradings[pickRandom(tradings.length)];
+        }
         try {
-          const dataStructure = {
-            nickname: users[i].nickname,
-            email: users[i].email,
-            password: users[i].password,
-            avatarUrl:
-              "https://images.unsplash.com/photo-1558276561-95e31d860c4b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
-          };
-
-          if (users[i].accountAuthority) {
-            dataStructure.accountAuthority = users[i].accountAuthority;
-          }
-
-          if (
-            dataStructure.nickname !== "tomato" &&
-            dataStructure.nickname !== "admin"
-          ) {
-            dataStructure.preferDealMethods =
-              tradings[pickRandom(tradings.length)];
-          }
-
           await User.create(dataStructure);
 
-          if (i === 5) {
+          if ((await User.countDocuments()) === 6) {
             console.log("user seeder completed.");
             return res
               .status(200)

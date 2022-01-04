@@ -26,7 +26,7 @@ const items = [
 
 const tradings = [
   {
-    convenientStores: ["7-11"],
+    selectedMethods: ["7-11", "面交"],
     faceToFace: {
       region: "新北市",
       district: "新莊區",
@@ -34,17 +34,18 @@ const tradings = [
   },
 
   {
-    convenientStores: ["7-11", "全家"],
+    selectedMethods: ["7-11", "全家"],
   },
 
   {
+    selectedMethods: ["面交"],
     faceToFace: {
       region: "南投縣",
       district: "埔里鎮",
     },
   },
   {
-    convenientStores: ["全家"],
+    selectedMethods: ["全家", "面交"],
     faceToFace: {
       region: "臺南市",
       district: "善化區",
@@ -52,9 +53,10 @@ const tradings = [
   },
 
   {
-    convenientStores: ["全家"],
+    selectedMethods: ["全家"],
   },
   {
+    selectedMethods: ["面交"],
     faceToFace: {
       region: "基隆市",
       district: "安樂區",

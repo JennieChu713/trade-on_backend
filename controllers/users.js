@@ -60,14 +60,15 @@ export default class UserControllers {
 
   static async login(req, res, next) {
     let preferDealMethods, account, avatarUrl, introduction;
-    if (!req.user.preferDealMethods.convenientStores.length) {
-      req.user.preferDealMethods.convenientStores = undefined;
-      if (req.user.preferDealMethods.faceToFace.region) {
-        preferDealMethods = req.user.preferDealMethods;
-      }
-    } else {
-      preferDealMethods = req.user.preferDealMethods;
+    if (!req.user.preferDealMethods.faceToFace.region) {
+      req.user.preferDealMethods.faceToFace = undefined;
     }
+
+    if (!req.user.preferDealMethods.selectedMethods.length) {
+      req.user.preferDealMethods.selectedMethods = undefined;
+    }
+
+    preferDealMethods = req.user.preferDealMethods;
 
     if (req.user.account.bankCode) {
       account = req.user.account;
@@ -116,8 +117,8 @@ export default class UserControllers {
       const allUsers = docs;
 
       for (const user of allUsers) {
-        if (!user.preferDealMethods.convenientStores.length) {
-          user.preferDealMethods.convenientStores = undefined;
+        if (!user.preferDealMethods.selectedMethods.length) {
+          user.preferDealMethods.selectedMethods = undefined;
         }
       }
 
@@ -157,8 +158,8 @@ export default class UserControllers {
         return;
       }
 
-      if (!user.preferDealMethods.convenientStores.length) {
-        user.preferDealMethods.convenientStores = undefined;
+      if (!user.preferDealMethods.selectedMethods.length) {
+        user.preferDealMethods.selectedMethods = undefined;
       }
 
       res.status(200).json({ message: "success", userInfo: user });
@@ -172,7 +173,7 @@ export default class UserControllers {
     const {
       nickname,
       introduction,
-      convenientStores,
+      tradingOptions, //array contain string
       region,
       district,
       bankCode,
@@ -199,14 +200,15 @@ export default class UserControllers {
       blankFields.account = "";
     }
 
-    const preferDealMethods = {};
-    if (convenientStores && convenientStores.length) {
-      preferDealMethods.convenientStores = [...convenientStores];
-    }
-    if (region && district) {
-      preferDealMethods.faceToFace = { region, district };
-    } else {
-      blankFields.faceToFace = "";
+    const preferDealMethods = { selectedMethods: [] };
+    if (tradingOptions && tradingOptions.length) {
+      preferDealMethods.selectedMethods = [...tradingOptions];
+
+      if (tradingOptions.indexOf("面交") > -1 && region && district) {
+        preferDealMethods.faceToFace = { region, district };
+      } else {
+        blankFields.faceToFace = "";
+      }
     }
 
     try {
@@ -219,8 +221,8 @@ export default class UserControllers {
         }
       );
 
-      if (!updateUser.preferDealMethods.convenientStores.length) {
-        updateUser.preferDealMethods.convenientStores = undefined;
+      if (!updateUser.preferDealMethods.selectedMethods.length) {
+        updateUser.preferDealMethods.selectedMethods = undefined;
       }
 
       res.status(200).json({ message: "success", update: updateUser });
@@ -250,8 +252,8 @@ export default class UserControllers {
         return;
       }
 
-      if (!user.preferDealMethods.convenientStores.length) {
-        user.preferDealMethods.convenientStores = undefined;
+      if (!user.preferDealMethods.selectedMethods.length) {
+        user.preferDealMethods.selectedMethods = undefined;
       }
 
       res.status(200).json({ message: "success", userInfo: user });

@@ -407,7 +407,7 @@ const postSchema = new Schema({
   },
   description: String,
   tradingOptions: {
-    convenientStores: [{ type: String, enum: ["7-11", "全家"] }],
+    selectedMethods: [{ type: String, enum: ["7-11", "全家", "面交"] }],
     faceToFace: {
       region: {
         type: String,
@@ -460,8 +460,8 @@ postSchema.pre("save", function (next) {
   if (!this.tradingOptions.faceToFace.region) {
     this.tradingOptions.faceToFace = undefined;
   }
-  if (!this.tradingOptions.convenientStores.length) {
-    this.tradingOptions.convenientStores = undefined;
+  if (!this.tradingOptions.selectedMethods.length) {
+    this.tradingOptions.selectedMethods = undefined;
   }
   next();
 });

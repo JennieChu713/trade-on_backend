@@ -74,9 +74,6 @@ export default class PostControllers {
         if (!post.tradingOptions.faceToFace.region) {
           post.tradingOptions.faceToFace = undefined;
         }
-        if (!post.tradingOptions.convenientStores.length) {
-          post.tradingOptions.convenientStores = undefined;
-        }
         res.status(200).json({ message: "success", post });
       } else {
         return res
@@ -95,16 +92,21 @@ export default class PostControllers {
       quantity,
       itemStatus,
       description,
-      convenientStores, //array contain string
+      tradingOptions, // array contain strings
       region,
       district,
       imgUrl,
       categoryId,
     } = req.body;
 
-    let allImgUrls = [];
-    if (imgUrl) {
-      if (imgUrl.length && typeof imgUrl !== "string") {
+    if (!tradingOptions.length) {
+      errorResponse(res, 400);
+      return;
+    }
+
+    const allImgUrls = [];
+    if (imgUrl && imgUrl.length) {
+      if (typeof imgUrl !== "string") {
         allImgUrls = [...imgUrl];
       } else if (typeof imgUrl === "string") {
         allImgUrls.push(imgUrl);
@@ -120,16 +122,16 @@ export default class PostControllers {
       category: ObjectId(categoryId),
       author: ObjectId(res.locals.user),
     };
-    let tradingOptions = {};
-    if (convenientStores && convenientStores.length) {
-      tradingOptions.convenientStores = [...convenientStores];
+
+    const selectedOptions = {
+      selectedMethods: [...tradingOptions],
+    };
+
+    if (tradingOptions.indexOf("面交") > -1 && region && district) {
+      selectedOptions.faceToFace = { region, district };
     }
 
-    if (region && district) {
-      tradingOptions.faceToFace = { region, district };
-    }
-
-    dataStructure.tradingOptions = tradingOptions;
+    dataStructure.tradingOptions = selectedOptions;
     try {
       const checkCategory = await Category.findById(categoryId).lean();
       if (!checkCategory) {
@@ -153,7 +155,7 @@ export default class PostControllers {
       quantity,
       itemStatus,
       description,
-      convenientStores, //array contain stringify objects
+      tradingOptions, // array contain strings
       region,
       district,
       imgUrl,
@@ -166,11 +168,13 @@ export default class PostControllers {
       return;
     }
 
-    let allImgUrls = [];
-    if (imgUrl.length && typeof imgUrl !== "string") {
-      allImgUrls = [...imgUrl];
-    } else if (typeof imgUrl === "string") {
-      allImgUrls.push(imgUrl);
+    const allImgUrls = [];
+    if (imgUrl && imgUrl.length) {
+      if (typeof imgUrl !== "string") {
+        allImgUrls = [...imgUrl];
+      } else if (typeof imgUrl === "string") {
+        allImgUrls.push(imgUrl);
+      }
     }
 
     const blankFields = {};
@@ -188,18 +192,17 @@ export default class PostControllers {
       blankFields.description = "";
     }
 
-    let tradingOptions = {};
-    if (convenientStores && convenientStores.length) {
-      tradingOptions.convenientStores = [...convenientStores];
-    }
-
-    if (region && district) {
-      tradingOptions.faceToFace = { region, district };
+    if (tradingOptions.indexOf("面交") > -1 && region && district) {
+      selectedOptions.faceToFace = { region, district };
     } else {
       blankFields.faceToFace = "";
     }
 
-    dataStructure.tradingOptions = tradingOptions;
+    const selectedOptions = {
+      selectedMethods: [...tradingOptions],
+    };
+
+    dataStructure.tradingOptions = selectedOptions;
     try {
       const checkCategory = await Category.findById(categoryId).lean();
       if (!checkCategory) {
@@ -215,6 +218,10 @@ export default class PostControllers {
           new: true,
         }
       );
+
+      if (!updatePost.tradingOptions.faceToFace.region) {
+        updatePost.tradingOptions.faceToFace = undefined;
+      }
       res.status(200).json({ message: "success", update: updatePost });
     } catch (err) {
       res.status(500).json({ error: err.message });
