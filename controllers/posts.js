@@ -62,7 +62,7 @@ export default class PostControllers {
     try {
       const post = await Post.findById(id).populate({
         path: "author category",
-        select: "email nickname categoryName",
+        select: "email nickname avatarUrl categoryName",
       });
 
       if (!post) {
