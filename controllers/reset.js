@@ -252,7 +252,7 @@ export const resetting = async (req, res, next) => {
               const { id } = findUser;
               const imgUrls = [];
               const imgAmount = pickRandom(10, "qnt");
-              for (const i = 0; i < imgAmount; i++) {
+              for (let i = 0; i < imgAmount; i++) {
                 imgUrls.push(postImgs[pickRandom(postImgs.length)]);
               }
 
