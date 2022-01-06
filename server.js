@@ -13,7 +13,7 @@ import "./config/mongoose.js";
 
 // App config
 const app = express();
-const PORT = process.env.PORT || 8081;
+const PORT = process.env.PORT || 3333;
 
 //middlewares
 app.use(
@@ -22,7 +22,6 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://127.0.0.1:3000",
-      `http://localhost:${PORT}`,
       process.env.FRONTEND_URI,
     ],
   })
@@ -34,13 +33,6 @@ app.use(express.json());
 usePassport(app);
 
 app.disable("x-powered-by");
-
-app.use((req, res, next) => {
-  res.locals.isAuthenticated = req.isAuthenticated();
-  res.locals.user = req.user || null;
-  res.locals.session = req.session;
-  next();
-});
 
 // routes
 app.use("/tradeon/api", routes);

@@ -138,14 +138,17 @@ export default class AuthenticationMiddleware {
   static async hasQueryUser(req, res, next) {
     const { user } = req.query;
 
-    const token = req.headers.authorization.split(" ")[1];
-    const {
-      sub: { id },
-    } = JWT.verify(token, process.env.JWT_SECRET);
-
     if (!user) {
       return next();
     }
+
+    const {
+      sub: { id },
+    } = JWT.verify(
+      req.headers.authorization.split(" ")[1],
+      process.env.JWT_SECRET
+    );
+
     if (!id || user !== id) {
       errorResponse(res, 401);
       return;
@@ -155,19 +158,23 @@ export default class AuthenticationMiddleware {
   static async hasQueryPublic(req, res, next) {
     const { isPublic } = req.query;
 
-    const token = req.headers.authorization.split(" ")[1];
-    const {
-      sub: { accountAuthority },
-    } = JWT.verify(token, process.env.JWT_SECRET);
-
     if (!isPublic) {
       return next();
     }
-    if (!token) {
-      errorResponse(res, 401);
-      return;
-    }
-    if (accountAuthority !== "admin") {
+
+    if (req.headers.authorization.split(" ")[1]) {
+      const {
+        sub: { accountAuthority },
+      } = JWT.verify(
+        req.headers.authorization.split(" ")[1],
+        process.env.JWT_SECRET
+      );
+
+      if (accountAuthority !== "admin") {
+        errorResponse(res, 401);
+        return;
+      }
+    } else {
       errorResponse(res, 401);
       return;
     }

@@ -375,13 +375,13 @@ export default class UserControllers {
 
       let getAll;
 
-      if (filterQuery.isPublic && filterQuery.owner) {
+      if (filterQuery.isPublic && filterQuery.author) {
         // all posts as giver general
         getAll = await Post.paginate(filterQuery, options);
       } else if (filterQuery.isCompleted) {
         // all completed deal records (present base on owner/giver or dealer/taker)
         getAll = await Transaction.paginate(filterQuery, options);
-      } else if (filterQuery.messageType && filterQuery.owner) {
+      } else if (filterQuery.messageType && filterQuery.author) {
         // all post as taker general
         getAll = await Message.paginate(filterQuery, options);
       }

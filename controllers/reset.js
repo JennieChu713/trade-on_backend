@@ -191,11 +191,10 @@ function pickRandom(num, mode = "pick") {
 
 export const resetting = async (req, res, next) => {
   const { type } = req.query;
-  let dataExist;
   switch (type) {
     case "commonqnas":
-      dataExist = await CommonQA.findOne();
-      if (dataExist) {
+      const qaDataExist = await CommonQA.findOne();
+      if (qaDataExist) {
         await CommonQA.deleteMany({});
       }
       Array.from({ length: 20 }, async (_, i) => {
