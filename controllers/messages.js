@@ -58,6 +58,7 @@ export default class MessageControllers {
           $project: {
             content: 1,
             author: 1,
+            "authorInfo._id": 1,
             "authorInfo.email": 1,
             "authorInfo.nickname": 1,
             relatedMsg: 1,
@@ -338,7 +339,7 @@ export default class MessageControllers {
 
     try {
       const findMsgs = await Message.find({
-        $or: [{ id: id }, { relatedMsg: ObjectId(id) }],
+        $or: [{ _id: id }, { relatedMsg: ObjectId(id) }],
       });
 
       let count = findMsgs.length;

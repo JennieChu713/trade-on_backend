@@ -214,7 +214,7 @@ export default class UserControllers {
     try {
       const updateUser = await User.findByIdAndUpdate(
         id,
-        { ...dataStructure, ...preferDealMethods, $unset: blankFields },
+        { ...dataStructure, preferDealMethods, $unset: blankFields },
         {
           runValidators: true,
           new: true,
