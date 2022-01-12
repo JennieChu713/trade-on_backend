@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 const { Schema } = mongoose;
+import ImageSchema from "./image.js";
 
 const allRegions = [
   "基隆市",
@@ -439,7 +440,7 @@ const postSchema = new Schema({
     type: Boolean,
     default: true,
   },
-  imgUrls: [String],
+  imgUrls: [ImageSchema],
   author: {
     type: Schema.Types.ObjectId,
     ref: "User",

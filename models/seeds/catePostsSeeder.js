@@ -140,8 +140,8 @@ db.once("open", async () => {
           const { id } = findUser;
           const imgUrls = [];
           const imgAmount = pickRandom(10, "qnt");
-          for (const i = 0; i < imgAmount; i++) {
-            imgUrls.push(postImgs[pickRandom(postImgs.length)]);
+          for (let i = 0; i < imgAmount; i++) {
+            imgUrls.push({ imgUrl: postImgs[pickRandom(postImgs.length)] });
           }
 
           const newPost = await Post.create({

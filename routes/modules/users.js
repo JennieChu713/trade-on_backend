@@ -1,5 +1,6 @@
 import express from "express";
 import AuthenticationMiddleware from "../../middleware/auth.js";
+import { uploadCheck } from "../../middleware/multer.js";
 
 const { permissionCheck, verifyLogin, checkToken, isUserSelf } =
   AuthenticationMiddleware;
@@ -14,7 +15,7 @@ const {
   updateUserInfo,
   deleteUser,
   getMe,
-  updateAccountRole,
+  updateAccountAuth,
   updatePassword,
   updateAvatar,
   getAllRecords,
@@ -23,8 +24,7 @@ const {
 const router = express.Router();
 
 // READ all users (admin)
-router.get("/all", getAllUsers);
-// router.get("/all", checkToken, permissionCheck, getAllUsers);
+router.get("/all", checkToken, permissionCheck, getAllUsers);
 
 // handle LOGIN
 router.post("/login", verifyLogin, login);
@@ -45,10 +45,16 @@ router.get("/:id/record", getAllRecords);
 router.put("/:id/password", checkToken, isUserSelf, updatePassword);
 
 // UPDATE avatarUrl
-router.put("/:id/avatar", checkToken, isUserSelf, updateAvatar);
+router.put(
+  "/:id/avatar",
+  checkToken,
+  isUserSelf,
+  uploadCheck.single("avatarUrl"),
+  updateAvatar
+);
 
-// UPDATE userRole
-router.put("/:id/role", checkToken, permissionCheck, updateAccountRole);
+// UPDATE userAuthority
+router.put("/:id/auth", checkToken, permissionCheck, updateAccountAuth);
 
 // READ userInfo
 router.get("/:id", getUserInfo);

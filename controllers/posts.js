@@ -2,11 +2,18 @@ import mongoose from "mongoose";
 
 import Post from "../models/post.js";
 import Category from "../models/category.js";
+import ImgurAPIs from "../utils/imgurAPI.js";
 
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 import { errorResponse } from "../utils/errorMsgs.js";
 
 const { ObjectId } = mongoose.Types;
+const { uploadToImgur, deleteImage } = ImgurAPIs;
+
+function getBase64(str) {
+  const arr = str.split(",");
+  return arr[1];
+}
 
 export default class PostControllers {
   // READ all posts, or related posts of user
@@ -104,7 +111,7 @@ export default class PostControllers {
       return;
     }
 
-    const allImgUrls = [];
+    let allImgUrls = [];
     if (imgUrl && imgUrl.length) {
       if (typeof imgUrl !== "string") {
         allImgUrls = [...imgUrl];
@@ -112,6 +119,7 @@ export default class PostControllers {
         allImgUrls.push(imgUrl);
       }
     }
+    //TODO: request give file.arrayBuffer from react-image-uploading as to turn into base64 at backend and save to imgur
 
     const dataStructure = {
       itemName,
@@ -168,7 +176,7 @@ export default class PostControllers {
       return;
     }
 
-    const allImgUrls = [];
+    let allImgUrls = [];
     if (imgUrl && imgUrl.length) {
       if (typeof imgUrl !== "string") {
         allImgUrls = [...imgUrl];
@@ -192,15 +200,15 @@ export default class PostControllers {
       blankFields.description = "";
     }
 
+    const selectedOptions = {
+      selectedMethods: [...tradingOptions],
+    };
+
     if (tradingOptions.indexOf("面交") > -1 && region && district) {
       selectedOptions.faceToFace = { region, district };
     } else {
       blankFields.faceToFace = "";
     }
-
-    const selectedOptions = {
-      selectedMethods: [...tradingOptions],
-    };
 
     dataStructure.tradingOptions = selectedOptions;
     try {

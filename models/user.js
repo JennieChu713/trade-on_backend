@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 import bcrypt from "bcrypt";
 const { Schema } = mongoose;
+import ImageSchema from "./image.js";
 
 const allRegions = [
   "基隆市",
@@ -411,7 +412,7 @@ const userSchema = new Schema({
     select: false,
     enum: ["local", "facebook"],
   },
-  avatarUrl: String,
+  avatarUrl: { type: ImageSchema },
   account: {
     bankCode: { type: String, match: /^\d{3}$/ },
     accountNum: { type: String, match: /^\d{10,16}$/ },
@@ -479,6 +480,9 @@ userSchema.method("toJSON", function () {
 // save hashed password
 userSchema.pre("save", async function (next) {
   //must use function declaration
+  if (!this.isModified("preferDealMethods")) {
+    next();
+  }
   if (!this.preferDealMethods.selectedMethods.length) {
     this.preferDealMethods.selectedMethods = undefined;
   }

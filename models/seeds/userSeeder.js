@@ -15,8 +15,8 @@ const seedUsers = [
   },
   {
     email: "admin@mail.com",
-    nickname: "admin",
-    password: "admin",
+    nickname: "admin123",
+    password: "admin123",
     accountAuthority: "admin",
   },
   {
@@ -31,8 +31,8 @@ const seedUsers = [
   },
   {
     email: "tomato@mail.com",
-    nickname: "tomato",
-    password: "tomato",
+    nickname: "tomato123",
+    password: "tomato123",
   },
 ];
 
@@ -99,8 +99,10 @@ db.once("open", async () => {
       email,
       password,
       accountAuthority,
-      avatarUrl:
-        "https://images.unsplash.com/photo-1558276561-95e31d860c4b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
+      avatarUrl: {
+        imgUrl:
+          "https://images.unsplash.com/photo-1558276561-95e31d860c4b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
+      },
     };
 
     if (nickname !== "tomato" && nickname !== "admin") {

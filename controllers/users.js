@@ -1,4 +1,9 @@
 import JWT from "jsonwebtoken";
+import { config } from "dotenv";
+
+if (process.env.NODE_ENV !== "production") {
+  config();
+}
 
 import User from "../models/user.js";
 import Message from "../models/message.js";
@@ -6,12 +11,19 @@ import Post from "../models/post.js";
 import Transaction from "../models/transaction.js";
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 import { errorResponse } from "../utils/errorMsgs.js";
+import ImgurAPIs from "../utils/imgurAPI.js";
+
+const { getImgurToken, uploadToImgur, deleteImage } = ImgurAPIs;
 
 const signToken = (user) => {
   return JWT.sign(
     {
       iss: "tradeon",
-      sub: { id: user.id, accountAuthority: user.accountAuthority },
+      sub: {
+        id: user.id,
+        accountAuthority: user.accountAuthority,
+        imgur: user.imgurToken,
+      },
       iat: new Date().getTime(),
       exp: new Date().setTime(
         new Date().getTime() + Number(process.env.JWT_EXPIRE)
@@ -49,12 +61,13 @@ export default class UserControllers {
       newUser.isAllowPost = undefined;
       newUser.isAllowMessage = undefined;
       newUser.provider = undefined;
+      newUser.imgurToken = await getImgurToken();
 
       const token = signToken(newUser);
 
       res.status(200).json({ success: true, newUser, token });
     } catch (err) {
-      next(err);
+      res.status(500).json({ error: err.message });
     }
   }
 
@@ -66,6 +79,11 @@ export default class UserControllers {
 
     if (!req.user.preferDealMethods.selectedMethods.length) {
       req.user.preferDealMethods.selectedMethods = undefined;
+    }
+    const { faceToFace, selectedMethods } = req.user.preferDealMethods;
+
+    if (!faceToFace.undefined && !selectedMethods) {
+      req.user.preferDealMethods = undefined;
     }
 
     preferDealMethods = req.user.preferDealMethods;
@@ -82,6 +100,8 @@ export default class UserControllers {
       avatarUrl = req.user.avatarUrl;
     }
 
+    req.user.imgurToken = await getImgurToken();
+
     const userInfo = {
       preferDealMethods,
       account,
@@ -94,6 +114,7 @@ export default class UserControllers {
     };
 
     const token = signToken(req.user);
+
     res.status(200).json({ message: "success", userInfo, token });
   }
 
@@ -108,7 +129,11 @@ export default class UserControllers {
 
   static async getAllUsers(req, res, next) {
     const { page, size } = req.query;
-    const options = optionsSetup(page, size, "+accountAuthority");
+    const options = optionsSetup(
+      page,
+      size,
+      "+accountAuthority +isAllowPost +isAllowMessage"
+    );
     const { limit } = options;
     try {
       const getAllUsers = await User.paginate({}, options);
@@ -128,15 +153,20 @@ export default class UserControllers {
     }
   }
 
-  static async updateAccountRole(req, res, next) {
+  static async updateAccountAuth(req, res, next) {
     const { id } = req.params;
-    const { role } = req.body;
+    const { role, isAllowMessage, isAllowPost } = req.body;
     try {
       const user = await User.findByIdAndUpdate(
         id,
-        { accountAuthority: role },
+        {
+          accountAuthority: role,
+          isAllowMessage: isAllowMessage ? true : false,
+          isAllowPost: isAllowPost ? true : false,
+        },
         { runValidators: true, new: true }
-      );
+      ).select("+isAllowPost +isAllowMessage");
+
       if (!user) {
         errorResponse(res, 404);
         return;
@@ -272,6 +302,11 @@ export default class UserControllers {
       if (!isMatch) {
         return res.status(403).json({ error: "old password does not match." });
       }
+      if (oldPassword === newPassword) {
+        return res
+          .status(403)
+          .json({ error: "new password is identical to present password." });
+      }
       if (newPassword !== confirmNewPassword) {
         return res
           .status(403)
@@ -288,18 +323,35 @@ export default class UserControllers {
 
   static async updateAvatar(req, res, next) {
     const { id } = req.params;
-    const { avatarUrl } = req.body;
+    if (!req.file) {
+      return res.status(200).json({ message: "no update" });
+    }
+    const encode_image = req.file.buffer.toString("base64");
+    const uploadImgur = {
+      image: encode_image,
+      album: process.env.IMGUR_ALBUM_USER_ID,
+    };
+
     try {
-      const user = await User.findByIdAndUpdate(
-        id,
-        { avatarUrl },
-        {
-          runValidators: true,
-          new: true,
-        }
+      const getUser = await User.findById(id).select("+avatarUrl.deleteHash");
+      const { deleteHash } = getUser.avatarUrl;
+
+      if (deleteHash) {
+        await deleteImage(res.locals.imgurToken, deleteHash);
+      }
+
+      const getImgurData = await uploadToImgur(
+        res.locals.imgurToken,
+        uploadImgur
       );
 
-      res.status(200).json({ message: "success", update: user });
+      const { link, deletehash } = getImgurData;
+      getUser.avatarUrl.imgUrl = link;
+      getUser.avatarUrl.deleteHash = deletehash;
+
+      const updateUser = await getUser.save();
+      updateUser.avatarUrl.deleteHash = undefined;
+      res.status(200).json({ message: "success", update: updateUser });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

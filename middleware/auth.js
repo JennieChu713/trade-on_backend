@@ -248,6 +248,7 @@ export default class AuthenticationMiddleware {
         const { sub } = JWT.verify(token, process.env.JWT_SECRET);
         res.locals.user = sub.id;
         res.locals.auth = sub.accountAuthority;
+        res.locals.imgurToken = sub.imgur;
         next();
       }
     )(req, res, next);
