@@ -46,7 +46,7 @@ export default class TransactionControllers {
     const options = optionsSetup(page, size, "", {
       path: "post owner dealer",
       select:
-        "_id itemName quantity givenAmount imgUrls email nickname avatarUrl",
+        "_id itemName quantity givenAmount imgUrls email nickname avatarUrl.imgUrl",
     });
     const { limit } = options;
     try {
@@ -76,7 +76,7 @@ export default class TransactionControllers {
     try {
       const trans = await Transaction.findById(id).populate(
         "post owner dealer",
-        "itemName account nickname email imgUrls avatarUrl"
+        "itemName account nickname email imgUrls avatarUrl.imgUrl"
       );
 
       if (trans) {
@@ -264,6 +264,7 @@ export default class TransactionControllers {
 
       if (checkProcess.isFilled && checkProcess.isPaid) {
         checkProcess.isCompleted = true;
+        checkProcess.isCancelable = false;
         const updateProcess = await checkProcess.save();
 
         const givenRecord = await Post.findByIdAndUpdate(
@@ -311,17 +312,17 @@ export default class TransactionControllers {
     try {
       // check Progress
       const checkTrans = await Transaction.findById(id)
-        .select("isCanceled isPaid")
+        .select("isCanceled isCancelable")
         .lean();
 
-      if (!checkTrans.isCancelable && checkTrans.isPaid) {
+      if (!checkTrans.isCancelable) {
         return res.status(403).json({
           message:
-            "The progress has gone through payment period, it can not be canceled.",
+            "The progress is over cancelable duration, it can not be cancel",
         });
       }
 
-      checkTrans.isCanceled = !checkTrans.isCanceled;
+      checkTrans.isCanceled = true;
 
       await checkTrans.save();
 

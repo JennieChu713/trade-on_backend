@@ -412,7 +412,7 @@ const userSchema = new Schema({
     select: false,
     enum: ["local", "facebook"],
   },
-  avatarUrl: { type: ImageSchema },
+  avatarUrl: ImageSchema,
   account: {
     bankCode: { type: String, match: /^\d{3}$/ },
     accountNum: { type: String, match: /^\d{10,16}$/ },
@@ -454,7 +454,8 @@ userSchema.set("timestamps", true);
 userSchema.plugin(mongoosePaginate);
 
 userSchema.method("toJSON", function () {
-  const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
+  const { __v, _id, updatedAt, createdAt, avatarUrl, ...object } =
+    this.toObject();
   object.id = _id;
   const timeOptions = {
     timeZone: "Asia/Taipei",
@@ -474,15 +475,15 @@ userSchema.method("toJSON", function () {
       timeOptions
     );
   }
+  if (avatarUrl.deleteHash) {
+    avatarUrl.deleteHash = undefined;
+  }
   return object;
 });
 
 // save hashed password
 userSchema.pre("save", async function (next) {
   //must use function declaration
-  if (!this.isModified("preferDealMethods")) {
-    next();
-  }
   if (!this.preferDealMethods.selectedMethods.length) {
     this.preferDealMethods.selectedMethods = undefined;
   }

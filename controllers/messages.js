@@ -210,6 +210,7 @@ export default class MessageControllers {
           }
           if (!dataStructure.applyDealMethod) {
             errorResponse(res, 404);
+            return;
           }
         }
       } else if (messageType === "transaction" && dealer) {

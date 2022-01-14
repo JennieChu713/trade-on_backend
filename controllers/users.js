@@ -65,6 +65,8 @@ export default class UserControllers {
 
       const token = signToken(newUser);
 
+      newUser.imgurToken = undefined;
+
       res.status(200).json({ success: true, newUser, token });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -165,7 +167,7 @@ export default class UserControllers {
           isAllowPost: isAllowPost ? true : false,
         },
         { runValidators: true, new: true }
-      ).select("+isAllowPost +isAllowMessage");
+      ).select("+isAllowPost +isAllowMessage +accountAuthority");
 
       if (!user) {
         errorResponse(res, 404);
@@ -232,13 +234,15 @@ export default class UserControllers {
 
     const preferDealMethods = { selectedMethods: [] };
     if (tradingOptions && tradingOptions.length) {
-      preferDealMethods.selectedMethods = [...tradingOptions];
-
       if (tradingOptions.indexOf("面交") > -1 && region && district) {
         preferDealMethods.faceToFace = { region, district };
       } else {
+        if (tradingOptions.indexOf("面交") > -1) {
+          tradingOptions.splice(tradingOptions.indexOf("面交"), 1);
+        }
         blankFields.faceToFace = "";
       }
+      preferDealMethods.selectedMethods = [...tradingOptions];
     }
 
     try {
@@ -303,9 +307,9 @@ export default class UserControllers {
         return res.status(403).json({ error: "old password does not match." });
       }
       if (oldPassword === newPassword) {
-        return res
-          .status(403)
-          .json({ error: "new password is identical to present password." });
+        return res.status(403).json({
+          error: "new password is identical to present-use password.",
+        });
       }
       if (newPassword !== confirmNewPassword) {
         return res
@@ -439,6 +443,11 @@ export default class UserControllers {
       }
 
       const { totalDocs, docs, page } = getAll;
+      if (!totalDocs) {
+        return res
+          .status(200)
+          .json({ message: "just get started - 尚未有紀錄" });
+      }
       const paginate = paginateObject(totalDocs, limit, page);
       const allRelatedPosts = docs;
 

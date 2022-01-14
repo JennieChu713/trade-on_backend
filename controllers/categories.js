@@ -10,11 +10,14 @@ import { errorResponse } from "../utils/errorMsgs.js";
 function trimWords(words) {
   let result;
   let trimWords = words.trim();
-  for (char of trimWords) {
-    if (char !== " ") {
+  for (let char of trimWords) {
+    if (!result) {
+      result = char;
+    } else if (char !== " ") {
       result += char;
     }
   }
+  console.log(result);
   return result;
 }
 
@@ -138,8 +141,8 @@ export default class CategoryControllers {
           .json({ message: `${categoryName} already exist. - 該分類已存在` });
       }
 
-      // check if category name is "未分類"；因為是視為原始分類，所以先暫時設定為不能透過 client 端新增或編輯成"未分類"的限制
-      if (categoryName === "未分類") {
+      // check if category name is "其他"；因為是視為原始分類，所以先暫時設定為不能透過 client 端新增或編輯成"其他"的限制
+      if (categoryName === "其他") {
         return res.status(403).json({
           message:
             "edit forbidden: This is a primary category, it can not be edit. - 該分類不可更改",
@@ -158,7 +161,9 @@ export default class CategoryControllers {
           res.status(200).json({ message: "success", update: editCategory });
         }
       } else {
-        return res.status(200).json({ message: "permission denied." });
+        return res.status(200).json({
+          message: "the object you are trying to edit does not match.",
+        });
       }
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -174,8 +179,8 @@ export default class CategoryControllers {
         return;
       }
 
-      // check if primary category "未分類" exist
-      const categoryName = "未分類";
+      // check if primary category "其他" exist
+      const categoryName = "其他";
       let primaryCategory = await Category.findOne({ categoryName }).lean();
       if (!primaryCategory) {
         // create primary category if not exist

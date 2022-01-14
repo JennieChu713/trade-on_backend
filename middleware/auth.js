@@ -107,7 +107,7 @@ export default class AuthenticationMiddleware {
           })
             .select("owner dealer")
             .lean();
-      if (!transaction.length) {
+      if (!id && !transaction) {
         return next();
       }
       if (
@@ -128,37 +128,42 @@ export default class AuthenticationMiddleware {
     }
   }
 
-  static async permissionCheck(req, res, next) {
+  static permissionCheck(req, res, next) {
     if (res.locals.auth === "admin") {
       return next();
     }
     errorResponse(res, 401);
   }
 
-  static async hasQueryUser(req, res, next) {
+  static hasQueryUser(req, res, next) {
     const { user } = req.query;
 
     if (!user) {
       return next();
     }
-
     const {
-      sub: { id },
+      sub: { id, accountAuthority },
     } = JWT.verify(
       req.headers.authorization.split(" ")[1],
       process.env.JWT_SECRET
     );
 
+    if (accountAuthority === "admin") {
+      return next();
+    }
+
     if (!id || user !== id) {
       errorResponse(res, 401);
       return;
     }
+
+    next();
   }
 
-  static async hasQueryPublic(req, res, next) {
+  static hasQueryPublic(req, res, next) {
     const { isPublic } = req.query;
 
-    if (!isPublic) {
+    if (typeof isPublic === "undefined") {
       return next();
     }
 
@@ -238,6 +243,7 @@ export default class AuthenticationMiddleware {
       { session: false },
       function (err, user, info) {
         if (err) {
+          console.log(err);
           return next(err);
         }
         if (info) {

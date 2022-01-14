@@ -69,7 +69,7 @@ export default class PostControllers {
     try {
       const post = await Post.findById(id).populate({
         path: "author category",
-        select: "email nickname avatarUrl categoryName",
+        select: "email nickname avatarUrl.imgUrl categoryName",
       });
 
       if (!post) {
@@ -77,16 +77,11 @@ export default class PostControllers {
         return;
       }
 
-      if (post) {
-        if (!post.tradingOptions.faceToFace.region) {
-          post.tradingOptions.faceToFace = undefined;
-        }
-        res.status(200).json({ message: "success", post });
-      } else {
-        return res
-          .status(404)
-          .json({ error: "The post you are looking for does not exist." });
+      if (!post.tradingOptions.faceToFace.region) {
+        post.tradingOptions.faceToFace = undefined;
       }
+
+      res.status(200).json({ message: "success", post });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -132,12 +127,16 @@ export default class PostControllers {
     };
 
     const selectedOptions = {
-      selectedMethods: [...tradingOptions],
+      selectedMethods: [],
     };
 
     if (tradingOptions.indexOf("面交") > -1 && region && district) {
       selectedOptions.faceToFace = { region, district };
+    } else if (tradingOptions.indexOf("面交") > -1 && (!region || !district)) {
+      tradingOptions.splice(tradingOptions.indexOf("面交") > -1, 1);
     }
+
+    selectedOptions.selectedMethods = [...tradingOptions];
 
     dataStructure.tradingOptions = selectedOptions;
     try {
@@ -201,14 +200,19 @@ export default class PostControllers {
     }
 
     const selectedOptions = {
-      selectedMethods: [...tradingOptions],
+      selectedMethods: [],
     };
 
     if (tradingOptions.indexOf("面交") > -1 && region && district) {
       selectedOptions.faceToFace = { region, district };
     } else {
+      if (tradingOptions.indexOf("面交") > -1) {
+        tradingOptions.splice(tradingOptions.indexOf("面交") > -1, 1);
+      }
       blankFields.faceToFace = "";
     }
+
+    selectedOptions.selectedMethods = [...tradingOptions];
 
     dataStructure.tradingOptions = selectedOptions;
     try {

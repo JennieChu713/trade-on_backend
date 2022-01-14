@@ -468,7 +468,8 @@ postSchema.pre("save", function (next) {
 });
 
 postSchema.method("toJSON", function () {
-  const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
+  const { __v, _id, updatedAt, createdAt, imgUrls, ...object } =
+    this.toObject();
   object.id = _id;
   const timeOptions = {
     timeZone: "Asia/Taipei",
@@ -487,6 +488,9 @@ postSchema.method("toJSON", function () {
       "zh-TW",
       timeOptions
     );
+  }
+  for (let img of imgUrls) {
+    img.deleteHash = undefined;
   }
   return object;
 });

@@ -22,11 +22,14 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://127.0.0.1:3000",
+      `http://localhost:${PORT}`,
       process.env.FRONTEND_URI1,
       process.env.FRONTEND_URI2,
     ],
+    maxAge: 86400000,
   })
 );
+app.options("*", cors());
 app.use(express.json());
 // app.use(express.urlencoded({ extended: false }));
 
