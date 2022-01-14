@@ -454,8 +454,7 @@ userSchema.set("timestamps", true);
 userSchema.plugin(mongoosePaginate);
 
 userSchema.method("toJSON", function () {
-  const { __v, _id, updatedAt, createdAt, avatarUrl, ...object } =
-    this.toObject();
+  const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
   object.id = _id;
   const timeOptions = {
     timeZone: "Asia/Taipei",
@@ -475,9 +474,7 @@ userSchema.method("toJSON", function () {
       timeOptions
     );
   }
-  if (avatarUrl.deleteHash) {
-    avatarUrl.deleteHash = undefined;
-  }
+
   return object;
 });
 
