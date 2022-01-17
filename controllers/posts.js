@@ -114,7 +114,21 @@ export default class PostControllers {
         allImgUrls.push(imgUrl);
       }
     }
-    //TODO: request give file.arrayBuffer from react-image-uploading as to turn into base64 at backend and save to imgur
+    // TODO: request give file.arrayBuffer from react-image-uploading as to turn into base64 at backend and save to imgur
+    // https://stackoverflow.com/questions/36280818/how-to-convert-file-to-base64-in-javascript (V)
+    // https://stackoverflow.com/questions/28834835/readfile-in-base64-nodejs
+    /* 
+    function getBase64(file) {
+  var reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = function () {
+    console.log("from getBase64",reader.result);
+  };
+  reader.onerror = function (error) {
+    console.log("Error: ", error);
+  };
+}
+    */
 
     const dataStructure = {
       itemName,
@@ -145,7 +159,6 @@ export default class PostControllers {
         errorResponse(res, 404);
         return;
       }
-
       const addPost = await Post.create(dataStructure);
       res.status(200).json({ message: "success", new: addPost });
     } catch (err) {

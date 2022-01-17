@@ -16,6 +16,7 @@ const app = express();
 const PORT = process.env.PORT || 3333;
 
 //middlewares
+app.options("*", cors());
 app.use(
   cors({
     credentials: true,
@@ -29,7 +30,6 @@ app.use(
     maxAge: 86400000,
   })
 );
-app.options("*", cors());
 app.use(express.json());
 // app.use(express.urlencoded({ extended: false }));
 

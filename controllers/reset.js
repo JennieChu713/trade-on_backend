@@ -152,6 +152,10 @@ const seedUsers = [
     email: "owner@mail.com",
     nickname: "owner",
     password: "owner",
+    account: {
+      bankCode: "333",
+      accountNum: "123456789011",
+    },
   },
   {
     email: "dealer@mail.com",
@@ -458,6 +462,11 @@ export const resetting = async (req, res, next) => {
           dataStructure.preferDealMethods =
             tradings[pickRandom(tradings.length)];
         }
+
+        if (nickname === "owner") {
+          dataStructure.account = seedUsers[i].account;
+        }
+
         try {
           await User.create(dataStructure);
 

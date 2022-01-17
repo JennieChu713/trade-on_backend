@@ -204,6 +204,7 @@ export default class TransactionControllers {
         dataStructure,
         { runValidators: true, new: true }
       );
+      await updateProcess.populate({ path: "owner", select: "account" });
       res.status(200).json({ message: "success", updated: updateProcess });
     } catch (err) {
       res.status(500).json(err.message);
@@ -311,9 +312,9 @@ export default class TransactionControllers {
     const { id } = req.params;
     try {
       // check Progress
-      const checkTrans = await Transaction.findById(id)
-        .select("isCanceled isCancelable")
-        .lean();
+      const checkTrans = await Transaction.findById(id).select(
+        "isCanceled isCancelable"
+      );
 
       if (!checkTrans.isCancelable) {
         return res.status(403).json({

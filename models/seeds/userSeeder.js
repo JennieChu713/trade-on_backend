@@ -7,6 +7,10 @@ const seedUsers = [
     email: "owner@mail.com",
     nickname: "owner",
     password: "owner",
+    account: {
+      bankCode: "333",
+      accountNum: "123456789011",
+    },
   },
   {
     email: "dealer@mail.com",
@@ -108,6 +112,9 @@ db.once("open", async () => {
     if (nickname !== "tomato" && nickname !== "admin") {
       dataStructure.preferDealMethods =
         preferMethods[pickRandom(preferMethods.length)];
+    }
+    if (nickname === "owner") {
+      dataStructure.account = seedUsers[i].account;
     }
 
     try {
