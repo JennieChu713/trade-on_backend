@@ -49,7 +49,7 @@ router.put(
   "/:id/avatar",
   checkToken,
   isUserSelf,
-  uploadCheck.single("avatarUrl"),
+  uploadCheck.single("imageUrl"),
   updateAvatar
 );
 

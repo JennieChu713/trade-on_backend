@@ -48,7 +48,7 @@ export default class ImgurAPIs {
         const {
           data: { link, deletehash },
         } = uploadData.data;
-        return { link, deletehash };
+        return { imgUrl: link, deleteHash: deletehash };
       }
     } catch (err) {
       throw new Error(err);

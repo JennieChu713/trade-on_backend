@@ -10,11 +10,6 @@ import { errorResponse } from "../utils/errorMsgs.js";
 const { ObjectId } = mongoose.Types;
 const { uploadToImgur, deleteImage } = ImgurAPIs;
 
-function getBase64(str) {
-  const arr = str.split(",");
-  return arr[1];
-}
-
 export default class PostControllers {
   // READ all posts, or related posts of user
   static async getAllPosts(req, res, next) {
@@ -89,127 +84,32 @@ export default class PostControllers {
 
   // CREATE a post
   static async createPost(req, res, next) {
-    const {
-      itemName,
-      quantity,
-      itemStatus,
-      description,
-      tradingOptions, // array contain strings
-      region,
-      district,
-      imgUrl,
-      categoryId,
-    } = req.body;
+    const obj = JSON.parse(JSON.stringify(req.body)); // get rid of [Object: null prototype] in case
+    const { itemName, itemStatus, description, region, district, categoryId } =
+      obj;
+    let { quantity, tradingOptions } = obj;
 
-    if (!tradingOptions.length) {
+    if (!tradingOptions || !tradingOptions.length) {
       errorResponse(res, 400);
       return;
     }
 
-    let allImgUrls = [];
-    if (imgUrl && imgUrl.length) {
-      if (typeof imgUrl !== "string") {
-        allImgUrls = [...imgUrl];
-      } else if (typeof imgUrl === "string") {
-        allImgUrls.push(imgUrl);
-      }
+    if (!quantity) {
+      quantity = 1;
     }
-    // TODO: request give file.arrayBuffer from react-image-uploading as to turn into base64 at backend and save to imgur
-    // https://stackoverflow.com/questions/36280818/how-to-convert-file-to-base64-in-javascript (V)
-    // https://stackoverflow.com/questions/28834835/readfile-in-base64-nodejs
-    /* 
-    function getBase64(file) {
-  var reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = function () {
-    console.log("from getBase64",reader.result);
-  };
-  reader.onerror = function (error) {
-    console.log("Error: ", error);
-  };
-}
-    */
 
     const dataStructure = {
       itemName,
       quantity,
       itemStatus,
       description,
-      imgUrls: allImgUrls,
+      imgUrls: res.locals.imgs,
       category: ObjectId(categoryId),
       author: ObjectId(res.locals.user),
     };
 
-    const selectedOptions = {
-      selectedMethods: [],
-    };
-
-    if (tradingOptions.indexOf("面交") > -1 && region && district) {
-      selectedOptions.faceToFace = { region, district };
-    } else if (tradingOptions.indexOf("面交") > -1 && (!region || !district)) {
-      tradingOptions.splice(tradingOptions.indexOf("面交") > -1, 1);
-    }
-
-    selectedOptions.selectedMethods = [...tradingOptions];
-
-    dataStructure.tradingOptions = selectedOptions;
-    try {
-      const checkCategory = await Category.findById(categoryId).lean();
-      if (!checkCategory) {
-        errorResponse(res, 404);
-        return;
-      }
-      const addPost = await Post.create(dataStructure);
-      res.status(200).json({ message: "success", new: addPost });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-
-  // UPDATE a post
-  static async updatePost(req, res, next) {
-    const { id } = req.params;
-
-    const {
-      itemName,
-      quantity,
-      itemStatus,
-      description,
-      tradingOptions, // array contain strings
-      region,
-      district,
-      imgUrl,
-      categoryId,
-      postId,
-    } = req.body;
-
-    if (id !== postId) {
-      errorResponse(res, 400);
-      return;
-    }
-
-    let allImgUrls = [];
-    if (imgUrl && imgUrl.length) {
-      if (typeof imgUrl !== "string") {
-        allImgUrls = [...imgUrl];
-      } else if (typeof imgUrl === "string") {
-        allImgUrls.push(imgUrl);
-      }
-    }
-
-    const blankFields = {};
-    const dataStructure = {
-      itemName,
-      quantity,
-      itemStatus,
-      imgUrls: allImgUrls,
-      category: ObjectId(categoryId),
-    };
-
-    if (description) {
-      dataStructure.description = description;
-    } else {
-      blankFields.description = "";
+    if (typeof tradingOptions === "string") {
+      tradingOptions = [tradingOptions];
     }
 
     const selectedOptions = {
@@ -220,11 +120,9 @@ export default class PostControllers {
       selectedOptions.faceToFace = { region, district };
     } else {
       if (tradingOptions.indexOf("面交") > -1) {
-        tradingOptions.splice(tradingOptions.indexOf("面交") > -1, 1);
+        tradingOptions.splice(tradingOptions.indexOf("面交"), 1);
       }
-      blankFields.faceToFace = "";
     }
-
     selectedOptions.selectedMethods = [...tradingOptions];
 
     dataStructure.tradingOptions = selectedOptions;
@@ -234,6 +132,110 @@ export default class PostControllers {
         errorResponse(res, 404);
         return;
       }
+
+      const addPost = await Post.create(dataStructure);
+      for (let i = 0; i < addPost.imgUrls.length; i++) {
+        addPost.imgUrls[i].deleteHash = undefined;
+      }
+
+      res.status(200).json({ message: "success", new: addPost });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  // UPDATE a post
+  static async updatePost(req, res, next) {
+    const { id } = req.params;
+    const obj = JSON.parse(JSON.stringify(req.body)); // get rid of [Object: null prototype] in case
+    const {
+      itemName,
+      itemStatus,
+      description,
+      region,
+      district,
+      categoryId,
+      postId,
+    } = obj;
+    let { imgUrl, quantity, tradingOptions } = obj;
+
+    if (id !== postId) {
+      errorResponse(res, 400);
+      return;
+    }
+
+    if (!tradingOptions || !tradingOptions.length) {
+      errorResponse(res, 400);
+      return;
+    }
+
+    if (!quantity) {
+      quantity = 1;
+    }
+
+    const blankFields = {};
+    const dataStructure = {
+      itemName,
+      quantity,
+      itemStatus,
+      category: ObjectId(categoryId),
+    };
+
+    if (description) {
+      dataStructure.description = description;
+    } else {
+      blankFields.description = "";
+    }
+
+    if (typeof tradingOptions === "string") {
+      tradingOptions = [tradingOptions];
+    }
+
+    const selectedOptions = {
+      selectedMethods: [],
+    };
+
+    if (tradingOptions.indexOf("面交") > -1 && region && district) {
+      selectedOptions.faceToFace = { region, district };
+    } else {
+      if (tradingOptions.indexOf("面交") > -1) {
+        tradingOptions.splice(tradingOptions.indexOf("面交"), 1);
+      }
+      blankFields.faceToFace = "";
+    }
+
+    selectedOptions.selectedMethods = [...tradingOptions];
+
+    dataStructure.tradingOptions = selectedOptions;
+
+    if (typeof imgUrl === "string") {
+      imgUrl = [imgUrl];
+    } else if (!imgUrl) {
+      imgUrl = [];
+    }
+
+    try {
+      const checkCategory = await Category.findById(categoryId).lean();
+      if (!checkCategory) {
+        errorResponse(res, 404);
+        return;
+      }
+
+      const checkImgs = await Post.findById(id).populate("imgUrls.deleteHash");
+      let reservedImgs = checkImgs.slice(0);
+      for (let i = 0; i < checkImgs.imgUrls.length; i++) {
+        if (imgUrl.indexOf(checkImgs.imgUrls[i].imgUrl) === -1) {
+          if (checkImgs.imgUrls[i].deleteHash) {
+            let { deleteHash } = checkImgs.imgUrls[i];
+            await deleteImage(res.locals.imgurToken, deleteHash);
+          }
+          reservedImgs.imgUrls.splice(i, 1);
+        }
+      }
+
+      dataStructure.imgUrls = res.locals.imgs
+        ? reservedImgs.imgUrls.concat(res.locals.imgs)
+        : reservedImgs.imgUrls;
 
       const updatePost = await Post.findByIdAndUpdate(
         id,
@@ -247,6 +249,11 @@ export default class PostControllers {
       if (!updatePost.tradingOptions.faceToFace.region) {
         updatePost.tradingOptions.faceToFace = undefined;
       }
+
+      for (let j = 0; j < updatePost.imgUrls.length; j++) {
+        updatePost.imgUrls[j].deleteHash = undefined;
+      }
+
       res.status(200).json({ message: "success", update: updatePost });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -272,7 +279,18 @@ export default class PostControllers {
   static async deletePost(req, res, next) {
     const { id } = req.params;
     try {
+      let getDeleteHashes = await Post.findById(id).populate(
+        "+imgUrls.deleteHash"
+      );
+      for (let i = 0; i < getDeleteHashes.imgUrls.length; i++) {
+        if (getDeleteHashes.imgUrls[i].deleteHash) {
+          let { deleteHash } = getDeleteHashes.imgUrls[i];
+          await deleteImage(res.locals.imgurToken, deleteHash);
+        }
+      }
+
       await Post.findByIdAndDelete(id);
+
       res.status(200).json({ message: "success" });
     } catch (err) {
       res.status(500).json({ error: err.message });

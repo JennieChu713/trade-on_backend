@@ -1,9 +1,4 @@
 import JWT from "jsonwebtoken";
-import { config } from "dotenv";
-
-if (process.env.NODE_ENV !== "production") {
-  config();
-}
 
 import User from "../models/user.js";
 import Message from "../models/message.js";
@@ -269,6 +264,15 @@ export default class UserControllers {
     const { id } = req.params;
 
     try {
+      const getDeleteHash = await User.findById(id).select(
+        "+avatarUrl.deleteHash"
+      );
+
+      if (getDeleteHash.avatarUrl.deleteHash) {
+        const { deleteHash } = getDeleteHash.avatarUrl;
+        await deleteImage(res.locals.imgurToken, deleteHash);
+      }
+
       await User.findByIdAndDelete(id);
       res.status(200).json({ message: "success" });
     } catch (err) {
@@ -349,9 +353,7 @@ export default class UserControllers {
         uploadImgur
       );
 
-      const { link, deletehash } = getImgurData;
-      getUser.avatarUrl.imgUrl = link;
-      getUser.avatarUrl.deleteHash = deletehash;
+      getUser.avatarUrl = getImgurData;
 
       const updateUser = await getUser.save();
       updateUser.avatarUrl.deleteHash = undefined;
