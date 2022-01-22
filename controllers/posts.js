@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 import Post from "../models/post.js";
+import Transaction from "../models/transaction.js";
 import Category from "../models/category.js";
 import ImgurAPIs from "../utils/imgurAPI.js";
 
@@ -72,11 +73,28 @@ export default class PostControllers {
         return;
       }
 
+      // get present transaction deals' total amount as reservedTransAmount
+      const presentDeals = await Transaction.aggregate([
+        { $match: { post: ObjectId(id), isCanceled: false } },
+        {
+          $group: {
+            _id: { transId: "$id", owner: "$owner", post: "$post" },
+            dealers: { $push: "$dealer" },
+            reservedTransAmount: { $sum: "$amount" },
+            includedTrans: { $sum: 1 },
+          },
+        },
+      ]);
+
+      let reservedAmount = presentDeals[0] + post.givenAmount
+
+      let haveDeal = reservedAmount === post.quantity;
+
       if (!post.tradingOptions.faceToFace.region) {
         post.tradingOptions.faceToFace = undefined;
       }
 
-      res.status(200).json({ message: "success", post });
+      res.status(200).json({ message: "success", haveDeal, post });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -109,7 +127,7 @@ export default class PostControllers {
     };
 
     if (typeof tradingOptions === "string") {
-      tradingOptions = [tradingOptions];
+      tradingOptions = tradingOptions.split(",");
     }
 
     const selectedOptions = {
@@ -188,7 +206,7 @@ export default class PostControllers {
     }
 
     if (typeof tradingOptions === "string") {
-      tradingOptions = [tradingOptions];
+      tradingOptions = tradingOptions.split(",");
     }
 
     const selectedOptions = {
@@ -222,20 +240,20 @@ export default class PostControllers {
       }
 
       const checkImgs = await Post.findById(id).populate("imgUrls.deleteHash");
-      let reservedImgs = checkImgs.slice(0);
+      let reservedImgs = checkImgs.imgUrls.slice(0);
       for (let i = 0; i < checkImgs.imgUrls.length; i++) {
         if (imgUrl.indexOf(checkImgs.imgUrls[i].imgUrl) === -1) {
           if (checkImgs.imgUrls[i].deleteHash) {
             let { deleteHash } = checkImgs.imgUrls[i];
             await deleteImage(res.locals.imgurToken, deleteHash);
           }
-          reservedImgs.imgUrls.splice(i, 1);
+          reservedImgs.splice(i, 1);
         }
       }
 
       dataStructure.imgUrls = res.locals.imgs
-        ? reservedImgs.imgUrls.concat(res.locals.imgs)
-        : reservedImgs.imgUrls;
+        ? reservedImgs.concat(res.locals.imgs)
+        : reservedImgs;
 
       const updatePost = await Post.findByIdAndUpdate(
         id,

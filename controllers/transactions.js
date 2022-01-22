@@ -172,6 +172,9 @@ export default class TransactionControllers {
         isPaid: isFace,
       });
 
+      // applyMsg.isDealing = true;
+      // await applyMsg.save();
+
       res.status(200).json({ message: "success", transaction: newTrans });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -326,6 +329,11 @@ export default class TransactionControllers {
       checkTrans.isCanceled = true;
 
       await checkTrans.save();
+
+      // let changeMsgStatus = await Message.findOne({author: checkTrans.dealer, applyDealMethod: checkTrans.dealMethod, isDealing: true})
+      // changeMsgStatus.isDealing = false;
+      // await changeMsgStatus.save();
+
 
       res.status(200).json({ message: "success" });
     } catch (err) {

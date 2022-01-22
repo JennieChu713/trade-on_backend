@@ -41,6 +41,10 @@ const msgSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  isDealing: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 msgSchema.set("timestamps", true);

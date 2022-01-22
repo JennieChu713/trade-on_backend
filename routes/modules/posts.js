@@ -28,7 +28,7 @@ const {
 const router = express.Router();
 
 // READ all posts
-router.get("/all", hasQueryUser, hasQueryPublic, getAllPosts);
+router.get("/all", hasQueryPublic, hasQueryUser, getAllPosts);
 
 // CREATE a post
 router.post(
