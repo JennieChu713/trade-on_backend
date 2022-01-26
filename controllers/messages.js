@@ -64,6 +64,7 @@ export default class MessageControllers {
             relatedMsg: 1,
             messageType: 1,
             applyDealMethod: 1,
+            isDealing: 1,
             isDeleted: 1,
             updatedAt: 1,
           },

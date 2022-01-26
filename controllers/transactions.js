@@ -6,6 +6,7 @@ import Message from "../models/message.js";
 
 import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 import { errorResponse } from "../utils/errorMsgs.js";
+import { presentDeals, remainAmount } from "../utils/countingAggregation.js";
 
 const { ObjectId } = mongoose.Types;
 
@@ -46,7 +47,7 @@ export default class TransactionControllers {
     const options = optionsSetup(page, size, "", {
       path: "post owner dealer",
       select:
-        "_id itemName quantity givenAmount imgUrls email nickname avatarUrl.imgUrl",
+        "_id itemName quantity givenAmount imgUrls email nickname avatarUrl.imgUrl -paymentInfo",
     });
     const { limit } = options;
     try {
@@ -76,7 +77,7 @@ export default class TransactionControllers {
     try {
       const trans = await Transaction.findById(id).populate(
         "post owner dealer",
-        "itemName account nickname email imgUrls avatarUrl.imgUrl"
+        "itemName nickname email imgUrls avatarUrl.imgUrl"
       );
 
       if (trans) {
@@ -93,7 +94,7 @@ export default class TransactionControllers {
 
   // CREATE a transaction (base on apply message)
   static async createTransaction(req, res, next) {
-    const { id } = req.params; //message id
+    const { id } = req.params; // message id
     const { accountNum, bankCode } = req.body;
     let { amount } = req.body;
 
@@ -110,35 +111,24 @@ export default class TransactionControllers {
         return;
       }
 
+      const relatedPost = await Post.findById(applyMsg.post);
+
+      if (relatedPost.isDealLimit) {
+        return res.status(403).json({
+          message: "The deals with this post has already reach its limit.",
+        });
+      }
+
       // get present transaction deals' total amount as reservedTransAmount
-      const presentDeals = await Transaction.aggregate([
-        { $match: { post: ObjectId(applyMsg.post), isCanceled: false } },
-        {
-          $group: {
-            _id: { transId: "$id", owner: "$owner", post: "$post" },
-            dealers: { $push: "$dealer" },
-            reservedTransAmount: { $sum: "$amount" },
-            includedTrans: { $sum: 1 },
-          },
-        },
-      ]);
+      const dealsInPresent = await presentDeals(applyMsg.post);
 
       // get post of actual amount as remain
-      const remainAmount = await Post.aggregate([
-        { $match: { _id: ObjectId(applyMsg.post) } },
-        {
-          $project: {
-            id: 1,
-            owner: 1,
-            remain: { $subtract: ["$quantity", "$givenAmount"] },
-          },
-        },
-      ]);
+      const remains = await remainAmount(applyMsg.post);
 
       //check if required amount is over actual quantities
-      if (presentDeals.length && remainAmount) {
-        const { remain } = remainAmount[0];
-        const { reservedTransAmount } = presentDeals[0];
+      if (dealsInPresent.length && remains.length) {
+        const { remain } = remains[0];
+        const { reservedTransAmount } = dealsInPresent[0];
         if (amount > remain - reservedTransAmount) {
           return res.status(200).json({
             message: `Amount is over remain quantities. remain: ${
@@ -146,20 +136,30 @@ export default class TransactionControllers {
             }`,
           });
         }
+
+        if (amount === remain - reservedTransAmount) {
+          relatedPost.isDealLimit = true;
+          await relatedPost.save();
+        }
       }
 
       //create transaction : no account-info required as faceToFace
-      const owner = await User.findById(res.locals.user);
+      const owner = await User.findById(res.locals.user).select("+account");
       const isFace = applyMsg.applyDealMethod.faceToFace ? true : false;
+      let paymentInfo;
       if (!isFace) {
         if (!accountNum || !bankCode) {
           errorResponse(res, 400);
           return;
         }
         const account = { accountNum, bankCode };
-
-        owner.account = { ...account };
-        await owner.save();
+        if (
+          owner.account.accountNum !== accountNum ||
+          owner.account.bankCode !== bankCode
+        ) {
+          owner.account = { ...account };
+          await owner.save();
+        }
       }
 
       const newTrans = await Transaction.create({
@@ -167,13 +167,16 @@ export default class TransactionControllers {
         dealMethod: { ...applyMsg["applyDealMethod"] },
         post: applyMsg.post,
         owner: owner._id,
-        dealer: applyMsg.owner,
+        dealer: applyMsg.author,
         isFilled: isFace,
         isPaid: isFace,
+        paymentInfo: isFace ? undefined : account,
       });
 
-      // applyMsg.isDealing = true;
-      // await applyMsg.save();
+      if (newTrans) {
+        applyMsg.presentDeal = newTrans._id;
+        await applyMsg.save();
+      }
 
       res.status(200).json({ message: "success", transaction: newTrans });
     } catch (err) {
@@ -207,7 +210,10 @@ export default class TransactionControllers {
         dataStructure,
         { runValidators: true, new: true }
       );
-      await updateProcess.populate({ path: "owner", select: "account" });
+      await updateProcess.populate({
+        path: "post owner dealer",
+        select: "itemName account nickname email imgUrls avatarUrl.imgUrl",
+      });
       res.status(200).json({ message: "success", updated: updateProcess });
     } catch (err) {
       res.status(500).json(err.message);
@@ -315,9 +321,9 @@ export default class TransactionControllers {
     const { id } = req.params;
     try {
       // check Progress
-      const checkTrans = await Transaction.findById(id).select(
-        "isCanceled isCancelable"
-      );
+      const checkTrans = await Transaction.findById(id)
+        .populate("post")
+        .select("isCanceled isCancelable isDealLimit");
 
       if (!checkTrans.isCancelable) {
         return res.status(403).json({
@@ -330,10 +336,16 @@ export default class TransactionControllers {
 
       await checkTrans.save();
 
-      // let changeMsgStatus = await Message.findOne({author: checkTrans.dealer, applyDealMethod: checkTrans.dealMethod, isDealing: true})
-      // changeMsgStatus.isDealing = false;
-      // await changeMsgStatus.save();
+      let changeMsgStatus = await Message.findOneAndUpdate(
+        {
+          presentDeal: checkTrans._id,
+        },
+        { $unset: { presentDeal: "" }, isDealing: false }
+      );
 
+      if (checkTrans.post.isDealLimit) {
+        await Post.findByIdAndUpdate(checkTrans.post, { isDealLimit: false });
+      }
 
       res.status(200).json({ message: "success" });
     } catch (err) {

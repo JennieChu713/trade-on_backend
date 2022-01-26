@@ -49,7 +49,7 @@ export default function usePassport(app) {
       async (email, password, done) => {
         try {
           const user = await User.findOne({ email }).select(
-            "+password +accountAuthority +avatarUrl -__v"
+            "+password +accountAuthority +avatarUrl"
           );
           if (!user) {
             return done(null, false, {

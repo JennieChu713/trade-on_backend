@@ -1,11 +1,15 @@
 import db from "../../config/mongoose.js";
-import Message from "../message.js";
-import Post from "../post.js";
-import Transaction from "../transaction.js";
-import User from "../user.js";
+import SeedGenerators from "../../utils/seedsGenerator.js";
+
+const { messageSeeds, transactionSeeds } = SeedGenerators;
 
 ///seeder data
-const startAMsgs = [
+const transMsgs = [
+  { content: "寄送資料已經填寫好囉！再請你確認～", messageType: "transaction" },
+  { content: "請問有收到資料嗎？", messageType: "transaction" },
+  { content: "有些部分想和您商量一下⋯⋯", messageType: "transaction" },
+];
+const applyPostMsgs = [
   { content: "想要J個酷東西", messageType: "apply" },
   {
     content: "我是這個牌子的大粉絲！請問可以給我嗎？\n我會非常珍惜地使用的！",
@@ -14,8 +18,7 @@ const startAMsgs = [
   { content: "希望能夠得到這個，非常感謝:)", messageType: "apply" },
   { content: "真的非常需要這個，希望你願意送我> <", messageType: "apply" },
 ];
-
-const startQMsgs = [
+const questionPostMsgs = [
   { content: "請問這上面有期限嗎？", messageType: "question" },
   { content: "請問這個還有嗎？", messageType: "question" },
   {
@@ -26,171 +29,40 @@ const startQMsgs = [
 ];
 
 const replyMsgs = [
-  { content: "OK沒問題喔！", messageType: "apply" },
-  { content: "已經送出，請你記得進入流程填資訊喔", messageType: "apply" },
-  { content: "沒有耶，不好意思", messageType: "question" },
-  { content: "好，先等一下喔", messageType: "question" },
+  { content: "OK沒問題喔！" },
+  { content: "可能要再看看O不OK" },
+  { content: "沒有耶，不好意思" },
+  { content: "好，先等一下喔" },
+  { content: "好的，確認後我再回覆您！" },
 ];
-
-function pickRandom(num, mode = "pick") {
-  if (mode === "qnt") {
-    return Math.floor(Math.random() * num) + 1;
-  }
-  return Math.floor(Math.random() * num);
-}
 
 // generate data
 db.once("open", async () => {
   console.log("generate seed data of message and transaction");
 
-  //clearout data if exist
-  const msgExist = await Message.findOne();
-  if (msgExist) {
-    await Message.deleteMany({});
-    console.log("clearout origin document data of message");
-  }
+  let msgProcess = await messageSeeds(
+    applyPostMsgs.concat(questionPostMsgs),
+    replyMsgs,
+    "post",
+    7,
+    true
+  );
 
-  const transExist = await Transaction.findOne();
-  if (transExist) {
-    await Transaction.deleteMany({});
-    console.log("clearout origin document data of transaction.");
-  }
+  if (msgProcess.length) {
+    let dealProcess = await transactionSeeds(applyPostMsgs, 12, true);
 
-  //check user and post data
-  const checkUsers = await User.find({
-    $or: [{ email: "dealer@mail.com" }, { email: "owner@mail.com" }],
-  });
-  const checkPosts = await Post.find();
+    if (dealProcess.length) {
+      let dealMsgProcess = await messageSeeds(
+        transMsgs,
+        replyMsgs,
+        "deal",
+        6,
+        true
+      );
 
-  if (!checkUsers.length || !checkPosts.length) {
-    console.log(
-      "generate message seed data failed: post and user data required. run 'node model/userSeeder.js' then 'node model/catePostsSeeder.js'"
-    );
-    process.exit(1);
-  }
-
-  let owner, dealer;
-  checkUsers.forEach((user) => {
-    if (user.email === "dealer@mail.com") {
-      dealer = user._id;
-    } else {
-      owner = user._id;
+      if (dealMsgProcess.length) {
+        process.exit(1);
+      }
     }
-  });
-
-  //generating 3 dummy transaction data
-  Array.from({ length: 12 }, async (_, i) => {
-    const post = checkPosts[pickRandom(checkPosts.length)];
-    const providedOptions = post.tradingOptions.selectedMethods;
-    const decidedMethod = providedOptions[pickRandom(providedOptions.length)];
-
-    const dealMethod =
-      decidedMethod === "面交"
-        ? { faceToFace: post.tradingOptions.faceToFace }
-        : {
-            convenientStore: decidedMethod,
-          };
-
-    const isFace = dealMethod.faceToFace ? true : false;
-
-    try {
-      const trans = await Transaction.create({
-        amount: pickRandom(post.quantity, "qnt"),
-        post: post._id,
-        dealMethod,
-        isFilled: isFace,
-        isPaid: isFace,
-        dealer,
-        owner,
-      });
-      if (trans) {
-        // settled transaction with related apply messages
-        await Message.create({
-          ...startAMsgs[pickRandom(startAMsgs.length)],
-          applyDealMethod: dealMethod,
-          post: post._id,
-          author: dealer,
-        });
-      }
-
-      // random transaction message data and reply
-      if (pickRandom(4) % 2) {
-        const msg = await Message.create({
-          content: "寄送資料已經填寫好囉！再請你確認～",
-          messageType: "transaction",
-          deal: trans._id,
-          author: dealer,
-        });
-
-        if (msg && pickRandom(4) % 2) {
-          await Message.create({
-            content: "好的，確認後我再回覆您！",
-            messageType: "transaction",
-            deal: trans._id,
-            relatedMsg: msg._id,
-            author: owner,
-          });
-        }
-      }
-
-      if (i === 11) {
-        console.log("transaction seeder data complete.");
-
-        // generating 7 dummy data for post messages
-        Array.from({ length: 7 }, async (_, i) => {
-          const {
-            _id,
-            tradingOptions: { selectedMethods, faceToFace },
-          } = checkPosts[pickRandom(checkPosts.length)];
-
-          const messageType = pickRandom(4) % 2 ? "question" : "apply";
-          let dataStruct;
-          switch (messageType) {
-            case "question":
-              dataStruct = {
-                ...startQMsgs[pickRandom(startQMsgs.length)],
-                post: _id,
-                author: dealer,
-              };
-              break;
-            case "apply":
-              const dealMethod =
-                selectedMethods[pickRandom(selectedMethods.length)];
-              dataStruct = {
-                ...startAMsgs[pickRandom(startAMsgs.length)],
-                applyDealMethod:
-                  dealMethod !== "面交"
-                    ? {
-                        convenientStore: dealMethod,
-                      }
-                    : { faceToFace },
-                post: _id,
-                author: dealer,
-              };
-              break;
-          }
-
-          const newMsg = await Message.create({ ...dataStruct });
-          if (newMsg) {
-            const addReply = replyMsgs[pickRandom(replyMsgs.length)];
-            if (addReply.messageType === newMsg.messageType) {
-              await Message.create({
-                ...addReply,
-                post: _id,
-                relatedMsg: newMsg._id,
-                author: owner,
-              });
-            }
-          }
-
-          if (i === 6) {
-            console.log("complete seed data of message");
-            process.exit(1);
-          }
-        });
-      }
-    } catch (err) {
-      console.error(err.message);
-    }
-  });
+  }
 });

@@ -41,10 +41,23 @@ const msgSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  presentDeal: {
+    type: Schema.Types.ObjectId,
+    ref: "Transaction",
+    select: false,
+  },
   isDealing: {
     type: Boolean,
-    default: false,
-  }
+    default: function () {
+      if (this.messageType === "apply") {
+        if (this.presentDeal) {
+          return true;
+        }
+        return false;
+      }
+      return undefined;
+    },
+  },
 });
 
 msgSchema.set("timestamps", true);
@@ -58,6 +71,8 @@ msgSchema.pre("save", async function (next) {
   if (!this.content && this.messageType === "apply" && !this.relatedMsg) {
     this.content = undefined;
   }
+
+  this.presentDeal ? (this.isDealing = true) : (this.isDealing = false);
   next();
 });
 

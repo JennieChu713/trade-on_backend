@@ -1,9 +1,14 @@
-import CommonQA from "../models/commonQA.js";
-import User from "../models/user.js";
-import Message from "../models/message.js";
-import Post from "../models/post.js";
-import Category from "../models/category.js";
-import Transaction from "../models/transaction.js";
+import SeedGenerators from "../utils/seedsGenerator.js";
+
+const {
+  categorySeeds,
+  postSeeds,
+  commonQASeeds,
+  transactionSeeds,
+  messageSeeds,
+  userSeeds,
+  clearOutData,
+} = SeedGenerators;
 
 // commonQnAs
 const qas = [
@@ -33,6 +38,131 @@ const qas = [
       "您要先新增刊登，並隨欄位填寫物品的狀態與數量，送出後便可以開始進行贈送了！",
   },
 ];
+
+// messages with transactions
+const transMsgs = [
+  { content: "寄送資料已經填寫好囉！再請你確認～", messageType: "transaction" },
+  { content: "請問有收到資料嗎？", messageType: "transaction" },
+  { content: "有些部分想和您商量一下⋯⋯", messageType: "transaction" },
+];
+const applyPostMsgs = [
+  { content: "想要J個酷東西", messageType: "apply" },
+  {
+    content: "我是這個牌子的大粉絲！請問可以給我嗎？\n我會非常珍惜地使用的！",
+    messageType: "apply",
+  },
+  { content: "希望能夠得到這個，非常感謝:)", messageType: "apply" },
+  { content: "真的非常需要這個，希望你願意送我> <", messageType: "apply" },
+];
+const questionPostMsgs = [
+  { content: "請問這上面有期限嗎？", messageType: "question" },
+  { content: "請問這個還有嗎？", messageType: "question" },
+  {
+    content: "你好，請問有沒有機會看一下這個東西背面的樣子？",
+    messageType: "question",
+  },
+  { content: "請問這有其他顏色嗎？", messageType: "question" },
+];
+
+const replyMsgs = [
+  { content: "OK沒問題喔！" },
+  { content: "可能要再看看O不OK" },
+  { content: "沒有耶，不好意思" },
+  { content: "好，先等一下喔" },
+  { content: "好的，確認後我再回覆您！" },
+];
+
+// users
+const seedUsers = [
+  {
+    email: "owner@mail.com",
+    nickname: "owner",
+    password: "owner",
+    account: {
+      bankCode: "333",
+      accountNum: "123456789011",
+    },
+  },
+  {
+    email: "dealer@mail.com",
+    nickname: "dealer",
+    password: "dealer",
+  },
+  {
+    email: "admin@mail.com",
+    nickname: "admin",
+    password: "admin",
+    accountAuthority: "admin",
+  },
+  {
+    email: "mango@mail.com",
+    nickname: "mango",
+    password: "mango",
+  },
+  {
+    email: "banana@mail.com",
+    nickname: "banana",
+    password: "banana",
+  },
+  {
+    email: "tomato@mail.com",
+    nickname: "tomato",
+    password: "tomato",
+  },
+];
+const preferMethods = [
+  {
+    selectedMethods: ["7-11", "面交"],
+    faceToFace: {
+      region: "新北市",
+      district: "新莊區",
+    },
+  },
+
+  {
+    selectedMethods: ["7-11", "全家"],
+  },
+
+  {
+    selectedMethods: ["面交"],
+    faceToFace: {
+      region: "南投縣",
+      district: "埔里鎮",
+    },
+  },
+  {
+    selectedMethods: ["全家", "面交"],
+    faceToFace: {
+      region: "臺南市",
+      district: "善化區",
+    },
+  },
+
+  {
+    selectedMethods: ["全家"],
+  },
+  {
+    selectedMethods: ["面交"],
+    faceToFace: {
+      region: "基隆市",
+      district: "安樂區",
+    },
+  },
+];
+
+// setup user structured data
+let userSamples = [];
+for (let user of seedUsers) {
+  let dataStructure = {
+    ...user,
+  };
+
+  if (user.nickname !== "tomato" && user.nickname !== "admin") {
+    dataStructure.preferDealMethods =
+      preferMethods[pickRandom(preferMethods.length)];
+  }
+  userSamples.push(dataStructure);
+}
 
 // Posts with categories
 const categories = [
@@ -118,72 +248,28 @@ const postImgs = [
   "https://images.unsplash.com/photo-1531892311573-7d77d5394367?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8OTV8fG9iamVjdHxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=500&q=60",
 ];
 
-// messages with transactions
-const startAMsgs = [
-  { content: "想要J個酷東西", messageType: "apply" },
-  {
-    content: "我是這個牌子的大粉絲！請問可以給我嗎？\n我會非常珍惜地使用的！",
-    messageType: "apply",
-  },
-  { content: "希望能夠得到這個，非常感謝:)", messageType: "apply" },
-  { content: "真的非常需要這個，希望你願意送我> <", messageType: "apply" },
-];
-
-const startQMsgs = [
-  { content: "請問這上面有期限嗎？", messageType: "question" },
-  { content: "請問這個還有嗎？", messageType: "question" },
-  {
-    content: "你好，請問有沒有機會看一下這個東西背面的樣子？",
-    messageType: "question",
-  },
-  { content: "請問這有其他顏色嗎？", messageType: "question" },
-];
-
-const replyMsgs = [
-  { content: "OK沒問題喔！", messageType: "apply" },
-  { content: "已經送出，請你記得進入流程填資訊喔", messageType: "apply" },
-  { content: "沒有耶，不好意思", messageType: "question" },
-  { content: "好，先等一下喔", messageType: "question" },
-];
-
-// users
-const seedUsers = [
-  {
-    email: "owner@mail.com",
-    nickname: "owner",
-    password: "owner",
-    account: {
-      bankCode: "333",
-      accountNum: "123456789011",
-    },
-  },
-  {
-    email: "dealer@mail.com",
-    nickname: "dealer",
-    password: "dealer",
-  },
-  {
-    email: "admin@mail.com",
-    nickname: "admin",
-    password: "admin",
-    accountAuthority: "admin",
-  },
-  {
-    email: "mango@mail.com",
-    nickname: "mango",
-    password: "mango",
-  },
-  {
-    email: "banana@mail.com",
-    nickname: "banana",
-    password: "banana",
-  },
-  {
-    email: "tomato@mail.com",
-    nickname: "tomato",
-    password: "tomato",
-  },
-];
+//setup post structured data
+let postSamples = [];
+for (let i = 0; i < 30; i++) {
+  let imgUrls = [];
+  let imgAmount = pickRandom(10, "qnt");
+  for (let i = 0; i < imgAmount; i++) {
+    if (imgAmount === 1) {
+      imgUrls.push({ imgUrl: undefined });
+    } else {
+      imgUrls.push({ imgUrl: postImgs[pickRandom(postImgs.length)] });
+    }
+  }
+  let dataStructure = {
+    itemName: items[pickRandom(items.length)],
+    quantity: pickRandom(10, "qnt"),
+    imgUrls,
+    itemStatus: pickRandom(15) % 2 === 0 ? "全新" : "二手",
+    description: descripts[pickRandom(descripts.length)],
+    tradingOptions: tradings[pickRandom(tradings.length)],
+  };
+  postSamples.push(dataStructure);
+}
 
 // random functions
 function pickRandom(num, mode = "pick") {
@@ -197,288 +283,59 @@ export const resetting = async (req, res, next) => {
   const { type } = req.query;
   switch (type) {
     case "commonqnas":
-      const qaDataExist = await CommonQA.findOne();
-      if (qaDataExist) {
-        await CommonQA.deleteMany({});
-      }
-      Array.from({ length: 20 }, async (_, i) => {
-        try {
-          await CommonQA.create(qas[pickRandom(qas.length)]);
-        } catch (err) {
-          res.status(500).json({ error: err.message });
-        }
+      let commonQAsProcess = await commonQASeeds(qas, 20, true);
+      return res.status(200).json({
+        message: `success; reset commonQAs with ${commonQAsProcess.length} samples.`,
       });
-      return res
-        .status(200)
-        .json({ message: "success; reset commonQAs as 20 samples." });
 
     case "posts":
-      //clearout collection past data if exist
-      const categoryDataExist = await Category.findOne();
-      if (categoryDataExist) {
-        await Category.deleteMany({});
-        console.log("clearout origin document data of categories.");
+      let categoryProcess = await categorySeeds(categories);
+      let postProcess;
+      if (categoryProcess.length) {
+        postProcess = await postSeeds(postSamples);
       }
-      const postDataExist = await Post.findOne();
-      if (postDataExist) {
-        await Post.deleteMany({});
-        console.log("clearout origin document data of posts.");
-      }
-
-      // generate dummy data of Categories
-      categories.forEach(async (category, i) => {
-        try {
-          await Category.create({
-            categoryName: category,
-          });
-
-          if (i === categories.length - 1) {
-            console.log("complete seed data of category.");
-
-            // check users data
-            const findUser = await User.findOne({ email: "owner@mail.com" });
-            if (!findUser) {
-              return res.status(404).json({
-                message:
-                  "generate post relation seeder data failed: no user exist, you need to have user data to proceed. (run 'node models/userSeeder.js')",
-              });
-            }
-
-            // generate 30 dummy data of Posts
-            Array.from({ length: 30 }, async (_, i) => {
-              const getCategory = await Category.findOne({
-                categoryName: categories[pickRandom(categories.length)],
-              });
-              const category = getCategory._id;
-
-              const itemStatus = pickRandom(15) % 2 === 0 ? "全新" : "二手";
-              const { id } = findUser;
-              const imgUrls = [];
-              const imgAmount = pickRandom(10, "qnt");
-              for (let i = 0; i < imgAmount; i++) {
-                imgUrls.push(postImgs[pickRandom(postImgs.length)]);
-              }
-
-              const newPost = await Post.create({
-                itemName: items[pickRandom(items.length)],
-                quantity: pickRandom(10, "qnt"),
-                itemStatus,
-                imgUrls,
-                description: descripts[pickRandom(descripts.length)],
-                tradingOptions: tradings[pickRandom(tradings.length)],
-                category,
-                author: id,
-              });
-
-              if (i === 29) {
-                console.log("post seeder data complete.");
-              }
-            });
-          }
-        } catch (err) {
-          res.status(500).json({ error: err.message });
-        }
-      });
       return res.status(200).json({
-        message:
-          "success; reset posts of 30 samples and categories of 7 samples.",
+        message: `success; reset posts of ${postProcess.length} samples and categories of ${categoryProcess.length} samples.`,
       });
 
     case "messages":
-      const msgExist = await Message.findOne();
-      if (msgExist) {
-        await Message.deleteMany({});
-        console.log("clearout origin document data of message");
-      }
-
-      const transExist = await Transaction.findOne();
-      if (transExist) {
-        await Transaction.deleteMany({});
-        console.log("clearout origin document data of transaction.");
-      }
-
-      //check user and post data
-      const checkUsers = await User.find({
-        $or: [{ email: "dealer@mail.com" }, { email: "owner@mail.com" }],
-      });
-      const checkPosts = await Post.find();
-
-      if (!checkUsers.length || !checkPosts.length) {
-        console.log(
-          "generate message seed data failed: post and user data required. run 'node model/userSeeder.js' then 'node model/catePostsSeeder.js'"
-        );
-        process.exit(1);
-      }
-
-      let owner, dealer;
-      checkUsers.forEach((user) => {
-        if (user.email === "dealer@mail.com") {
-          dealer = user._id;
-        } else {
-          owner = user._id;
-        }
-      });
-
-      //generating 3 dummy transaction data
-      Array.from({ length: 12 }, async (_, i) => {
-        const post = checkPosts[pickRandom(checkPosts.length)];
-        const providedOptions = post.tradingOptions.selectedMethods;
-        const decidedMethod =
-          providedOptions[pickRandom(providedOptions.length)];
-
-        const dealMethod =
-          decidedMethod === "面交"
-            ? { faceToFace: post.tradingOptions.faceToFace }
-            : {
-                convenientStore: decidedMethod,
-              };
-
-        const isFace = dealMethod.faceToFace ? true : false;
-
-        try {
-          const trans = await Transaction.create({
-            amount: pickRandom(post.quantity, "qnt"),
-            post: post._id,
-            dealMethod,
-            isFilled: isFace,
-            isPaid: isFace,
-            dealer,
-            owner,
-          });
-          if (trans) {
-            // settled transaction with related apply messages
-            await Message.create({
-              ...startAMsgs[pickRandom(startAMsgs.length)],
-              applyDealMethod: dealMethod,
-              post: post._id,
-              author: dealer,
-            });
-          }
-
-          // random transaction message data and reply
-          if (pickRandom(4) % 2) {
-            const msg = await Message.create({
-              content: "寄送資料已經填寫好囉！再請你確認～",
-              messageType: "transaction",
-              deal: trans._id,
-              author: dealer,
-            });
-
-            if (msg && pickRandom(4) % 2) {
-              await Message.create({
-                content: "好的，確認後我再回覆您！",
-                messageType: "transaction",
-                deal: trans._id,
-                relatedMsg: msg._id,
-                author: owner,
-              });
-            }
-          }
-
-          if (i === 11) {
-            console.log("transaction seeder data complete.");
-
-            // generating 11 dummy data for post messages
-            Array.from({ length: 7 }, async (_, i) => {
-              const {
-                _id,
-                tradingOptions: { selectedMethods, faceToFace },
-              } = checkPosts[pickRandom(checkPosts.length)];
-
-              const messageType = pickRandom(4) % 2 ? "question" : "apply";
-              let dataStruct;
-              switch (messageType) {
-                case "question":
-                  dataStruct = {
-                    ...startQMsgs[pickRandom(startQMsgs.length)],
-                    post: _id,
-                    author: dealer,
-                  };
-                  break;
-                case "apply":
-                  const dealMethod =
-                    selectedMethods[pickRandom(selectedMethods.length)];
-                  dataStruct = {
-                    ...startAMsgs[pickRandom(startAMsgs.length)],
-                    applyDealMethod:
-                      dealMethod !== "面交"
-                        ? {
-                            convenientStore: dealMethod,
-                          }
-                        : { faceToFace },
-                    post: _id,
-                    author: dealer,
-                  };
-                  break;
-              }
-
-              const newMsg = await Message.create({ ...dataStruct });
-              if (newMsg) {
-                const addReply = replyMsgs[pickRandom(replyMsgs.length)];
-                if (addReply.messageType === newMsg.messageType) {
-                  await Message.create({
-                    ...addReply,
-                    post: _id,
-                    relatedMsg: newMsg._id,
-                    author: owner,
-                  });
-                }
-              }
-
-              if (i === 6) {
-                console.log("complete seed data of message");
-              }
-            });
-          }
-        } catch (err) {
-          console.error(err.message);
-        }
-      });
+      let msgProcess = await messageSeeds(
+        applyPostMsgs.concat(questionPostMsgs),
+        replyMsgs,
+        "post",
+        7,
+        true
+      );
       return res.status(200).json({
-        message:
-          "success; reset messages of 7+12 samples with random reply and 12 transactions.",
+        message: `success; reset post messages with random replies of ${msgProcess.length} samples`,
+      });
+
+    case "transactions":
+      let dealProcess = await transactionSeeds(applyPostMsgs, 12, true);
+      let dealMsgProcess;
+      if (dealProcess.length) {
+        dealMsgProcess = await messageSeeds(
+          transMsgs,
+          replyMsgs,
+          "deal",
+          6,
+          true
+        );
+      }
+      return res.status(200).json({
+        message: `success; reset transaction with related apply messages random replies of ${dealProcess.length} samples,\n transaction messages with random replies of ${dealMsgProcess.length} samples.`,
       });
 
     case "users":
-      const dataExist = await User.findOne();
-      if (dataExist) {
-        await User.deleteMany({});
-        console.log("clearout origin user data.");
-      }
-
-      Array.from({ length: 6 }, async (_, i) => {
-        const { nickname, email, password, accountAuthority } = seedUsers[i];
-
-        const dataStructure = {
-          nickname,
-          email,
-          password,
-          accountAuthority,
-          avatarUrl:
-            "https://images.unsplash.com/photo-1558276561-95e31d860c4b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
-        };
-
-        if (nickname !== "tomato" && nickname !== "admin") {
-          dataStructure.preferDealMethods =
-            tradings[pickRandom(tradings.length)];
-        }
-
-        if (nickname === "owner") {
-          dataStructure.account = seedUsers[i].account;
-        }
-
-        try {
-          await User.create(dataStructure);
-
-          if ((await User.countDocuments()) === 6) {
-            console.log("user seeder completed.");
-            return res
-              .status(200)
-              .json({ message: "success; reset users as 6 samples." });
-          }
-        } catch (err) {
-          console.error(err.message);
-        }
+      let usersProcess = await userSeeds(userSamples);
+      return res.status(200).json({
+        message: `success; reset users of ${usersProcess.length} samples.`,
       });
+
+    // case "all":
+    //   await clearOutData();
+    //   return res.status(200).json({
+    //     message: `success; clear all data.`,
+    //   });
   }
 };

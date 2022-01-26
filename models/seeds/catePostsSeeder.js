@@ -1,7 +1,7 @@
 import db from "../../config/mongoose.js";
-import Post from "../post.js";
-import Category from "../category.js";
-import User from "../user.js";
+import SeedGenerators from "../../utils/seedsGenerator.js";
+
+const { categorySeeds, postSeeds } = SeedGenerators;
 
 // seeder data
 const categories = [
@@ -94,76 +94,42 @@ function pickRandom(num, mode = "pick") {
   return Math.floor(Math.random() * num);
 }
 
+//setup post structured data
+let postSamples = [];
+for (let i = 0; i < 30; i++) {
+  let imgUrls = [];
+  let imgAmount = pickRandom(10, "qnt");
+  for (let i = 0; i < imgAmount; i++) {
+    if (imgAmount === 1) {
+      imgUrls.push({ imgUrl: undefined });
+    } else {
+      imgUrls.push({ imgUrl: postImgs[pickRandom(postImgs.length)] });
+    }
+  }
+  let dataStructure = {
+    itemName: items[pickRandom(items.length)],
+    quantity: pickRandom(10, "qnt"),
+    imgUrls,
+    itemStatus: pickRandom(15) % 2 === 0 ? "全新" : "二手",
+    description: descripts[pickRandom(descripts.length)],
+    tradingOptions: tradings[pickRandom(tradings.length)],
+  };
+  postSamples.push(dataStructure);
+}
+
 // generate data
 db.once("open", async () => {
   console.log("generating seed data of category and post");
 
-  //clearout collection past data if exist
-  const categoryDataExist = await Category.findOne();
-  if (categoryDataExist) {
-    await Category.deleteMany({});
-    console.log("clearout origin document data of categories.");
-  }
-  const postDataExist = await Post.findOne();
-  if (postDataExist) {
-    await Post.deleteMany({});
-    console.log("clearout origin document data of posts.");
-  }
+  // category
+  let categoryProcess = await categorySeeds(categories);
 
-  // generate dummy data of Categories
-  categories.forEach(async (category, i) => {
-    try {
-      await Category.create({
-        categoryName: category,
-      });
+  // post
+  if (categoryProcess.length) {
+    let postProcess = await postSeeds(postSamples);
 
-      if (i === categories.length - 1) {
-        console.log("complete seed data of category.");
-
-        // check users data
-        const findUser = await User.findOne({ email: "owner@mail.com" });
-        if (!findUser) {
-          console.log(
-            "generate post relation seeder data failed: no user exist, you need to have user data to proceed. (run 'node models/userSeeder.js')"
-          );
-          process.exit(1);
-        }
-
-        // generate 30 dummy data of Posts
-        Array.from({ length: 30 }, async (_, i) => {
-          const getCategory = await Category.findOne({
-            categoryName: categories[pickRandom(categories.length)],
-          });
-          const category = getCategory._id;
-
-          const itemStatus = pickRandom(15) % 2 === 0 ? "全新" : "二手";
-          const { id } = findUser;
-          const imgUrls = [];
-          const imgAmount = pickRandom(10, "qnt");
-          for (let i = 0; i < imgAmount; i++) {
-            imgUrls.push({ imgUrl: postImgs[pickRandom(postImgs.length)] });
-          }
-
-          const newPost = await Post.create({
-            itemName: items[pickRandom(items.length)],
-            quantity: pickRandom(10, "qnt"),
-            itemStatus,
-            imgUrls,
-            description: descripts[pickRandom(descripts.length)],
-            tradingOptions: tradings[pickRandom(tradings.length)],
-            category,
-            author: id,
-          });
-
-          if (i === 29) {
-            console.log("post seeder data complete.");
-            process.exit(1);
-          }
-        });
-      }
-    } catch (err) {
-      console.log("generate category seed data failed");
-      console.error(err);
+    if (postProcess.length) {
+      process.exit(1);
     }
-  });
+  }
 });

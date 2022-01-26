@@ -129,7 +129,9 @@ export default class UserControllers {
     const options = optionsSetup(
       page,
       size,
-      "+accountAuthority +isAllowPost +isAllowMessage"
+      "+accountAuthority +isAllowPost +isAllowMessage",
+      "",
+      { createdAt: -1 }
     );
     const { limit } = options;
     try {
@@ -154,6 +156,12 @@ export default class UserControllers {
     const { id } = req.params;
     const { role, isAllowMessage, isAllowPost } = req.body;
     try {
+      let checkUser = await User.find(id);
+      if (checkUser.email === "admin@mail.com") {
+        return res.status(403).json({
+          message: "this is a primary user, it can not be manipulate.",
+        });
+      }
       const user = await User.findByIdAndUpdate(
         id,
         {
@@ -262,6 +270,13 @@ export default class UserControllers {
 
   static async deleteUser(req, res, next) {
     const { id } = req.params;
+
+    let checkUser = await User.find(id);
+    if (checkUser.email === "admin@mail.com") {
+      return res.status(403).json({
+        message: "this is a primary user, it can not be delete.",
+      });
+    }
 
     try {
       const getDeleteHash = await User.findById(id).select(

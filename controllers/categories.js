@@ -26,22 +26,22 @@ const { ObjectId } = mongoose.Types;
 export default class CategoryControllers {
   static async getAllCategories(req, res, next) {
     const { sortBy } = req.query;
-    let updatedAt;
+    let createdAt;
     switch (sortBy) {
       case "asc":
-        updatedAt = 1;
+        createdAt = 1;
         break;
       case "desc":
-        updatedAt = -1;
+        createdAt = -1;
         break;
       default:
-        updatedAt = 1;
+        createdAt = -1;
         break;
     }
 
     try {
       const categories = await Category.find().sort({
-        updatedAt,
+        createdAt,
       });
 
       if (!categories.length) {

@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 import bcrypt from "bcrypt";
 const { Schema } = mongoose;
-import ImageSchema from "./image.js";
 
 const allRegions = [
   "基隆市",
@@ -412,7 +411,13 @@ const userSchema = new Schema({
     select: false,
     enum: ["local", "facebook"],
   },
-  avatarUrl: ImageSchema,
+  avatarUrl: {
+    imgUrl: {
+      type: String,
+      default: "https://i.imgur.com/E3aSqYi.png",
+    },
+    deleteHash: { type: String, select: false },
+  },
   account: {
     bankCode: { type: String, match: /^\d{3}$/ },
     accountNum: { type: String, match: /^\d{10,16}$/ },

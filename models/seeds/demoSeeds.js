@@ -18,7 +18,7 @@ const categories = [
 const users = [
   {
     email: "evergreen111@example.com",
-    password: "evergreen111",
+    password: "evergreen111", //6 char+num
     nickname: "不能再綠惹",
     avatarUrl: {
       imgUrl:

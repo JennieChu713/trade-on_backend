@@ -138,9 +138,14 @@ export default class AuthenticationMiddleware {
   static hasQueryUser(req, res, next) {
     const { user, isPublic } = req.query;
 
-    if (!user) {
+    if ((!user && !isPublic) || (!user && isPublic === "true")) {
       return next();
     }
+    if (!user && isPublic === "false") {
+      errorResponse(res, 401);
+      return;
+    }
+
     const {
       sub: { id, accountAuthority },
     } = JWT.verify(
@@ -161,36 +166,20 @@ export default class AuthenticationMiddleware {
   }
 
   static hasQueryPublic(req, res, next) {
-    const { isPublic, user} = req.query;
+    const { isPublic } = req.query;
 
     if (typeof isPublic === "undefined") {
       return next();
     }
 
     if (isPublic === "false") {
-      if (user || req.headers.authorization.length > 5) {
+      if (req.headers.authorization.length > 7) {
         return next();
       }
       errorResponse(res, 401);
-      return 
+      return;
     }
 
-    // if (req.headers.authorization.split(" ")[1]) {
-    //   const {
-    //     sub: { accountAuthority },
-    //   } = JWT.verify(
-    //     req.headers.authorization.split(" ")[1],
-    //     process.env.JWT_SECRET
-    //   );
-
-    //   if (accountAuthority !== "admin") {
-    //     errorResponse(res, 401);
-    //     return;
-    //   }
-    // } else {
-    //   errorResponse(res, 401);
-    //   return;
-    // }
     next();
   }
 

@@ -18,6 +18,10 @@ const transactSchema = new Schema({
     storeCode: { type: String, match: /^\d{5,6}$/ },
     storeName: { type: String },
   },
+  paymentInfo: {
+    bankCode: { type: String, match: /^\d{3}$/ },
+    accountNum: { type: String, match: /^\d{10,16}$/ },
+  },
   isPaid: {
     type: Boolean,
     default: false,
@@ -44,11 +48,13 @@ const transactSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
     index: true,
+    required: true,
   },
   dealer: {
     type: Schema.Types.ObjectId,
     ref: "User",
     index: true,
+    required: true,
   },
 });
 

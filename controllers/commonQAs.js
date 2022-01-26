@@ -5,17 +5,20 @@ import { errorResponse } from "../utils/errorMsgs.js";
 export default class CommonQAsControllers {
   static async getAllCommonQAs(req, res, next) {
     const { sortBy } = req.query;
-    let updatedAt = 1;
+    let createdAt;
     switch (sortBy) {
       case "asc":
-        updatedAt = 1;
+        createdAt = 1;
         break;
       case "desc":
-        updatedAt = -1;
+        createdAt = -1;
+        break;
+      default:
+        createdAt = -1;
         break;
     }
     try {
-      const allQAs = await CommonQA.find().sort({ updatedAt });
+      const allQAs = await CommonQA.find().sort({ createdAt });
 
       if (!allQAs.length) {
         return res.status(200).json({

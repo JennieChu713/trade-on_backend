@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 const { Schema } = mongoose;
-import ImageSchema from "./image.js";
 
 const allRegions = [
   "基隆市",
@@ -432,6 +431,10 @@ const postSchema = new Schema({
     //enum: ["刊登者", "索取者", "贈與者"]
     //required: true,
   },
+  isDealLimit: {
+    type: Boolean,
+    default: false,
+  },
   isGoal: {
     type: Boolean,
     default: false,
@@ -440,7 +443,16 @@ const postSchema = new Schema({
     type: Boolean,
     default: true,
   },
-  imgUrls: [ImageSchema],
+  imgUrls: [
+    {
+      _id: false,
+      imgUrl: {
+        type: String,
+        default: "https://i.imgur.com/NGhlZr4.jpg",
+      },
+      deleteHash: { type: String, select: false },
+    },
+  ],
   author: {
     type: Schema.Types.ObjectId,
     ref: "User",

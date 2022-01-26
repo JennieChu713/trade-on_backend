@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 import Post from "../models/post.js";
 import Transaction from "../models/transaction.js";
+import Message from "../models/message.js";
 import Category from "../models/category.js";
 import ImgurAPIs from "../utils/imgurAPI.js";
 
@@ -9,7 +10,7 @@ import { optionsSetup, paginateObject } from "../utils/paginateOptionSetup.js";
 import { errorResponse } from "../utils/errorMsgs.js";
 
 const { ObjectId } = mongoose.Types;
-const { uploadToImgur, deleteImage } = ImgurAPIs;
+const { deleteImage } = ImgurAPIs;
 
 export default class PostControllers {
   // READ all posts, or related posts of user
@@ -73,28 +74,11 @@ export default class PostControllers {
         return;
       }
 
-      // get present transaction deals' total amount as reservedTransAmount
-      const presentDeals = await Transaction.aggregate([
-        { $match: { post: ObjectId(id), isCanceled: false } },
-        {
-          $group: {
-            _id: { transId: "$id", owner: "$owner", post: "$post" },
-            dealers: { $push: "$dealer" },
-            reservedTransAmount: { $sum: "$amount" },
-            includedTrans: { $sum: 1 },
-          },
-        },
-      ]);
-
-      let reservedAmount = presentDeals[0] + post.givenAmount
-
-      let haveDeal = reservedAmount === post.quantity;
-
       if (!post.tradingOptions.faceToFace.region) {
         post.tradingOptions.faceToFace = undefined;
       }
 
-      res.status(200).json({ message: "success", haveDeal, post });
+      res.status(200).json({ message: "success", post });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -306,6 +290,10 @@ export default class PostControllers {
           await deleteImage(res.locals.imgurToken, deleteHash);
         }
       }
+
+      await Transaction.deleteMany({ post: ObjectId(id) });
+
+      await Message.deleteMany({ post: ObjectId(id) });
 
       await Post.findByIdAndDelete(id);
 
