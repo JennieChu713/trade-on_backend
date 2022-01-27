@@ -281,6 +281,15 @@ export default class PostControllers {
   static async deletePost(req, res, next) {
     const { id } = req.params;
     try {
+      let checkTrans = await Transaction.find({ post: ObjectId(id) });
+      for (let tran of checkTrans) {
+        if (!tran.isCancelable) {
+          return res.status(403).json({
+            message: `there is deal that can not be cancel, you need to complete the deal ${tran._id} before delete the post.`,
+          });
+        }
+      }
+
       let getDeleteHashes = await Post.findById(id).populate(
         "+imgUrls.deleteHash"
       );
