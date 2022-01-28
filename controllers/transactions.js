@@ -44,10 +44,10 @@ export default class TransactionControllers {
       $or: [{ owner: res.locals.user }, { dealer: res.locals.user }],
       ...progressFilters,
     };
-    const options = optionsSetup(page, size, "", {
+    const options = optionsSetup(page, size, "-paymentInfo", {
       path: "post owner dealer",
       select:
-        "_id itemName quantity givenAmount imgUrls email nickname avatarUrl.imgUrl -paymentInfo",
+        "_id itemName quantity givenAmount imgUrls email nickname avatarUrl.imgUrl",
     });
     const { limit } = options;
     try {
