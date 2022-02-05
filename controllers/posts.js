@@ -223,7 +223,7 @@ export default class PostControllers {
         return;
       }
 
-      const checkImgs = await Post.findById(id).populate("imgUrls.deleteHash");
+      const checkImgs = await Post.findById(id).select("imgUrls.deleteHash");
       let reservedImgs = checkImgs.imgUrls.slice(0);
       for (let i = 0; i < checkImgs.imgUrls.length; i++) {
         if (imgUrl.indexOf(checkImgs.imgUrls[i].imgUrl) === -1) {
@@ -290,7 +290,7 @@ export default class PostControllers {
         }
       }
 
-      let getDeleteHashes = await Post.findById(id).populate(
+      let getDeleteHashes = await Post.findById(id).select(
         "+imgUrls.deleteHash"
       );
       for (let i = 0; i < getDeleteHashes.imgUrls.length; i++) {
