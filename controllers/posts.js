@@ -223,7 +223,9 @@ export default class PostControllers {
         return;
       }
 
-      const checkImgs = await Post.findById(id).select("imgUrls.deleteHash");
+      const checkImgs = await Post.findById(id).select(
+        "imgUrls.imgUrl imgUrls.deleteHash"
+      );
       let reservedImgs = checkImgs.imgUrls.slice(0);
       for (let i = 0; i < checkImgs.imgUrls.length; i++) {
         if (imgUrl.indexOf(checkImgs.imgUrls[i].imgUrl) === -1) {
@@ -233,6 +235,10 @@ export default class PostControllers {
           }
           reservedImgs.splice(i, 1);
         }
+      }
+
+      if (!reservedImgs.length) {
+        reservedImgs.push({ imgUrl: undefined });
       }
 
       dataStructure.imgUrls = res.locals.imgs

@@ -4,7 +4,7 @@ const { uploadToImgur } = ImgurAPIs;
 export default class UploadImagesMiddleware {
   static async uploadMulti(req, res, next) {
     if (!req.files || !req.files.length) {
-      next();
+      return next();
     }
     try {
       let allImgUrls = [];
@@ -24,7 +24,7 @@ export default class UploadImagesMiddleware {
       }
       if (allImgUrls.length === req.files.length) {
         res.locals.imgs = allImgUrls;
-        next();
+        return next();
       }
     } catch (err) {
       return res.status(500).json({ error: err.message });
