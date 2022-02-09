@@ -160,6 +160,7 @@ export default class TransactionControllers {
           owner.account = { ...account };
           await owner.save();
         }
+        paymentInfo = account;
       }
 
       const newTrans = await Transaction.create({
@@ -170,7 +171,7 @@ export default class TransactionControllers {
         dealer: applyMsg.author,
         isFilled: isFace,
         isPaid: isFace,
-        paymentInfo: isFace ? undefined : account,
+        paymentInfo,
       });
 
       if (newTrans) {

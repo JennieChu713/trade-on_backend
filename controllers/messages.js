@@ -29,7 +29,12 @@ export default class MessageControllers {
 
       const { totalDocs, page, docs } = getAllMsgs;
       const paginate = paginateObject(totalDocs, limit, page);
-      const allMsgs = docs;
+      let allMsgs = docs;
+      for (let mes of allMsgs) {
+        if (mes.messageType !== "apply" || mes.relatedMsg) {
+          mes.isDealing = undefined;
+        }
+      }
 
       res
         .status(200)
@@ -103,6 +108,9 @@ export default class MessageControllers {
           mes.author = mes.authorInfo[0];
           mes.authorInfo = undefined;
 
+          mes.isDealing =
+            (mes.messageType === "apply" && !mes.relatedMsg) || undefined;
+
           mes.lastModified = new Date(mes.updatedAt).toLocaleString(
             "zh-TW",
             timeOptions
@@ -131,6 +139,9 @@ export default class MessageControllers {
         return res.status(200).json({
           message: "No related message in present. - 目前沒有相關留言",
         });
+      }
+      for (let mes of allMsgs) {
+        mes.isDealing = undefined;
       }
 
       res.status(200).json({ message: "success", dealMessages: allMsgs });

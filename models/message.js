@@ -53,9 +53,8 @@ const msgSchema = new Schema({
         if (this.presentDeal) {
           return true;
         }
-        return false;
       }
-      return undefined;
+      return false;
     },
   },
 });
