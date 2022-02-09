@@ -108,8 +108,9 @@ export default class MessageControllers {
           mes.author = mes.authorInfo[0];
           mes.authorInfo = undefined;
 
-          mes.isDealing =
-            (mes.messageType === "apply" && !mes.relatedMsg) || undefined;
+          if (mes.messageType !== "apply" || mes.relatedMsg) {
+            mes.isDealing = undefined;
+          }
 
           mes.lastModified = new Date(mes.updatedAt).toLocaleString(
             "zh-TW",
