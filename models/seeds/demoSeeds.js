@@ -53,6 +53,9 @@ const users = [
     email: "cinnamon888bunbun@yufoo.tw",
     password: "cinnamon888bunbun",
     nickname: "肉桂幫幫",
+    preferDealMethods: {
+      selectedMethods: ["全家"],
+    },
   },
 ];
 

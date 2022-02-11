@@ -186,8 +186,10 @@ export default class SeedGenerators {
           let categoryId = await Category.findOne({ categoryName });
           samples[i].category = categoryId._id;
           dataStructure = { ...samples[i] };
-          dataStructure.author = checkUser[pickRandom(checkUser.length)]._id;
+          let user = checkUser[pickRandom(checkUser.length)];
+          dataStructure.author = user._id;
           dataStructure.imgUrls = [{ imgUrl: undefined }];
+          dataStructure.tradingOptions = user.preferDealMethods;
         }
 
         let item = await Post.create(dataStructure);

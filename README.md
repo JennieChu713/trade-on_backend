@@ -1,6 +1,6 @@
 # Tradeon Backend API
 
-Tradeon backend API 是以 node.js 環境，搭配 express 框架 和 mongoDB 資料庫的後端專案，部署於AWS EC2，並依據 RESTful 的設計原則來滿足 [Tradeon 前端專案](https://github.com/Jane0901/trade-on-frontend/tree/main) 贈物網站中的資料需求。
+Tradeon backend API 是以 node.js 環境，搭配 express 框架 和 mongoDB 資料庫的後端專案，部署於 AWS EC2，並依據 RESTful 的設計原則來滿足 [Tradeon 前端專案](https://github.com/Jane0901/trade-on-frontend/tree/main) 贈物網站中的資料需求。
 
 ## 目錄
 
@@ -41,28 +41,33 @@ Tradeon backend API 是以 node.js 環境，搭配 express 框架 和 mongoDB �
 ![schema structure and relation](https://i.imgur.com/MhAzaVk.png)
 
 ## API Reference - 格式範例
+
+API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vji3gk5)
+
+範例使用者帳號與密碼
+| 信箱 | 密碼 | 權限 |
+| -------- | -------- | -------- |
+| evergreen111@example.com | eveergreen111 | 一般使用者 |
+| snowball0913@ggmail.com | snowball0913 | 一般使用者 |
+| cinnamon888bunbun@yufoo.tw | cinnamon888bunbun | 一般使用者 |
+| admin123@mail.com | admin123 | 管理員 |
+
 以下圖片顯示有經過掛件 prettify
 
 - [所有刊登](https://cosdelus.tw/tradeon/api/posts/all) : `https://codelus.tw/tradeon/api/posts/all`
-![all posts](https://i.imgur.com/H0YcHWH.png)
+  ![all posts](https://i.imgur.com/H0YcHWH.png)
 
 - 單一刊登 : `https://codelus.tw/tradeon/api/posts/:id`
-
-![one post](https://i.imgur.com/X6JHxQP.png)
+  ![one post](https://i.imgur.com/X6JHxQP.png)
 
 - 刊登關聯的留言板 : `https://codelus.tw/tradeon/api/messages/post/:id`
-
-![post related messages](https://i.imgur.com/lAVBXZk.png)
+  ![post related messages](https://i.imgur.com/lAVBXZk.png)
 
 - 所有交易進程（需登入）: `https://codelus.tw/tradeon/api/transactions/all`
-
-![all transactions](https://i.imgur.com/rcJTMDo.png)
+  ![all transactions](https://i.imgur.com/rcJTMDo.png)
 
 - 單一交易進程（需登入）: `https://codelus.tw/tradeon/api/transactions/:id`
-
-![one transaction](https://i.imgur.com/e6hx2fK.png)
-
-API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vji3gk5)
+  ![one transaction](https://i.imgur.com/e6hx2fK.png)
 
 ## Environment SetUp - 環境建置
 
@@ -73,68 +78,71 @@ API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vj
 
 1. 打開你的 terminal，Clone 此專案至本機電腦
 
-	```
-	git clone https://github.com/JennieChu713/trade-on_backend.git
-	```
+   ```
+   git clone https://github.com/JennieChu713/trade-on_backend.git
+   ```
 
 2. 開啟終端機(Terminal)，進入存放此專案的資料夾
 
-	```
-	cd trade-on_backend
-	```
+   ```
+   cd trade-on_backend
+   ```
 
 3. 安裝 npm 套件，可透過 `yarn` 或 `npm`下載專案相依套件
 
-	```
-	npm i
-	```
-	```
-	yarn
-	```
+   ```
+   npm i
+   ```
+
+   ```
+   yarn
+   ```
 
 4. 環境變數設定
 
-	將 .env.example 檔案名稱修改為 .env，並填入相對應的值
-	
-	```
-	//.env.example --> .env
-	PORT = 3333
-	
-	MONGODB_URI = your mongodb route
-	
-	MONGODB_NAME= your mongodb name
-	
-	MONGODB_USER = your mongodb access username
-	MONGDB_PASSWORD = your mongodb access username
-	
-	FRONTEND_URI = frontend url address for CORS list
-	
-	JWT_SECRET = your JWT-token secret
-	
-	JWT_EXPIRE = your JWT expiration setting
-	
-	IMGUR_CLIENT_ID = your imgur clientId
-	IMGUR_CLIENT_SECRET = your imgur secret
-	IMGUR_REFRESH_TOKEN = your imgur refresh token
-	```
+   將 .env.example 檔案名稱修改為 .env，並填入相對應的值
 
-6. 建立種子檔案
+   ```
+   //.env.example --> .env
+   PORT = 3333
 
-	```
-	npm run demoSeed
-	```
-	```
-	yarn demoSeed
-	```
+   MONGODB_URI = your mongodb route
 
-7. 啟動應用程式，執行 server.js 檔案
+   MONGODB_NAME= your mongodb name
 
-	```
-	npm run devStart
-	```
-	```
-	yarn devStart
-	```
+   MONGODB_USER = your mongodb access username
+   MONGDB_PASSWORD = your mongodb access username
+
+   FRONTEND_URI = frontend url address for CORS list
+
+   JWT_SECRET = your JWT-token secret
+
+   JWT_EXPIRE = your JWT expiration setting
+
+   IMGUR_CLIENT_ID = your imgur clientId
+   IMGUR_CLIENT_SECRET = your imgur secret
+   IMGUR_REFRESH_TOKEN = your imgur refresh token
+   ```
+
+5. 建立種子檔案
+
+   ```
+   npm run demoSeed
+   ```
+
+   ```
+   yarn demoSeed
+   ```
+
+6. 啟動應用程式，執行 server.js 檔案
+
+   ```
+   npm run devStart
+   ```
+
+   ```
+   yarn devStart
+   ```
 
 最後，開啟任一瀏覽器或 API 測試軟體，輸入 [http://localhost:3333](http://localhost:3333) 便可進行瀏覽。
 
@@ -145,7 +153,6 @@ API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vj
 1. 負責團隊資源協調與協作機制建立，實踐各階段的產品開發目標
 2. 負責專案核心分支管理，協助團隊 PR 審核
 3. 協同團隊確立專案規格（User Story, Wireframe, ERD Model）
-
 
 [Wei](https://github.com/jweiliao)
 
@@ -158,7 +165,6 @@ API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vj
 1. 負責團隊資源協調與協作機制建立，實踐各階段的產品開發目標
 2. 負責專案分支管理，協助團隊 PR 審核
 3. 協同團隊確立專案規格（User Story, Wireframe, ERD Model）
-
 
 [Jennie Chu](https://jenniechu713.github.io/resume/)
 
