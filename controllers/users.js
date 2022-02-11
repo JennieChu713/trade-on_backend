@@ -97,22 +97,26 @@ export default class UserControllers {
       avatarUrl = req.user.avatarUrl;
     }
 
-    req.user.imgurToken = await getImgurToken();
+    try {
+      req.user.imgurToken = await getImgurToken();
 
-    const userInfo = {
-      preferDealMethods,
-      account,
-      introduction,
-      email: req.user.email,
-      nickname: req.user.nickname,
-      id: req.user._id,
-      accountAuthority: req.user.accountAuthority,
-      avatarUrl,
-    };
+      const userInfo = {
+        preferDealMethods,
+        account,
+        introduction,
+        email: req.user.email,
+        nickname: req.user.nickname,
+        id: req.user._id,
+        accountAuthority: req.user.accountAuthority,
+        avatarUrl,
+      };
 
-    const token = signToken(req.user);
+      const token = signToken(req.user);
 
-    res.status(200).json({ message: "success", userInfo, token });
+      return res.status(200).json({ message: "success", userInfo, token });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
   }
 
   static async logout(req, res, next) {
@@ -156,12 +160,6 @@ export default class UserControllers {
     const { id } = req.params;
     const { role, isAllowMessage, isAllowPost } = req.body;
     try {
-      let checkUser = await User.find(id);
-      if (checkUser.email === "admin@mail.com") {
-        return res.status(403).json({
-          message: "this is a primary user, it can not be manipulate.",
-        });
-      }
       const user = await User.findByIdAndUpdate(
         id,
         {
@@ -270,14 +268,6 @@ export default class UserControllers {
 
   static async deleteUser(req, res, next) {
     const { id } = req.params;
-
-    let checkUser = await User.find(id);
-    if (checkUser.email === "admin@mail.com") {
-      return res.status(403).json({
-        message: "this is a primary user, it can not be delete.",
-      });
-    }
-
     try {
       const getDeleteHash = await User.findById(id).select(
         "+avatarUrl.deleteHash"

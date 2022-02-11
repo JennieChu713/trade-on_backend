@@ -196,7 +196,7 @@ export default class AuthenticationMiddleware {
         return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
     errorResponse(res, 401);
   }
@@ -255,5 +255,22 @@ export default class AuthenticationMiddleware {
         next();
       }
     )(req, res, next);
+  }
+
+  static async isPrimaryAdmin(req, res, next) {
+    const { id } = req.params;
+    try {
+      let checkUser = await User.findById(id);
+      const reg = /^admin*/gi;
+      let matching = checkUser.email.match(reg);
+      if (matching.includes("admin") && res.locals.auth === "admin") {
+        return res.status(403).json({
+          message: "this is a primary user, it can not be manipulate.",
+        });
+      }
+      next();
+    } catch (err) {
+      return next(err);
+    }
   }
 }

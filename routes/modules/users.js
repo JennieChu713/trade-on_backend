@@ -2,7 +2,7 @@ import express from "express";
 import AuthenticationMiddleware from "../../middleware/auth.js";
 import { uploadCheck } from "../../middleware/multer.js";
 
-const { permissionCheck, verifyLogin, checkToken, isUserSelf } =
+const { permissionCheck, verifyLogin, checkToken, isUserSelf, isPrimaryAdmin } =
   AuthenticationMiddleware;
 
 import UserControllers from "../../controllers/users.js";
@@ -42,7 +42,13 @@ router.get("/me", checkToken, getMe);
 router.get("/:id/record", getAllRecords);
 
 // UPDATE password
-router.put("/:id/password", checkToken, isUserSelf, updatePassword);
+router.put(
+  "/:id/password",
+  checkToken,
+  isUserSelf,
+  isPrimaryAdmin,
+  updatePassword
+);
 
 // UPDATE avatarUrl
 router.put(
@@ -54,7 +60,13 @@ router.put(
 );
 
 // UPDATE userAuthority
-router.put("/:id/auth", checkToken, permissionCheck, updateAccountAuth);
+router.put(
+  "/:id/auth",
+  checkToken,
+  permissionCheck,
+  isPrimaryAdmin,
+  updateAccountAuth
+);
 
 // READ userInfo
 router.get("/:id", getUserInfo);
@@ -63,6 +75,12 @@ router.get("/:id", getUserInfo);
 router.put("/:id", checkToken, isUserSelf, updateUserInfo);
 
 // DELETE user
-router.delete("/:id/delete", checkToken, isUserSelf, deleteUser);
+router.delete(
+  "/:id/delete",
+  checkToken,
+  isUserSelf,
+  isPrimaryAdmin,
+  deleteUser
+);
 
 export default router;
