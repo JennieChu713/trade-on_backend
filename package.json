@@ -11,7 +11,8 @@
     "catePostSeed": "node models/seeds/catePostsSeeder.js",
     "msgTranSeed": "node models/seeds/msgTranSeeder.js",
     "commonQASeed": "node models/seeds/commonQASeeder.js",
-    "userSeed": "node models/seeds/userSeeder.js"
+    "userSeed": "node models/seeds/userSeeder.js",
+    "demoSeed": "node models/seeds/demoSeeds.js"
   },
   "author": "jc",
   "license": "ISC",

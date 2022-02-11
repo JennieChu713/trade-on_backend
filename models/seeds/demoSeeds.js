@@ -1,6 +1,9 @@
 import db from "../../config/mongoose.js";
 import SeedGenerators from "../../utils/seedsGenerator.js";
 
+const { clearOutData, categorySeeds, userSeeds, commonQASeeds, postSeeds } =
+  SeedGenerators;
+
 // category
 const categories = [
   "配件飾品",
@@ -22,15 +25,11 @@ const users = [
     email: "evergreen111@example.com",
     password: "evergreen111", //6 char+num
     nickname: "不能再綠惹",
-    avatarUrl: {
-      imgUrl:
-        "https://images.unsplash.com/photo-1554311884-415bfda22b47?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
-    },
     description: '"向世界分享更多美好。"',
     preferDealMethods: {
       selectedMethods: ["7-11", "全家", "面交"],
       faceToFace: {
-        region: "台北市",
+        region: "臺北市",
         district: "萬華區",
       },
     },
@@ -39,10 +38,6 @@ const users = [
     email: "snowball0913@ggmail.com",
     password: "snowball0913",
     nickname: "雪球白",
-    avatarUrl: {
-      imgUrl:
-        "https://images.unsplash.com/photo-1548524049-a5a566db5727?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=80",
-    },
     description: "純粹的祝福，祈願世界和平。",
     preferDealMethods: {
       selectedMethods: ["7-11", "全家"],
@@ -330,3 +325,34 @@ const posts = [
     category: "其他",
   },
 ];
+
+db.once("open", async () => {
+  try {
+    // drop collections to clearout data
+    let clear = await clearOutData();
+
+    if (clear) {
+      let completeCateogry = await categorySeeds(categories);
+      let completeQAs = await commonQASeeds(qas);
+
+      if (completeCateogry.length && completeQAs.length) {
+        let completeUsers = await userSeeds(users);
+
+        if (completeUsers.length) {
+          let completePosts = await postSeeds(
+            posts,
+            undefined,
+            undefined,
+            "demo"
+          );
+          if (completePosts.length) {
+            process.exit(0);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error(err.message);
+    process.exit(1);
+  }
+});

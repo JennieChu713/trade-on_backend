@@ -18,30 +18,45 @@ function pickRandom(num, mode = "pick") {
 export default class SeedGenerators {
   // CLEAROUT datas
   static async clearOutData(select = "") {
-    switch (select) {
-      case "category":
-        await Category.deleteMany();
-        break;
-      case "commonqa":
-        await CommonQA.deleteMany();
-        break;
-      case "post":
-        await Post.deleteMany();
-        break;
-      case "transaction":
-        await Transaction.deleteMany();
-        break;
-      case "user":
-        await User.deleteMany();
-        break;
-      case "message":
-        await Message.deleteMany();
-        break;
-      default:
-        await mongoose.connection.db.dropDatabase();
-        break;
+    try {
+      switch (select) {
+        case "category":
+          await Category.deleteMany();
+          break;
+        case "commonqa":
+          await CommonQA.deleteMany();
+          break;
+        case "post":
+          await Post.deleteMany();
+          break;
+        case "transaction":
+          await Transaction.deleteMany();
+          break;
+        case "user":
+          await User.deleteMany();
+          break;
+        case "message":
+          await Message.deleteMany();
+          break;
+        default:
+          let collections = await mongoose.connection.db
+            .listCollections()
+            .toArray();
+
+          let allCollectionNames = collections.map(
+            (collection) => collection.name
+          );
+          for (let name of allCollectionNames) {
+            await mongoose.connection.db.dropCollection(name);
+          }
+          break;
+      }
+      console.log(`cleared data from ${select ? select : "all"}`);
+      return true;
+    } catch (err) {
+      console.error(err.message);
+      return false;
     }
-    console.log(`cleared data from ${select ? select : "all"}`);
   }
 
   // Category generator
@@ -127,7 +142,12 @@ export default class SeedGenerators {
   }
 
   // Post generator
-  static async postSeeds(samples, sizing = samples.length, randMode = false) {
+  static async postSeeds(
+    samples,
+    sizing = samples.length,
+    randMode = false,
+    scenario = "dev"
+  ) {
     try {
       // clearout data if exist
       let checkDataExist = await Post.findOne();
@@ -137,23 +157,39 @@ export default class SeedGenerators {
       }
 
       // check reference data User, Category
-      let checkUser = await User.findOne({ email: "owner@mail.com" });
+      let checkUser;
+      if (scenario === "dev") {
+        checkUser = await User.findOne({ email: "owner@mail.com" });
+      } else if (scenario === "demo") {
+        checkUser = await User.find({ email: { $not: { $regex: /^admin*/ } } });
+      }
+
       let checkCategories = await Category.find();
-      if (!checkUser || !checkCategories.length) {
+      if (!checkUser || !checkUser.length || !checkCategories.length) {
         throw new Error("category and user data are required");
       }
 
       // generate data
       let result = [];
       for (let i = 0; i < sizing; i++) {
-        let postInfo = randMode
-          ? samples[pickRandom(samples.length)]
-          : samples[i];
-        let item = await Post.create({
-          ...postInfo,
-          author: checkUser._id,
-          category: checkCategories[pickRandom(checkCategories.length)],
-        });
+        let dataStructure = {};
+        if (scenario === "dev") {
+          let postInfo = randMode
+            ? samples[pickRandom(samples.length)]
+            : samples[i];
+          dataStructure = { ...postInfo };
+          dataStructure.author = checkUser._id;
+          dataStructure.category =
+            checkCategories[pickRandom(checkCategories.length)];
+        } else if (scenario === "demo") {
+          const categoryName = samples[i].category;
+          let categoryId = await Category.findOne({ categoryName });
+          samples[i].category = categoryId._id;
+          dataStructure = { ...samples[i] };
+          dataStructure.author = checkUser[pickRandom(checkUser.length)]._id;
+        }
+
+        let item = await Post.create(dataStructure);
         result.push(item);
       }
       console.log("complete posts data");
