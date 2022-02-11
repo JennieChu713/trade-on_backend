@@ -187,6 +187,7 @@ export default class SeedGenerators {
           samples[i].category = categoryId._id;
           dataStructure = { ...samples[i] };
           dataStructure.author = checkUser[pickRandom(checkUser.length)]._id;
+          dataStructure.imgUrls = [{ imgUrl: undefined }];
         }
 
         let item = await Post.create(dataStructure);
