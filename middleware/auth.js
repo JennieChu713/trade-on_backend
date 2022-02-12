@@ -258,12 +258,11 @@ export default class AuthenticationMiddleware {
   }
 
   static async isPrimaryAdmin(req, res, next) {
-    const { id } = req.params;
     try {
-      let checkUser = await User.findById(id);
-      const reg = /^admin*/gi;
-      let matching = checkUser.email.match(reg);
-      if (matching.includes("admin") && res.locals.auth === "admin") {
+      let checkUser = await User.findById(res.locals.user)
+        .select("email")
+        .lean();
+      if (checkUser.email.includes("admin") && res.locals.auth === "admin") {
         return res.status(403).json({
           message: "this is a primary user, it can not be manipulate.",
         });
