@@ -105,7 +105,7 @@ export default class PostControllers {
       quantity,
       itemStatus,
       description,
-      imgUrls: res.locals.imgs,
+      imgUrls: res.locals.imgs || [{ imgUrl: undefined }],
       category: ObjectId(categoryId),
       author: ObjectId(res.locals.user),
     };
@@ -237,13 +237,13 @@ export default class PostControllers {
         }
       }
 
-      if (!reservedImgs.length) {
-        reservedImgs.push({ imgUrl: undefined });
-      }
-
       dataStructure.imgUrls = res.locals.imgs
         ? reservedImgs.concat(res.locals.imgs)
         : reservedImgs;
+
+      if (!dataStructure.imgUrls.length) {
+        dataStructure.imgUrls.push({ imgUrl: undefined });
+      }
 
       const updatePost = await Post.findByIdAndUpdate(
         id,

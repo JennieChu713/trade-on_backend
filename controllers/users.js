@@ -130,12 +130,13 @@ export default class UserControllers {
 
   static async getAllUsers(req, res, next) {
     const { page, size } = req.query;
+
     const options = optionsSetup(
       page,
       size,
       "+accountAuthority +isAllowPost +isAllowMessage",
       "",
-      { createdAt: -1 }
+      { createdAt: 1 }
     );
     const { limit } = options;
     try {

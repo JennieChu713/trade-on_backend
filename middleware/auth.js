@@ -4,6 +4,7 @@ import Post from "../models/post.js";
 import Message from "../models/message.js";
 import Transaction from "../models/transaction.js";
 import User from "../models/user.js";
+import Category from "../models/category.js";
 
 import { errorResponse } from "../utils/errorMsgs.js";
 
@@ -267,6 +268,33 @@ export default class AuthenticationMiddleware {
           message: "this is a primary user, it can not be manipulate.",
         });
       }
+      next();
+    } catch (err) {
+      return next(err);
+    }
+  }
+
+  static async isPrimaryCategory(req, res, next) {
+    const { id } = req.params;
+    const { categoryName } = req.body;
+
+    try {
+      if (id) {
+        let checkCategory = await Category.findById(id).lean();
+        if (checkCategory.categoryName === "其他") {
+          return res.status(403).json({
+            message:
+              "forbidden: This is a primary category, it can not be manipulate. - 該分類不可操作",
+          });
+        }
+      }
+      if (categoryName === "其他") {
+        return res.status(403).json({
+          message:
+            "forbidden: This is a primary category, it can not be manipulate. - 該分類不可操作",
+        });
+      }
+
       next();
     } catch (err) {
       return next(err);

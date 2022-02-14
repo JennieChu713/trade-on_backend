@@ -17,7 +17,6 @@ function trimWords(words) {
       result += char;
     }
   }
-  console.log(result);
   return result;
 }
 
@@ -35,7 +34,7 @@ export default class CategoryControllers {
         createdAt = -1;
         break;
       default:
-        createdAt = -1;
+        createdAt = 1;
         break;
     }
 
@@ -141,14 +140,6 @@ export default class CategoryControllers {
           .json({ message: `${categoryName} already exist. - 該分類已存在` });
       }
 
-      // check if category name is "其他"；因為是視為原始分類，所以先暫時設定為不能透過 client 端新增或編輯成"其他"的限制
-      if (categoryName === "其他") {
-        return res.status(403).json({
-          message:
-            "edit forbidden: This is a primary category, it can not be edit. - 該分類不可更改",
-        });
-      }
-
       // check if the param id is identical to compareId
       if (id === compareId) {
         // update category name
@@ -185,12 +176,6 @@ export default class CategoryControllers {
       if (!primaryCategory) {
         // create primary category if not exist
         primaryCategory = await Category.create({ categoryName });
-      }
-      if (id === primaryCategory._id) {
-        return res.status(403).json({
-          message:
-            "deletion forbidden: This is a primary category, it can not be delete. - 該分類不可刪除",
-        });
       }
 
       const relatedPosts = await Post.find({ category: ObjectId(id) });

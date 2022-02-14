@@ -14,7 +14,7 @@ export default class CommonQAsControllers {
         createdAt = -1;
         break;
       default:
-        createdAt = -1;
+        createdAt = 1;
         break;
     }
     try {

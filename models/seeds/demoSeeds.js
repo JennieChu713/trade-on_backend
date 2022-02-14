@@ -22,7 +22,7 @@ const categories = [
 // user
 const users = [
   {
-    email: "evergreen111@example.com",
+    email: "evergreen111@mail.com",
     password: "evergreen111", //6 char+num
     nickname: "不能再綠惹",
     description: '"向世界分享更多美好。"',
@@ -35,7 +35,7 @@ const users = [
     },
   },
   {
-    email: "snowball0913@ggmail.com",
+    email: "snowball0913@mail.com",
     password: "snowball0913",
     nickname: "雪球白",
     description: "純粹的祝福，祈願世界和平。",
@@ -50,7 +50,7 @@ const users = [
     accountAuthority: "admin",
   },
   {
-    email: "cinnamon888bunbun@yufoo.tw",
+    email: "cinnamon888bunbun@mail.com",
     password: "cinnamon888bunbun",
     nickname: "肉桂幫幫",
     preferDealMethods: {
