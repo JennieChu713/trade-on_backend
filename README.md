@@ -47,9 +47,9 @@ API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vj
 範例使用者帳號與密碼
 | 信箱 | 密碼 | 權限 |
 | -------- | -------- | -------- |
-| evergreen111@example.com | eveergreen111 | 一般使用者 |
-| snowball0913@ggmail.com | snowball0913 | 一般使用者 |
-| cinnamon888bunbun@yufoo.tw | cinnamon888bunbun | 一般使用者 |
+| evergreen111@mail.com | eveergreen111 | 一般使用者 |
+| snowball0913@mail.com | snowball0913 | 一般使用者 |
+| cinnamon888bunbun@mail.com | cinnamon888bunbun | 一般使用者 |
 | admin123@mail.com | admin123 | 管理員 |
 
 以下圖片顯示有經過掛件 prettify
