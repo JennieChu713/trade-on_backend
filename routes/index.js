@@ -31,7 +31,9 @@ router.get("/", (req, res) => {
 ////// reset temp route /////
 // import { resetting } from "../controllers/reset.js";
 // // temporary reset seed
-// router.get("/reset", resetting);
+import { savingPoint, restoreData } from "../controllers/reset.js";
+router.get("/save", savingPoint);
+router.get("/restore", restoreData);
 
 router.all("/*", (req, res) => {
   res.status(404).json({ error: "permission denied or incorrect route." });

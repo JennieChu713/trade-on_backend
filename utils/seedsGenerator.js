@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import fs from "fs";
 import Message from "../models/message.js";
 import Post from "../models/post.js";
 import Category from "../models/category.js";
@@ -118,7 +119,7 @@ export default class SeedGenerators {
   }
 
   // User generator
-  static async userSeeds(samples) {
+  static async userSeeds(samples, scenario = "dev") {
     try {
       // clear out data if exist
       let checkDataExist = await User.findOne();
@@ -129,7 +130,13 @@ export default class SeedGenerators {
       // generate data
       let result = [];
       for (let user of samples) {
-        let item = await User.create(user);
+        let item;
+        if (scenario === "dev") {
+          item = await User.create(user);
+        } else if (scenario === "restore") {
+          let password = user.email.split("@")[0];
+          item = await User.create({ ...user, password });
+        }
         result.push(item);
       }
 
@@ -154,6 +161,11 @@ export default class SeedGenerators {
       if (checkDataExist) {
         await Post.deleteMany({});
         console.log("clearout posts data");
+      }
+
+      if (scenario === "restore") {
+        console.log("complete posts data");
+        return await Post.insertMany(samples);
       }
 
       // check reference data User, Category
@@ -209,7 +221,8 @@ export default class SeedGenerators {
     replySamples,
     typeMode = "post",
     sizing = samples.length,
-    randMode = false
+    randMode = false,
+    scenario = "dev"
   ) {
     try {
       // clearout data if exist
@@ -230,10 +243,26 @@ export default class SeedGenerators {
           messageType: "transaction",
         };
       }
-      let checkDataExist = await Message.findOne(query);
+      let checkDataExist =
+        scenario === "dev"
+          ? await Message.findOne(query)
+          : await Message.findOne();
+
       if (checkDataExist) {
-        await Message.deleteMany(query);
+        if (scenario === "dev") {
+          await Message.deleteMany(query);
+        } else {
+          await Message.deleteMany();
+        }
         console.log("clearout messages data");
+      }
+
+      if (scenario === "restore") {
+        for (let sample of samples) {
+          await Message.create(sample);
+        }
+        console.log("complete message data");
+        return samples;
       }
 
       // check reference data User, Post and Transaction
@@ -420,6 +449,73 @@ export default class SeedGenerators {
     } catch (err) {
       console.error(err.message);
       return;
+    }
+  }
+
+  // saving point data json
+  static async savingJson() {
+    try {
+      let posts = await Post.find().select("+imgUrls.deleteHash").lean();
+      let categories = await Category.find().lean();
+      let commonqas = await CommonQA.find().lean();
+      let messages = await Message.find()
+        .select("+isDeleted +presentDeal")
+        .lean();
+      let trans = await Transaction.find().lean();
+      let users = await User.find()
+        .select(
+          "+avatarUrl.deleteHash +account +isAllowPost +isAllowMessage +accountAuthority"
+        )
+        .lean();
+      let dataStructure = {
+        posts,
+        categories,
+        commonqas,
+        messages,
+        trans,
+        users,
+      };
+      let dictstring = JSON.stringify(dataStructure);
+      fs.writeFile("saving.json", dictstring, function (err, result) {
+        if (err) return { error: err.message };
+      });
+      return dataStructure;
+    } catch (err) {
+      console.error(err.message);
+      return;
+    }
+  }
+
+  // restore json data
+  static async restore() {
+    let getData = fs.readFileSync("saving.json", "utf8");
+
+    let parsedData = JSON.parse(getData);
+    try {
+      let cleared = await SeedGenerators.clearOutData();
+      if (cleared) {
+        await SeedGenerators.commonQASeeds(parsedData.commonqas);
+        await SeedGenerators.categorySeeds(parsedData.categories);
+        await SeedGenerators.userSeeds(parsedData.users, "restore");
+        await SeedGenerators.postSeeds(
+          parsedData.posts,
+          undefined,
+          undefined,
+          "restore"
+        );
+        await SeedGenerators.messageSeeds(
+          parsedData.messages,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          "restore"
+        );
+      }
+      return true;
+    } catch (err) {
+      console.error(err.message);
+      return false;
     }
   }
 }

@@ -1,4 +1,6 @@
 import SeedGenerators from "../utils/seedsGenerator.js";
+import fs from "fs";
+import Post from "../models/post.js";
 
 const {
   categorySeeds,
@@ -8,6 +10,8 @@ const {
   messageSeeds,
   userSeeds,
   clearOutData,
+  savingJson,
+  restore,
 } = SeedGenerators;
 
 // commonQnAs
@@ -337,5 +341,25 @@ export const resetting = async (req, res, next) => {
     //   return res.status(200).json({
     //     message: `success; clear all data.`,
     //   });
+  }
+};
+
+export const savingPoint = async (req, res, next) => {
+  try {
+    let result = await savingJson();
+    return res.status(200).json({ message: "success", result });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+export const restoreData = async (req, res, next) => {
+  try {
+    let result = await restore();
+    if (result) {
+      return res.status(200).json({ message: "success" });
+    }
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };
