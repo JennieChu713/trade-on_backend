@@ -8,7 +8,7 @@ const { permissionCheck, verifyLogin, checkToken, isUserSelf, isPrimaryAdmin } =
 import UserControllers from "../../controllers/users.js";
 const {
   register,
-  logout,
+  // logout,
   login,
   getAllUsers,
   getUserInfo,
@@ -33,7 +33,7 @@ router.post("/login", verifyLogin, login);
 router.post("/register", register);
 
 //handle LOGOUT
-router.get("/logout", logout);
+// router.get("/logout", logout);
 
 // GET token user route
 router.get("/me", checkToken, getMe);

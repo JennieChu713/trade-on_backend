@@ -180,13 +180,10 @@ export default class CategoryControllers {
 
       const relatedPosts = await Post.find({ category: ObjectId(id) });
       if (relatedPosts.length) {
-        relatedPosts.forEach(async (post) => {
-          const checkUpdatePosts = await Post.updateOne(
-            { _id: post._id },
-            { category: ObjectId(primaryCategory._id) },
-            { runValidators: true, new: true }
-          );
-        });
+        for (let post of relatedPosts) {
+          post.category = ObjectId(primaryCategory._id);
+          await post.save();
+        }
       }
 
       //if no related posts, delete the category

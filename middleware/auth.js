@@ -83,6 +83,10 @@ export default class AuthenticationMiddleware {
   }
 
   static async messagePermission(req, res, next) {
+    const { messageType } = req.body;
+    if (messageType === "transaction") {
+      return next();
+    }
     try {
       const checkUser = await User.findById(res.locals.user)
         .select("isAllowMessage")
@@ -259,11 +263,15 @@ export default class AuthenticationMiddleware {
   }
 
   static async isPrimaryAdmin(req, res, next) {
+    const { id } = req.params;
     try {
-      let checkUser = await User.findById(res.locals.user)
-        .select("email")
+      let checkUser = await User.findById(id)
+        .select("email accountAuthority")
         .lean();
-      if (checkUser.email.includes("admin") && res.locals.auth === "admin") {
+      if (
+        checkUser.email.includes("admin") &&
+        checkUser.accountAuthority === "admin"
+      ) {
         return res.status(403).json({
           message: "this is a primary user, it can not be manipulate.",
         });
@@ -281,6 +289,7 @@ export default class AuthenticationMiddleware {
     try {
       if (id) {
         let checkCategory = await Category.findById(id).lean();
+
         if (checkCategory.categoryName === "其他") {
           return res.status(403).json({
             message:

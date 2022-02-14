@@ -22,8 +22,8 @@ const categories = [
 // user
 const users = [
   {
-    email: "evergreen111@mail.com",
-    password: "evergreen111", //6 char+num
+    email: "green111@mail.com",
+    password: "green111", //6 char+num
     nickname: "不能再綠惹",
     description: '"向世界分享更多美好。"',
     preferDealMethods: {
@@ -35,8 +35,8 @@ const users = [
     },
   },
   {
-    email: "snowball0913@mail.com",
-    password: "snowball0913",
+    email: "snow0913@mail.com",
+    password: "snow0913",
     nickname: "雪球白",
     description: "純粹的祝福，祈願世界和平。",
     preferDealMethods: {
@@ -50,8 +50,8 @@ const users = [
     accountAuthority: "admin",
   },
   {
-    email: "cinnamon888bunbun@mail.com",
-    password: "cinnamon888bunbun",
+    email: "rogui888@mail.com",
+    password: "rogui888",
     nickname: "肉桂幫幫",
     preferDealMethods: {
       selectedMethods: ["全家"],
@@ -123,21 +123,21 @@ const posts = [
   },
   {
     itemName: "空白筆記本",
-    quantity: 7,
+    quantity: 1,
     itemStatus: "二手",
     description: "從小時候累積到現在的空白筆記本。",
     category: "辦公文具",
   },
   {
     itemName: "鳥類木雕飾品",
-    quantity: 4,
+    quantity: 1,
     itemStatus: "全新",
     description: "今年大掃除才發現這些東西的存在，如果喜歡請跟我說。",
     category: "居家雜貨",
   },
   {
     itemName: "兔子布偶",
-    quantity: 2,
+    quantity: 1,
     itemStatus: "全新",
     description: "小時候的禮物，希望能找到珍惜它的人。",
     category: "親子育幼",
@@ -151,7 +151,7 @@ const posts = [
   },
   {
     itemName: "(可分送) 龍族 第一部",
-    quantity: 12,
+    quantity: 1,
     itemStatus: "二手",
     description:
       "全部 12 集。除了書角有些微磨損，書頁翻閱的狀況OK。雖然能拿一整組是最理想的，但也可以接受索取想要的集數。\n索取時請告知要拿哪幾集或是要拿一組。會優先考量拿整組的人，謝謝。",
@@ -167,7 +167,7 @@ const posts = [
   },
   {
     itemName: "香氛蠟燭",
-    quantity: 6,
+    quantity: 1,
     itemStatus: "全新",
     description:
       "聖誕節抽到的禮物，但本身沒有用香氛的習慣，所以送給有興趣的人。",
@@ -175,14 +175,14 @@ const posts = [
   },
   {
     itemName: "針織斗篷",
-    quantity: 2,
+    quantity: 1,
     itemStatus: "全新",
     description: "豆沙紅和灰麻色各一件。",
     category: "衣飾配件",
   },
   {
     itemName: "N1 日文檢定參考書",
-    quantity: 8,
+    quantity: 1,
     itemStatus: "二手",
     description: "考過N1檢定，所以轉送給需要的人。\n預祝順利通過！",
     category: "書籍讀物",
@@ -190,7 +190,7 @@ const posts = [
 
   {
     itemName: "無動力木頭模型組件",
-    quantity: 4,
+    quantity: 1,
     itemStatus: "全新",
     description: "買了很久一直沒機會組，決定釋出。",
     category: "親子育幼",
@@ -211,7 +211,7 @@ const posts = [
   },
   {
     itemName: "商業設計工具",
-    quantity: 5,
+    quantity: 1,
     itemStatus: "二手",
     description: "高中唸商設的工具，如果需要歡迎索取。",
     category: "辦公文具",
@@ -233,7 +233,7 @@ const posts = [
   },
   {
     itemName: "寵物食盆碗架組",
-    quantity: 2,
+    quantity: 1,
     itemStatus: "二手",
     description: "家裡的寶貝走了⋯⋯所以想給需要的人。",
     category: "寵物用品",
@@ -246,7 +246,7 @@ const posts = [
   },
   {
     itemName: "運動隨行水壺",
-    quantity: 3,
+    quantity: 1,
     itemStatus: "全新",
     description: "家裡水壺太多，想清點空間出來。",
     category: "運動器材",
@@ -261,7 +261,7 @@ const posts = [
 
   {
     itemName: "圍巾",
-    quantity: 10,
+    quantity: 1,
     itemStatus: "二手",
     description:
       "收集了很多，但最後只固定用幾條，所以決定出讓。喜歡的話歡迎索取。",
@@ -289,7 +289,7 @@ const posts = [
   },
   {
     itemName: "紙膠帶",
-    quantity: 13,
+    quantity: 1,
     itemStatus: "二手",
     description: "索取時請告訴我編號，感恩！",
     category: "辦公文具",
@@ -302,14 +302,14 @@ const posts = [
   },
   {
     itemName: "碗盤組",
-    quantity: 3,
+    quantity: 1,
     itemStatus: "全新",
     description: "沒用過",
     category: "居家雜貨",
   },
   {
     itemName: "貓咪擺飾",
-    quantity: 5,
+    quantity: 1,
     itemStatus: "二手",
     description: "瓷製品、木雕刻都有。",
     category: "居家雜貨",
@@ -322,7 +322,7 @@ const posts = [
   },
   {
     itemName: "CD",
-    quantity: 4,
+    quantity: 1,
     itemStatus: "二手",
     description: "家裡沒有播放器了，所以轉送。",
     category: "其他",

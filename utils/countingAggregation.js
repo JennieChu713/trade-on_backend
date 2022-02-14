@@ -7,7 +7,7 @@ const { ObjectId } = mongoose.Types;
 export async function presentDeals(postId) {
   // get present transaction deals' total amount as reservedTransAmount
   try {
-    return await Transaction.aggregate([
+    let allTrans = await Transaction.aggregate([
       { $match: { post: ObjectId(postId), isCanceled: false } },
       {
         $group: {
@@ -19,6 +19,7 @@ export async function presentDeals(postId) {
         },
       },
     ]);
+    return allTrans.length ? allTrans : [{ reservedTransAmount: 0 }];
   } catch (err) {
     throw new Error(err.message);
   }

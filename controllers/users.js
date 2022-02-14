@@ -53,8 +53,6 @@ export default class UserControllers {
       });
 
       newUser.password = undefined;
-      newUser.isAllowPost = undefined;
-      newUser.isAllowMessage = undefined;
       newUser.provider = undefined;
       newUser.imgurToken = await getImgurToken();
 
@@ -69,7 +67,7 @@ export default class UserControllers {
   }
 
   static async login(req, res, next) {
-    let preferDealMethods, account, avatarUrl, introduction;
+    let preferDealMethods, account, introduction;
     if (!req.user.preferDealMethods.faceToFace.region) {
       req.user.preferDealMethods.faceToFace = undefined;
     }
@@ -93,10 +91,6 @@ export default class UserControllers {
       introduction = req.user.introduction;
     }
 
-    if (req.user.avatarUrl) {
-      avatarUrl = req.user.avatarUrl;
-    }
-
     try {
       req.user.imgurToken = await getImgurToken();
 
@@ -108,7 +102,9 @@ export default class UserControllers {
         nickname: req.user.nickname,
         id: req.user._id,
         accountAuthority: req.user.accountAuthority,
-        avatarUrl,
+        isAllowMessage: req.user.isAllowMessage,
+        isAllowPost: req.user.isAllowPost,
+        avatarUrl: req.user.avatarUrl,
       };
 
       const token = signToken(req.user);
@@ -119,14 +115,14 @@ export default class UserControllers {
     }
   }
 
-  static async logout(req, res, next) {
-    if (req.isAuthenticated()) {
-      req.logout();
-      res.status(200).json({ message: "success" });
-    } else {
-      res.status(200).json({ message: "already logout" });
-    }
-  }
+  // static async logout(req, res, next) {
+  //   if (req.isAuthenticated()) {
+  //     req.logout();
+  //     res.status(200).json({ message: "success" });
+  //   } else {
+  //     res.status(200).json({ message: "already logout" });
+  //   }
+  // }
 
   static async getAllUsers(req, res, next) {
     const { page, size } = req.query;
@@ -289,7 +285,7 @@ export default class UserControllers {
   static async getMe(req, res, next) {
     try {
       const user = await User.findById(res.locals.user).select(
-        "+accountAuthority -__v"
+        "+accountAuthority +isAllowMessage +isAllowPost -__v"
       );
       if (!user) {
         errorResponse(res, 404);
