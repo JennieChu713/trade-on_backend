@@ -66,6 +66,7 @@ export default class MessageControllers {
             "authorInfo._id": 1,
             "authorInfo.email": 1,
             "authorInfo.nickname": 1,
+            "authorInfo.avatarUrl": 1,
             relatedMsg: 1,
             messageType: 1,
             applyDealMethod: 1,
