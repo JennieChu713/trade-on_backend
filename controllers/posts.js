@@ -233,16 +233,16 @@ export default class PostControllers {
             let { deleteHash } = checkImgs.imgUrls[i];
             await deleteImage(res.locals.imgurToken, deleteHash);
           }
-          reservedImgs.splice(
-            reservedImgs.indexOf(checkImgs.imgUrls[i].imgUrl),
-            1
-          );
+          reservedImgs.splice(reservedImgs.indexOf(checkImgs.imgUrls[i]), 1);
         }
       }
 
-      dataStructure.imgUrls = res.locals.imgs
-        ? reservedImgs.concat(res.locals.imgs)
-        : reservedImgs;
+      if (res.locals.imgs && res.locals.imgs.length) {
+        for (let img of res.locals.imgs) {
+          reservedImgs.push(img);
+        }
+      }
+      dataStructure.imgUrls = reservedImgs;
 
       if (!dataStructure.imgUrls.length) {
         dataStructure.imgUrls.push({ imgUrl: undefined });
