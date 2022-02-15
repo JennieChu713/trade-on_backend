@@ -239,7 +239,12 @@ export default class MessageControllers {
         author: ObjectId(res.locals.user),
       });
 
-      await newMessage.populate("author", "nickname email");
+      let fields =
+        messageType !== "transaction"
+          ? "nickname email avatarUrl.imgUrl"
+          : "nickname email";
+
+      await newMessage.populate("author", fields);
 
       res.status(200).json({ message: "success", new: newMessage });
     } catch (err) {
@@ -282,7 +287,12 @@ export default class MessageControllers {
         author: ObjectId(res.locals.user),
       });
 
-      await newReply.populate("author", "nickname email");
+      let fields =
+        messageType !== "transaction"
+          ? "nickname email avatarUrl.imgUrl"
+          : "nickname email";
+
+      await newReply.populate("author", fields);
 
       res.status(200).json({ message: "success", new: newReply });
     } catch (err) {

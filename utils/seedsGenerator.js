@@ -61,7 +61,7 @@ export default class SeedGenerators {
   }
 
   // Category generator
-  static async categorySeeds(samples) {
+  static async categorySeeds(samples, scenario = "dev") {
     try {
       // clearout old data if exist
       let checkDataExist = await Category.findOne();
@@ -73,9 +73,13 @@ export default class SeedGenerators {
       //generate new datas
       let result = [];
       for (let category of samples) {
-        let item = await Category.create({
-          categoryName: category,
-        });
+        let dataStructure =
+          scenario === "dev"
+            ? {
+                categoryName: category,
+              }
+            : { ...category };
+        let item = await Category.create(dataStructure);
         result.push(item);
       }
 
@@ -341,7 +345,12 @@ export default class SeedGenerators {
   }
 
   // Transaction generator
-  static async transactionSeeds(msgSamples, sizing = 1, randMode = false) {
+  static async transactionSeeds(
+    msgSamples,
+    sizing = 1,
+    randMode = false,
+    scenario = "dev"
+  ) {
     try {
       // clearout data if exist
       let checkDataExist = await Transaction.findOne();
@@ -352,6 +361,10 @@ export default class SeedGenerators {
         console.log(
           "reset post status, and clearout transaction with related message data"
         );
+      }
+
+      if (scenario === "restore") {
+        return await Transaction.insertMany(samples);
       }
 
       // check reference data User, Post and Transaction
@@ -495,7 +508,7 @@ export default class SeedGenerators {
       let cleared = await SeedGenerators.clearOutData();
       if (cleared) {
         await SeedGenerators.commonQASeeds(parsedData.commonqas);
-        await SeedGenerators.categorySeeds(parsedData.categories);
+        await SeedGenerators.categorySeeds(parsedData.categories, "restore");
         await SeedGenerators.userSeeds(parsedData.users, "restore");
         await SeedGenerators.postSeeds(
           parsedData.posts,
@@ -511,6 +524,8 @@ export default class SeedGenerators {
           undefined,
           "restore"
         );
+        await Transaction.insertMany(parsedData.trans);
+        console.log("complete transaction data");
       }
       return true;
     } catch (err) {
