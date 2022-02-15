@@ -251,7 +251,7 @@ export default class UserControllers {
           runValidators: true,
           new: true,
         }
-      );
+      ).select("+isAllowPost +isAllowMessage");
 
       if (!updateUser.preferDealMethods.selectedMethods.length) {
         updateUser.preferDealMethods.selectedMethods = undefined;
