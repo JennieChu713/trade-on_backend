@@ -209,7 +209,7 @@ API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vj
 4. 協同團隊進行 Netlify 部署
 5. 協同團隊確立專案規格（User Flow、Wireframe、設計稿）
 
-[Jennie Chu](https://jenniechu713.github.io/JennieChu713/)<!-- RESUME 連結 -->
+[Jennie Chu](https://jenniechu713.github.io/resume/)
 
 1. 負責後端的開發，包括：
    - 登入、註冊，編輯使用者資料，包含密碼修改、頭像上傳等
