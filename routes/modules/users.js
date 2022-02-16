@@ -1,41 +1,86 @@
 import express from "express";
-import passport from "passport";
 import AuthenticationMiddleware from "../../middleware/auth.js";
+import { uploadCheck } from "../../middleware/multer.js";
 
-const { authenticator, permissionCheck } = AuthenticationMiddleware;
+const { permissionCheck, verifyLogin, checkToken, isUserSelf, isPrimaryAdmin } =
+  AuthenticationMiddleware;
 
 import UserControllers from "../../controllers/users.js";
 const {
   register,
-  logout,
+  // logout,
   login,
   getAllUsers,
   getUserInfo,
   updateUserInfo,
   deleteUser,
+  getMe,
+  updateAccountAuth,
+  updatePassword,
+  updateAvatar,
+  getAllRecords,
 } = UserControllers;
 
 const router = express.Router();
 
-// get all users (admin)
-router.get("/all", authenticator, permissionCheck, getAllUsers);
+// READ all users (admin)
+router.get("/all", checkToken, permissionCheck, getAllUsers);
 
 // handle LOGIN
-router.post("/login", passport.authenticate("local"), login);
+router.post("/login", verifyLogin, login);
 
 //handle REGISTER
 router.post("/register", register);
 
 //handle LOGOUT
-router.get("/logout", logout);
+// router.get("/logout", logout);
+
+// GET token user route
+router.get("/me", checkToken, getMe);
+
+// READ records
+router.get("/:id/record", getAllRecords);
+
+// UPDATE password
+router.put(
+  "/:id/password",
+  checkToken,
+  isUserSelf,
+  isPrimaryAdmin,
+  updatePassword
+);
+
+// UPDATE avatarUrl
+router.put(
+  "/:id/avatar",
+  checkToken,
+  isUserSelf,
+  uploadCheck.single("imageUrl"),
+  updateAvatar
+);
+
+// UPDATE userAuthority
+router.put(
+  "/:id/auth",
+  checkToken,
+  permissionCheck,
+  isPrimaryAdmin,
+  updateAccountAuth
+);
 
 // READ userInfo
 router.get("/:id", getUserInfo);
 
 // UPDATE userInfo
-router.put("/:id", authenticator, updateUserInfo);
+router.put("/:id", checkToken, isUserSelf, updateUserInfo);
 
 // DELETE user
-router.delete("/:id/delete", authenticator, deleteUser);
+router.delete(
+  "/:id/delete",
+  checkToken,
+  isUserSelf,
+  isPrimaryAdmin,
+  deleteUser
+);
 
 export default router;

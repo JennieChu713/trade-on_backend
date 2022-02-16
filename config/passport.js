@@ -1,15 +1,46 @@
 import passport from "passport";
 import passportLocal from "passport-local";
+import passportJWT, { ExtractJwt } from "passport-jwt";
 import passportFacebook from "passport-facebook";
 import User from "../models/user.js";
 
 const LocalStrategy = passportLocal.Strategy;
+const JWTStrategy = passportJWT.Strategy;
 const FacebookStrategy = passportFacebook.Strategy;
 
 export default function usePassport(app) {
   // initialize passport
   app.use(passport.initialize());
-  app.use(passport.session());
+
+  // setup JWTtoken
+  passport.use(
+    new JWTStrategy(
+      {
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        secretOrKey: process.env.JWT_SECRET,
+      },
+      async (payload, done) => {
+        try {
+          const user = await User.findById(payload.sub.id).select(
+            "accountAuthority"
+          );
+
+          if (!user) {
+            return done(null, false, {
+              message: "No token provided",
+            });
+          }
+
+          if (payload.exp < new Date().getTime()) {
+            return done(null, false, { message: "token has expired" });
+          }
+          done(null, user);
+        } catch (err) {
+          done(err, false);
+        }
+      }
+    )
+  );
 
   // setup local login strategy
   passport.use(
@@ -17,20 +48,26 @@ export default function usePassport(app) {
       { usernameField: "email" },
       async (email, password, done) => {
         try {
-          const user = await User.findOne({ email }).select("+password");
+          const user = await User.findOne({ email }).select(
+            "+password +accountAuthority +avatarUrl +isAllowPost +isAllowMessage"
+          );
           if (!user) {
-            return done(null, false, { message: "Not a registered email" });
+            return done(null, false, {
+              error: true,
+              message: "Not a registered email",
+            });
           } else {
             const isMatch = await user.matchPasswords(password);
             if (!isMatch) {
               return done(null, false, {
+                error: true,
                 message: "Email or password incorrect",
               });
             }
-            return done(null, user);
           }
+          done(null, user);
         } catch (err) {
-          (err) => done(err, false);
+          done(err, false);
         }
       }
     )
@@ -57,17 +94,15 @@ export default function usePassport(app) {
 
   //         //register
   //         const randomPassword = Math.random().toString(36).slice(-8);
-  //         const hashed = await bcrypt.hash(randomPassword, 10);
-  //         if (hashed) {
-  //           const newUser = await User.create({
-  //             email,
-  //             name,
-  //             password: hashed,
-  //             provider,
-  //           });
-  //           if (newUser) {
-  //             return done(null, newUser);
-  //           }
+
+  //         const newUser = await User.create({
+  //           email,
+  //           name,
+  //           password: randomPassword,
+  //           provider,
+  //         });
+  //         if (newUser) {
+  //           return done(null, newUser);
   //         }
   //       } catch (err) {
   //         (err) => done(err, false);
@@ -78,11 +113,11 @@ export default function usePassport(app) {
 
   //setup serialize and deserialize
   passport.serializeUser((user, done) => {
-    done(null, user.id);
+    done(null, user._id);
   });
   passport.deserializeUser(async (id, done) => {
     try {
-      const findUser = await User.findById(id).lean();
+      const findUser = await User.findById(id);
       if (findUser) {
         return done(null, findUser);
       }

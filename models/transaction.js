@@ -14,15 +14,15 @@ const transactSchema = new Schema({
   },
   sendingInfo: {
     name: { type: String },
-    cellPhone: { type: Number, match: /^\d{4}[-]?\d{6}$/ },
-    storeCode: { type: Number, match: /^\d{5, 6}$/ },
+    cellPhone: { type: String, match: /^\d{4}[-]?\d{6}$/ },
+    storeCode: { type: String, match: /^\d{5,6}$/ },
     storeName: { type: String },
   },
-  isPaid: {
-    type: Boolean,
-    default: false,
+  paymentInfo: {
+    bankCode: { type: String, match: /^\d{3}$/ },
+    accountNum: { type: String, match: /^\d{10,16}$/ },
   },
-  isSent: {
+  isPaid: {
     type: Boolean,
     default: false,
   },
@@ -34,6 +34,10 @@ const transactSchema = new Schema({
     type: Boolean,
     default: true,
   },
+  isCanceled: {
+    type: Boolean,
+    default: false,
+  },
   post: {
     type: Schema.Types.ObjectId,
     ref: "Post",
@@ -44,19 +48,18 @@ const transactSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
     index: true,
+    required: true,
   },
   dealer: {
     type: Schema.Types.ObjectId,
     ref: "User",
     index: true,
+    required: true,
   },
-  // expiredAt: {
-  //   type: Date,
-  //   default: Date.now,
-  //   expires: "3d",
-  // },
 });
+
 transactSchema.set("timestamps", true);
+
 transactSchema.method("toJSON", function () {
   const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();
   object.id = _id;

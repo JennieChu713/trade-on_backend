@@ -2,7 +2,7 @@ import express from "express";
 import AuthenticationMiddleware from "../../middleware/auth.js";
 
 const {
-  authenticator,
+  checkToken,
   isMessageAuthor,
   messagePermission,
   transactionInvolved,
@@ -24,7 +24,7 @@ const {
 const router = express.Router();
 
 // READ all messages (for admin)
-router.get("/all", authenticator, permissionCheck, getAllMessages);
+router.get("/all", checkToken, permissionCheck, getAllMessages);
 
 // READ all messages of related post
 router.get("/post/:id", getPostRelatedMessages);
@@ -32,24 +32,24 @@ router.get("/post/:id", getPostRelatedMessages);
 // READ all messages with related transaction
 router.get(
   "/deal/:id",
-  authenticator,
+  checkToken,
   transactionInvolved,
   getTransactionRelatedMessages
 );
 
 // CREATE a message (post and transaction)
-router.post("/new", authenticator, messagePermission, createMessage);
+router.post("/new", checkToken, messagePermission, createMessage);
+
+// CREATE a reply (post and transaction)
+router.post("/:id/new", checkToken, messagePermission, createReply);
 
 // READ one message (for edit rendering value)
-router.get("/:id", authenticator, isMessageAuthor, getOneMessage);
+router.get("/:id", checkToken, isMessageAuthor, getOneMessage);
 
-//CREATE a reply (post and transaction)
-router.post("/:id/new", authenticator, messagePermission, createReply);
+// UPDATE message / reply
+router.put("/:id", checkToken, isMessageAuthor, updateMessage);
 
-//UPDATE message / reply
-router.put("/:id", authenticator, isMessageAuthor, updateMessage);
-
-//DELETE message with related replies / single reply
-router.delete("/:id", authenticator, isMessageAuthor, deleteMessageAndRelated);
+// DELETE message with related replies / single reply
+router.delete("/:id", checkToken, isMessageAuthor, deleteMessageAndRelated);
 
 export default router;

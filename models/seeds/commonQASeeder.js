@@ -1,5 +1,7 @@
 import db from "../../config/mongoose.js";
-import CommonQA from "../commonQA.js";
+import SeedGenerators from "../../utils/seedsGenerator.js";
+
+const { commonQASeeds } = SeedGenerators;
 
 // seeder data
 const qas = [
@@ -30,31 +32,13 @@ const qas = [
   },
 ];
 
-function pickRandom(num) {
-  return Math.floor(Math.random() * num);
-}
 //generate data and store
 db.once("open", async () => {
   console.log("generating seed data for common QAs");
 
-  // clearout common_qas collection data if exist.
-  const dataExist = await CommonQA.find();
-  if (dataExist.length) {
-    await CommonQA.deleteMany({});
-    console.log("clearout origin document data.");
-  }
+  let result = await commonQASeeds(qas, 20, true);
 
-  // generate 20 dummy data
-  Array.from({ length: 20 }, async (_, i) => {
-    try {
-      await CommonQA.create(qas[pickRandom(qas.length)]);
-      if (i === 19) {
-        console.log("seeder data complete.");
-        process.exit();
-      }
-    } catch (err) {
-      console.log("generate seed data failed");
-      console.error(err);
-    }
-  });
+  if (result.length) {
+    process.exit(1);
+  }
 });

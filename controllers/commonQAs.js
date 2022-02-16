@@ -1,23 +1,32 @@
 import CommonQA from "../models/commonQA.js";
 
-// paginate option setup function
-import {
-  optionsSetup,
-  paginateObject,
-} from "../utils/paginateOptionSetup.common.js";
+import { errorResponse } from "../utils/errorMsgs.js";
 
 export default class CommonQAsControllers {
   static async getAllCommonQAs(req, res, next) {
-    const { page, size } = req.query;
-    const options = optionsSetup(page, size);
-    const { limit } = options;
+    const { sortBy } = req.query;
+    let createdAt;
+    switch (sortBy) {
+      case "asc":
+        createdAt = 1;
+        break;
+      case "desc":
+        createdAt = -1;
+        break;
+      default:
+        createdAt = 1;
+        break;
+    }
     try {
-      const getAllQAs = await CommonQA.paginate({}, options);
-      const { totalDocs, page, docs } = getAllQAs;
-      const paginate = paginateObject(totalDocs, limit, page);
-      const allQAs = docs;
+      const allQAs = await CommonQA.find().sort({ createdAt });
 
-      res.status(200).json({ message: "success", paginate, allQAs });
+      if (!allQAs.length) {
+        return res.status(200).json({
+          message: "common QnA is empty in present. - 目前尚未建立常見問題資料",
+        });
+      }
+
+      res.status(200).json({ message: "success", allQAs });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -27,20 +36,19 @@ export default class CommonQAsControllers {
     const { id } = req.params;
     try {
       const qna = await CommonQA.findById(id);
-      if (qna) {
-        res.status(200).json({ message: "success", QnA: qna });
-      } else {
-        return res
-          .status(404)
-          .json({ error: "The question you are looking for does not exist." });
+      if (!qna) {
+        errorResponse(res, 404);
+        return;
       }
+
+      res.status(200).json({ message: "success", QnA: qna });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   }
 
   static async createCommonQA(req, res, next) {
-    const { question, answer, imgUrls } = req.body;
+    const { question, answer } = req.body;
     try {
       const newQA = { question, answer };
       const addQA = await CommonQA.create(newQA);
@@ -59,9 +67,12 @@ export default class CommonQAsControllers {
         { question, answer },
         { runValidators: true, new: true }
       );
-      if (editQA) {
-        res.status(200).json({ message: "success", update: editQA });
+      if (!editQA) {
+        errorResponse(res, 404);
+        return;
       }
+
+      res.status(200).json({ message: "success", update: editQA });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

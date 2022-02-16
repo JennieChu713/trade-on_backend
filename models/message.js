@@ -5,8 +5,15 @@ const { Schema } = mongoose;
 const msgSchema = new Schema({
   content: {
     type: String,
-    required: true,
+    required: function () {
+      if (this.messageType !== "apply" || this.relatedMsg) {
+        return true;
+      } else {
+        return false;
+      }
+    },
   },
+  applyDealMethod: Object,
   relatedMsg: {
     type: Schema.Types.ObjectId,
     ref: "Message",
@@ -24,15 +31,49 @@ const msgSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Transaction",
   },
-  owner: {
+  author: {
     type: Schema.Types.ObjectId,
     ref: "User",
     index: true,
     required: true,
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
+  presentDeal: {
+    type: Schema.Types.ObjectId,
+    ref: "Transaction",
+    select: false,
+  },
+  isDealing: {
+    type: Boolean,
+    default: function () {
+      if (this.messageType === "apply") {
+        if (this.presentDeal) {
+          return true;
+        }
+      }
+      return false;
+    },
+  },
 });
 
 msgSchema.set("timestamps", true);
+
+msgSchema.pre("save", async function (next) {
+  //must use function declaration
+  if (!this.isModified("content")) {
+    next();
+  }
+
+  if (!this.content && this.messageType === "apply" && !this.relatedMsg) {
+    this.content = undefined;
+  }
+
+  this.presentDeal ? (this.isDealing = true) : (this.isDealing = false);
+  next();
+});
 
 msgSchema.method("toJSON", function () {
   const { __v, _id, updatedAt, createdAt, ...object } = this.toObject();

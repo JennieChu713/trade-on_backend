@@ -8,23 +8,29 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "devStart": "nodemon server.js",
-    "postTranSeed": "node models/seeds/postnTransSeeder.js",
-    "postMsgSeed": "node models/seeds/postMsgSeeder.js",
-    "commonQASeed": "node models/seeds/commonQASeeder.js"
+    "catePostSeed": "node models/seeds/catePostsSeeder.js",
+    "msgTranSeed": "node models/seeds/msgTranSeeder.js",
+    "commonQASeed": "node models/seeds/commonQASeeder.js",
+    "userSeed": "node models/seeds/userSeeder.js",
+    "demoSeed": "node models/seeds/demoSeeds.js"
   },
   "author": "jc",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.24.0",
     "bcrypt": "^5.0.1",
     "connect-mongo": "^4.6.0",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "express-session": "^1.17.2",
+    "form-data": "^4.0.0",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.12",
     "mongoose-paginate-v2": "^1.4.2",
+    "multer": "^1.4.4",
     "passport": "^0.5.0",
     "passport-facebook": "^3.0.0",
+    "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0"
   }
 }
