@@ -97,13 +97,13 @@ API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vj
 | axios                | 用於串接 Imgur API                            |
 | form-data            | 處理傳給 Imgur API request headers 等需求設定 |
 | multer               | 處理前端 request 傳來的圖片檔案               |
-| bcrypt               | 對使用者帳號密碼進行加密                      |
+| bcrypt               | 對使用者密碼進行雜湊加密                      |
 | cors                 | 設定 Cross Origin Resource                    |
 | dotenv               | 設定環境變數                                  |
 | express              | 相容 Node.js 環境網頁框架                     |
 | mongoose             | mongoDB ODM                                   |
 | connect-mongo        | mongoDB 連線                                  |
-| mongoose-paginate-v2 | 能夠便捷地產生 paginate 分頁                  |
+| mongoose-paginate-v2 | 能夠對取得的資料便捷地產生 paginate 分頁      |
 | passport             | 登入驗證 middleware                           |
 | passport-local       | 針對 app 原生登入驗證                         |
 | passport-jwt         | 針對 使用 JWT 登入驗證                        |
@@ -112,7 +112,7 @@ API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vj
 
 ## Installing - 專案安裝流程
 
-1. 打開你的 terminal，Clone 此專案至本機電腦
+1. 打開 terminal，Clone 此專案至本機電腦
 
    ```
    git clone https://github.com/JennieChu713/trade-on_backend.git
