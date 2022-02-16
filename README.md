@@ -9,29 +9,42 @@ Tradeon backend API 是以 node.js 環境，搭配 express 框架 和 mongoDB �
 - [DB Structure - 資料庫架構規劃](#DB-Structure---資料庫架構規劃)
 - [API Reference - 格式範例](#API-Reference---格式範例)
 - [Environment SetUp - 環境建置](#Environment-SetUp---環境建置)
+- [Technical Skills - 專案採用技術](#Technical-Skills---專案採用技術)
 - [Installing - 專案安裝流程](#Installing---專案安裝流程)
 - [Contributor and Responsibility - 開發人員與職責分工](#Contributor-and-Responsibility---開發人員與職責分工)
 
 ## Initial - 專案緣起
 
-專案始於程式導師實驗計畫第五期的期末專案，根據 [Jane](https://github.com/Jane0901) 發想的贈物平台為主題，建造前後端分離的作品，希望能透過技術解決並整合以往贈物社群上不一致的資訊規格與明確的贈送流程。
+這個專案源於[程式導師實驗計畫第五期](https://bootcamp.lidemy.com/)的期末專題，以 [Jane](https://github.com/Jane0901) 發想的贈物平台做為主題。
 
-專案核心價值：
+在斷捨離物品時，雖然有 FB 社團提供大家贈物，不過發文與留言格式混亂，而且一次贈送 / 索取多個物品，自己還要另外紀錄每個物品的交易情況。
 
-1. 對消費者的價值：提供一個物品狀態明確的資訊，清楚的贈送流程。
+為了解決上述問題，我們建立了 Trade On 贈物平台。Trade On 有格式統一的物品資訊，以及清楚的贈物流程，可以方便管理每一筆贈物 / 索物交易。另外，我們還有提供交易的一對一留言功能，增進會員的贈物 / 索物使用者體驗。
 
-1. 對店家的價值：減省物品資訊提供多寡程度的問題並將資訊核心化，同時省去贈送流程期間的不確定性。
+**專案核心價值**
+
+- 對於贈物者：減少贈物的時間成本，能夠輕鬆上架物品，並且方便管理物品資訊
+- 對於索物者：快速瀏覽格式一致的物品資訊，方便找到自己需要的物品
+- 對於雙方：直接留言互動讓溝通更方便，以及藉由清楚的贈物 / 索物紀錄，更好掌握交易進度
 
 ## Features - 專案功能
 
-- 使用者 CRUD - 贈物文瀏覽、贈物文索取或詢問留言、建立索取交易、交易留言、交易瀏覽
-- 管理員 CRUD - 贈物分類管理、使用者權限管理、留言管理、常見問題管理
+- 使用者 CRUD：贈物文瀏覽、贈物文索取或詢問留言、建立索取交易、交易留言、交易瀏覽
+
+- 管理員 CRUD：贈物分類管理、使用者權限管理、留言管理、常見問題管理
+
 - AWS EC2 部署，並搭配 nginx 反向代理及 pm2 運行。
+
 - 透過 cors 實作前後端分離
+
 - 採用 JSON Web Tokens 實作跨域認證
+
 - 採用 multer 對接前後端檔案程式
+
 - 整合 imgur API，實作上傳圖片功能
+
 - 採用 bcrypt 處理使用者密碼
+
 - 使用 dotenv 設定環境變數
 
 ## DB Structure - 資料庫架構規劃
@@ -45,12 +58,13 @@ Tradeon backend API 是以 node.js 環境，搭配 express 框架 和 mongoDB �
 API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vji3gk5)
 
 範例使用者帳號與密碼
-| 信箱 | 密碼 | 權限 |
-| -------- | -------- | -------- |
+
+| 信箱              | 密碼     | 權限       |
+| ----------------- | -------- | ---------- |
 | green111@mail.com | green111 | 一般使用者 |
 | snow0913@mail.com | snow0913 | 一般使用者 |
 | rogui888@mail.com | rogui888 | 一般使用者 |
-| admin123@mail.com | admin123 | 管理員 |
+| admin123@mail.com | admin123 | 管理員     |
 
 以下圖片顯示有經過掛件 prettify
 
@@ -73,6 +87,28 @@ API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vj
 
 - [Node.js](https://nodejs.org/en/)
 - [MongoDB](https://www.mongodb.com/)
+
+## Technical Skills - 專案採用技術
+
+![npm source tree](https://i.imgur.com/eux795I.png)
+
+| 套件                 | 用途                                          |
+| -------------------- | --------------------------------------------- |
+| axios                | 用於串接 Imgur API                            |
+| form-data            | 處理傳給 Imgur API request headers 等需求設定 |
+| multer               | 處理前端 request 傳來的圖片檔案               |
+| bcrypt               | 對使用者帳號密碼進行加密                      |
+| cors                 | 設定 Cross Origin Resource                    |
+| dotenv               | 設定環境變數                                  |
+| express              | 相容 Node.js 環境網頁框架                     |
+| mongoose             | mongoDB ODM                                   |
+| connect-mongo        | mongoDB 連線                                  |
+| mongoose-paginate-v2 | 能夠便捷地產生 paginate 分頁                  |
+| passport             | 登入驗證 middleware                           |
+| passport-local       | 針對 app 原生登入驗證                         |
+| passport-jwt         | 針對 使用 JWT 登入驗證                        |
+| passport-facebook    | 針對 facebook 第三方登入驗證（開發中）        |
+| jsonwebtoken         | 產生 JWT 簽證與驗證                           |
 
 ## Installing - 專案安裝流程
 
@@ -148,26 +184,39 @@ API 詳細操作文件可見[此](https://hackmd.io/@ST0HtQp5T0Cw_bEqVtdStA/B1vj
 
 ## Contributor and Responsibility - 開發人員與職責分工
 
-[Jane](https://github.com/Jane0901)
+[Jane Chen](https://github.com/Jane0901)
 
 1. 負責團隊資源協調與協作機制建立，實踐各階段的產品開發目標
-2. 負責專案核心分支管理，協助團隊 PR 審核
-3. 協同團隊確立專案規格（User Story, Wireframe, ERD Model）
-
-[Wei](https://github.com/jweiliao)
-
-1. 負責團隊資源協調與協作機制建立，實踐各階段的產品開發目標
-2. 負責專案核心分支管理，協助團隊 PR 審核
-3. 協同團隊確立專案規格（User Story, Wireframe, ERD Model）
+2. 負責前台功能開發，包含新增或編輯贈物文頁、個人資料頁、交易紀錄頁、交易詳情頁、登入頁、註冊頁
+3. 協同前台功能開發，包含編輯個人資料頁、常見問題頁
+4. 協同後台管理常見問題頁的功能開發
+5. 協同團隊建立 router
+6. 協同團隊進行 Netlify 部署
+7. 協同團隊確立專案規格（User Story、設計稿）
 
 [Genie](https://github.com/4genie)
 
-1. 負責團隊資源協調與協作機制建立，實踐各階段的產品開發目標
-2. 負責專案分支管理，協助團隊 PR 審核
-3. 協同團隊確立專案規格（User Story, Wireframe, ERD Model）
+1. 負責前台功能開發，包含禮物貼文頁、常見問題頁
+2. 負責後台功能開發，包含會員管理頁、贈物文管理頁、分類管理頁、常見問題管理頁
+3. 協同團隊建立 router
+4. 協同團隊確立專案規格（User Flow、Wireframe、設計稿）
 
-[Jennie Chu](https://jenniechu713.github.io/resume/)
+[Wei](https://github.com/jweiliao)
 
-1. 負責後端的開發，包括使用者登入和註冊、使用者資料修改、贈送文章的刊登、編輯與刪除，建立或取消交易，新增、編輯或刪除留言，以及後台管理員身份驗證等功能。
-2. 協同團隊確立專案規格（User Story, Wireframe, ERD Model）
-3. 協同團隊建立資料庫架構、種子資料與 EC2 部署
+1. 負責前台編輯個人資料頁的功能開發
+2. 協同前台功能開發，包含物品圖片上傳、表單驗證
+3. 協同團隊建立 router
+4. 協同團隊進行 Netlify 部署
+5. 協同團隊確立專案規格（User Flow、Wireframe、設計稿）
+
+[Jennie Chu](https://jenniechu713.github.io/JennieChu713/)<!-- RESUME 連結 -->
+
+1. 負責後端的開發，包括：
+   - 登入、註冊，編輯使用者資料，包含密碼修改、頭像上傳等
+   - 贈送文章的刊登、編輯與刪除
+   - 新增、編輯或刪除刊登文上的留言和回覆，以及交易進程中 1:1 的留言與回覆
+   - 建立或取消交易（會依照流程階段進行限制取消的機制）
+   - 後台管理員身份驗證 endpoint、發文和留言權限操作等功能
+2. 負責建立資料庫架構與設定種子資料
+3. 進行 AWS EC2 部署，並設定 nginx 和 pm2
+4. 協同團隊確立專案規格（User Flow、Wireframe、設計稿）

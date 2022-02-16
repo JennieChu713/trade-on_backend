@@ -31,7 +31,6 @@ app.use(
   })
 );
 app.use(express.json());
-// app.use(express.urlencoded({ extended: false }));
 
 // passport
 usePassport(app);
