@@ -23,7 +23,7 @@ function trimWords(words) {
 const { ObjectId } = mongoose.Types;
 
 export default class CategoryControllers {
-  static async getAllCategories(req, res, next) {
+  static async getAllCategories(req, res) {
     const { sortBy } = req.query;
     let createdAt;
     switch (sortBy) {
@@ -58,7 +58,7 @@ export default class CategoryControllers {
     }
   }
 
-  static async getOneCategory(req, res, next) {
+  static async getOneCategory(req, res) {
     try {
       const { id } = req.params;
       const getCategory = await Category.findById(id);
@@ -74,7 +74,7 @@ export default class CategoryControllers {
     }
   }
 
-  static async getRelatedPosts(req, res, next) {
+  static async getRelatedPosts(req, res) {
     const { id } = req.params;
     const { page, size } = req.query;
     const options = optionsSetup(page, size, "-tradingOptions -isPublic", {
@@ -104,7 +104,7 @@ export default class CategoryControllers {
     }
   }
 
-  static async createCategory(req, res, next) {
+  static async createCategory(req, res) {
     let { categoryName } = req.body;
     categoryName = trimWords(categoryName);
     try {
@@ -127,7 +127,7 @@ export default class CategoryControllers {
     }
   }
 
-  static async updateCategory(req, res, next) {
+  static async updateCategory(req, res) {
     const { id } = req.params;
     let { categoryName, compareId } = req.body;
     categoryName = trimWords(categoryName);
@@ -161,7 +161,7 @@ export default class CategoryControllers {
     }
   }
 
-  static async deleteCategory(req, res, next) {
+  static async deleteCategory(req, res) {
     const { id } = req.params;
     try {
       const categoryExist = await Category.findById(id).lean();

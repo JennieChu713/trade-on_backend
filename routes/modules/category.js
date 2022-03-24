@@ -1,8 +1,10 @@
 import express from "express";
 import AuthenticationMiddleware from "../../middleware/auth.js";
+import ValidationMiddleware from "../../middleware/validation.js";
 
 const { checkToken, permissionCheck, isPrimaryCategory } =
   AuthenticationMiddleware;
+const { idValidate } = ValidationMiddleware;
 
 import CategoryControllers from "../../controllers/categories.js";
 const {
@@ -20,10 +22,10 @@ const router = express.Router();
 router.get("/all", getAllCategories);
 
 // READ a category with related posts
-router.get("/:id/posts", getRelatedPosts);
+router.get("/:id/posts", idValidate, getRelatedPosts);
 
 // READ a category (for editing present data)
-router.get("/:id", checkToken, permissionCheck, getOneCategory);
+router.get("/:id", checkToken, permissionCheck, idValidate, getOneCategory);
 
 // CREATE a Category
 router.post(
@@ -39,6 +41,7 @@ router.put(
   "/:id",
   checkToken,
   permissionCheck,
+  idValidate,
   isPrimaryCategory,
   updateCategory
 );
@@ -48,6 +51,7 @@ router.delete(
   "/:id",
   checkToken,
   permissionCheck,
+  idValidate,
   isPrimaryCategory,
   deleteCategory
 );

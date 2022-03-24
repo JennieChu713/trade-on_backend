@@ -29,7 +29,7 @@ const signToken = (user) => {
 };
 
 export default class UserControllers {
-  static async register(req, res, next) {
+  static async register(req, res) {
     const { email, nickname, password, confirmPassword } = req.body;
 
     //prevention before storing data
@@ -66,7 +66,7 @@ export default class UserControllers {
     }
   }
 
-  static async login(req, res, next) {
+  static async login(req, res) {
     let preferDealMethods, account, introduction;
     if (!req.user.preferDealMethods.faceToFace.region) {
       req.user.preferDealMethods.faceToFace = undefined;
@@ -115,7 +115,7 @@ export default class UserControllers {
     }
   }
 
-  // static async logout(req, res, next) {
+  // static async logout(req, res) {
   //   if (req.isAuthenticated()) {
   //     req.logout();
   //     res.status(200).json({ message: "success" });
@@ -124,7 +124,7 @@ export default class UserControllers {
   //   }
   // }
 
-  static async getAllUsers(req, res, next) {
+  static async getAllUsers(req, res) {
     const { page, size } = req.query;
 
     const options = optionsSetup(
@@ -153,7 +153,7 @@ export default class UserControllers {
     }
   }
 
-  static async updateAccountAuth(req, res, next) {
+  static async updateAccountAuth(req, res) {
     const { id } = req.params;
     const { role, isAllowMessage, isAllowPost } = req.body;
     try {
@@ -178,7 +178,7 @@ export default class UserControllers {
     }
   }
 
-  static async getUserInfo(req, res, next) {
+  static async getUserInfo(req, res) {
     const { id } = req.params;
     try {
       const user = await User.findById(id).select("-account");
@@ -198,7 +198,7 @@ export default class UserControllers {
     }
   }
 
-  static async updateUserInfo(req, res, next) {
+  static async updateUserInfo(req, res) {
     const { id } = req.params;
     const {
       nickname,
@@ -263,7 +263,7 @@ export default class UserControllers {
     }
   }
 
-  static async deleteUser(req, res, next) {
+  static async deleteUser(req, res) {
     const { id } = req.params;
     try {
       const getDeleteHash = await User.findById(id).select(
@@ -282,7 +282,7 @@ export default class UserControllers {
     }
   }
 
-  static async getMe(req, res, next) {
+  static async getMe(req, res) {
     try {
       const user = await User.findById(res.locals.user).select(
         "+accountAuthority +isAllowMessage +isAllowPost -__v"
@@ -302,7 +302,7 @@ export default class UserControllers {
     }
   }
 
-  static async updatePassword(req, res, next) {
+  static async updatePassword(req, res) {
     const { id } = req.params;
     const { oldPassword, newPassword, confirmNewPassword } = req.body;
 
@@ -331,7 +331,7 @@ export default class UserControllers {
     }
   }
 
-  static async updateAvatar(req, res, next) {
+  static async updateAvatar(req, res) {
     const { id } = req.params;
     if (!req.file) {
       return res.status(200).json({ message: "no update" });
@@ -365,7 +365,7 @@ export default class UserControllers {
     }
   }
 
-  static async getAllRecords(req, res, next) {
+  static async getAllRecords(req, res) {
     const { id } = req.params;
     const { page, size, type, status } = req.query;
 
