@@ -1,9 +1,11 @@
 import express from "express";
 import AuthenticationMiddleware from "../../middleware/auth.js";
+import ValidationMiddleware from "../../middleware/validation.js";
 import { uploadCheck } from "../../middleware/multer.js";
 
 const { permissionCheck, verifyLogin, checkToken, isUserSelf, isPrimaryAdmin } =
   AuthenticationMiddleware;
+const { idValidate } = ValidationMiddleware;
 
 import UserControllers from "../../controllers/users.js";
 const {
@@ -39,12 +41,13 @@ router.post("/register", register);
 router.get("/me", checkToken, getMe);
 
 // READ records
-router.get("/:id/record", getAllRecords);
+router.get("/:id/record", idValidate, getAllRecords);
 
 // UPDATE password
 router.put(
   "/:id/password",
   checkToken,
+  idValidate,
   isUserSelf,
   isPrimaryAdmin,
   updatePassword
@@ -54,6 +57,7 @@ router.put(
 router.put(
   "/:id/avatar",
   checkToken,
+  idValidate,
   isUserSelf,
   uploadCheck.single("imageUrl"),
   updateAvatar
@@ -64,20 +68,22 @@ router.put(
   "/:id/auth",
   checkToken,
   permissionCheck,
+  idValidate,
   isPrimaryAdmin,
   updateAccountAuth
 );
 
 // READ userInfo
-router.get("/:id", getUserInfo);
+router.get("/:id", idValidate, getUserInfo);
 
 // UPDATE userInfo
-router.put("/:id", checkToken, isUserSelf, updateUserInfo);
+router.put("/:id", checkToken, idValidate, isUserSelf, updateUserInfo);
 
 // DELETE user
 router.delete(
   "/:id/delete",
   checkToken,
+  idValidate,
   isUserSelf,
   isPrimaryAdmin,
   deleteUser

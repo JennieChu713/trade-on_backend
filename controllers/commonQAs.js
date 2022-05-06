@@ -3,7 +3,7 @@ import CommonQA from "../models/commonQA.js";
 import { errorResponse } from "../utils/errorMsgs.js";
 
 export default class CommonQAsControllers {
-  static async getAllCommonQAs(req, res, next) {
+  static async getAllCommonQAs(req, res) {
     const { sortBy } = req.query;
     let createdAt;
     switch (sortBy) {
@@ -32,7 +32,7 @@ export default class CommonQAsControllers {
     }
   }
 
-  static async getOneCommonQA(req, res, next) {
+  static async getOneCommonQA(req, res) {
     const { id } = req.params;
     try {
       const qna = await CommonQA.findById(id);
@@ -47,7 +47,7 @@ export default class CommonQAsControllers {
     }
   }
 
-  static async createCommonQA(req, res, next) {
+  static async createCommonQA(req, res) {
     const { question, answer } = req.body;
     try {
       const newQA = { question, answer };
@@ -58,7 +58,7 @@ export default class CommonQAsControllers {
     }
   }
 
-  static async updateCommonQA(req, res, next) {
+  static async updateCommonQA(req, res) {
     const { id } = req.params;
     const { question, answer } = req.body;
     try {
@@ -78,7 +78,7 @@ export default class CommonQAsControllers {
     }
   }
 
-  static async deleteCommonQA(req, res, next) {
+  static async deleteCommonQA(req, res) {
     const { id } = req.params;
     try {
       await CommonQA.findByIdAndDelete(id);

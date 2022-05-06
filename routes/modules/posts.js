@@ -3,6 +3,7 @@ import express from "express";
 import AuthenticationMiddleware from "../../middleware/auth.js";
 import UploadImagesMiddleware from "../../middleware/handleMultipleImages.js";
 import { uploadCheck } from "../../middleware/multer.js";
+import ValidationMiddleware from "../../middleware/validation.js";
 
 const {
   checkToken,
@@ -12,6 +13,8 @@ const {
   isAdminOrOwner,
   hasQueryPublic,
 } = AuthenticationMiddleware;
+
+const { idValidate, tradingOptionsValidate } = ValidationMiddleware;
 
 const { uploadMulti } = UploadImagesMiddleware;
 
@@ -35,6 +38,8 @@ router.post(
   "/new",
   checkToken,
   postPermission,
+  idValidate,
+  tradingOptionsValidate,
   uploadCheck.array("imgUrl", 10),
   uploadMulti,
   createPost
@@ -46,23 +51,26 @@ router.put(
   checkToken,
   postPermission,
   isAdminOrOwner,
+  idValidate,
   updatePostStatus
 );
 
 // READ a post
-router.get("/:id", getOnePost);
+router.get("/:id", idValidate, getOnePost);
 
 //UPDATE a post
 router.put(
   "/:id",
   checkToken,
+  idValidate,
   isPostAuthor,
+  tradingOptionsValidate,
   uploadCheck.array("imgUrl", 10),
   uploadMulti,
   updatePost
 );
 
 // DELETE a post
-router.delete("/:id", checkToken, isPostAuthor, deletePost);
+router.delete("/:id", checkToken, idValidate, isPostAuthor, deletePost);
 
 export default router;

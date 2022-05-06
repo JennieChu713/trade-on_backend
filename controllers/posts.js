@@ -86,10 +86,11 @@ export default class PostControllers {
 
   // CREATE a post
   static async createPost(req, res, next) {
-    const obj = JSON.parse(JSON.stringify(req.body)); // get rid of [Object: null prototype] in case
+    // const obj = JSON.parse(JSON.stringify(req.body)); // get rid of [Object: null prototype] in case
     const { itemName, itemStatus, description, region, district, categoryId } =
-      obj;
-    let { quantity, tradingOptions } = obj;
+      res.locals.obj;
+    let tradingOptions = res.locals.tradingOptions;
+    let { quantity } = res.locals.obj;
 
     if (!tradingOptions || !tradingOptions.length) {
       errorResponse(res, 400);
@@ -110,18 +111,14 @@ export default class PostControllers {
       author: ObjectId(res.locals.user),
     };
 
-    if (typeof tradingOptions === "string") {
-      tradingOptions = tradingOptions.split(",");
-    }
-
     const selectedOptions = {
       selectedMethods: [],
     };
 
-    if (tradingOptions.indexOf("面交") > -1 && region && district) {
+    if (tradingOptions.includes("面交") && region && district) {
       selectedOptions.faceToFace = { region, district };
     } else {
-      if (tradingOptions.indexOf("面交") > -1) {
+      if (tradingOptions.includes("面交")) {
         tradingOptions.splice(tradingOptions.indexOf("面交"), 1);
       }
     }
@@ -149,7 +146,7 @@ export default class PostControllers {
   // UPDATE a post
   static async updatePost(req, res, next) {
     const { id } = req.params;
-    const obj = JSON.parse(JSON.stringify(req.body)); // get rid of [Object: null prototype] in case
+    // const obj = JSON.parse(JSON.stringify(req.body)); // get rid of [Object: null prototype] in case
     const {
       itemName,
       itemStatus,
@@ -158,8 +155,9 @@ export default class PostControllers {
       district,
       categoryId,
       postId,
-    } = obj;
-    let { imgUrl, quantity, tradingOptions } = obj;
+    } = res.locals.obj;
+    let tradingOptions = res.locals.tradingOptions;
+    let { imgUrl, quantity } = res.locals.obj;
 
     if (id !== postId) {
       errorResponse(res, 400);
@@ -189,18 +187,14 @@ export default class PostControllers {
       blankFields.description = "";
     }
 
-    if (typeof tradingOptions === "string") {
-      tradingOptions = tradingOptions.split(",");
-    }
-
     const selectedOptions = {
       selectedMethods: [],
     };
 
-    if (tradingOptions.indexOf("面交") > -1 && region && district) {
+    if (tradingOptions.includes("面交") && region && district) {
       selectedOptions.faceToFace = { region, district };
     } else {
-      if (tradingOptions.indexOf("面交") > -1) {
+      if (tradingOptions.includes("面交")) {
         tradingOptions.splice(tradingOptions.indexOf("面交"), 1);
       }
       blankFields.faceToFace = "";

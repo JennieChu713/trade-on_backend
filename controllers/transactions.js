@@ -12,7 +12,7 @@ const { ObjectId } = mongoose.Types;
 
 export default class TransactionControllers {
   // READ all transactions of a user
-  static async getAllTransactions(req, res, next) {
+  static async getAllTransactions(req, res) {
     const { page, size, progress } = req.query;
 
     const progressFilters = {};
@@ -72,7 +72,7 @@ export default class TransactionControllers {
   }
 
   // READ a transaction
-  static async getOneTransaction(req, res, next) {
+  static async getOneTransaction(req, res) {
     const { id } = req.params;
     try {
       const trans = await Transaction.findById(id).populate(
@@ -93,7 +93,7 @@ export default class TransactionControllers {
   }
 
   // CREATE a transaction (base on apply message)
-  static async createTransaction(req, res, next) {
+  static async createTransaction(req, res) {
     const { id } = req.params; // message id
     const { accountNum, bankCode } = req.body;
     let { amount } = req.body;
@@ -186,7 +186,7 @@ export default class TransactionControllers {
   }
 
   // UPDATE transaction deal: filling sending info (for convenientStore)
-  static async updateFillingProgress(req, res, next) {
+  static async updateFillingProgress(req, res) {
     const { id } = req.params;
     const { name, cellPhone, storeCode, storeName } = req.body;
 
@@ -222,7 +222,7 @@ export default class TransactionControllers {
   }
 
   // UPDATE user accountInfo if none;  for ATM usage
-  static async updateUserAccount(req, res, next) {
+  static async updateUserAccount(req, res) {
     const { id } = req.params;
     const { accountNum, bankCode } = req.body;
 
@@ -244,7 +244,7 @@ export default class TransactionControllers {
   }
 
   // UPDATE a transaction deal: is paid (for convenientStore)
-  static async updatePaymentProgress(req, res, next) {
+  static async updatePaymentProgress(req, res) {
     const { id } = req.params;
     try {
       const checkProcess = await Transaction.findOne({
@@ -264,7 +264,7 @@ export default class TransactionControllers {
   }
 
   // UPDATE a transaction deal: is complete
-  static async updateCompleteProgress(req, res, next) {
+  static async updateCompleteProgress(req, res) {
     const { id } = req.params;
 
     try {
@@ -318,7 +318,7 @@ export default class TransactionControllers {
   }
 
   // UPDATE a transaction status: cancel
-  static async updateCancelTrans(req, res, next) {
+  static async updateCancelTrans(req, res) {
     const { id } = req.params;
     try {
       // check Progress

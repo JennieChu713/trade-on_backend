@@ -9,7 +9,7 @@ const { ObjectId } = mongoose.Types;
 
 export default class MessageControllers {
   // READ all messages (for admin)
-  static async getAllMessages(req, res, next) {
+  static async getAllMessages(req, res) {
     const { page, size, type } = req.query;
     const matchQuery = type ? { messageType: type } : {};
     const options = optionsSetup(page, size, "", {
@@ -45,7 +45,7 @@ export default class MessageControllers {
   }
 
   // READ post related messages
-  static async getPostRelatedMessages(req, res, next) {
+  static async getPostRelatedMessages(req, res) {
     const { id } = req.params;
 
     try {
@@ -128,7 +128,7 @@ export default class MessageControllers {
   }
 
   // READ transaction related messages as 1:1
-  static async getTransactionRelatedMessages(req, res, next) {
+  static async getTransactionRelatedMessages(req, res) {
     const { id } = req.params;
 
     try {
@@ -153,7 +153,7 @@ export default class MessageControllers {
   }
 
   // READ one message as for editing
-  static async getOneMessage(req, res, next) {
+  static async getOneMessage(req, res) {
     const { id } = req.params;
     try {
       const msg = await Message.findById(id).populate(
@@ -168,7 +168,7 @@ export default class MessageControllers {
   }
 
   // CREATE a message (transaction or post)
-  static async createMessage(req, res, next) {
+  static async createMessage(req, res) {
     const { content, chooseDealMethod, messageType, relatedId } = req.body; // relatedId is a post or transaction
     try {
       const related =
@@ -253,7 +253,7 @@ export default class MessageControllers {
   }
 
   // CREATE a reply message (transaction or post)
-  static async createReply(req, res, next) {
+  static async createReply(req, res) {
     const { id } = req.params; // message id
     const { content, messageType, relatedId, relatedMsg } = req.body; // relatedId could be the post or transaction
 
@@ -301,7 +301,7 @@ export default class MessageControllers {
   }
 
   // UPDATE a message (transaction or post)
-  static async updateMessage(req, res, next) {
+  static async updateMessage(req, res) {
     const { id } = req.params;
     const { content, chooseDealMethod } = req.body;
 
@@ -325,7 +325,7 @@ export default class MessageControllers {
       if (messageType === "apply" && !relatedMsg) {
         if (
           chooseDealMethod === "faceToFace" &&
-          getPost.tradingOptions.selectedMethods.indexOf("面交") > -1
+          getPost.tradingOptions.selectedMethods.includes("面交")
         ) {
           checkMsg.applyDealMethod = {
             [chooseDealMethod]: getPost.tradingOptions.faceToFace,
@@ -359,7 +359,7 @@ export default class MessageControllers {
   }
 
   // DELETE message and its related
-  static async deleteMessageAndRelated(req, res, next) {
+  static async deleteMessageAndRelated(req, res) {
     const { id } = req.params;
 
     try {

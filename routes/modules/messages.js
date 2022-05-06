@@ -1,5 +1,6 @@
 import express from "express";
 import AuthenticationMiddleware from "../../middleware/auth.js";
+import ValidationMiddleware from "../../middleware/validation.js";
 
 const {
   checkToken,
@@ -8,6 +9,8 @@ const {
   transactionInvolved,
   permissionCheck,
 } = AuthenticationMiddleware;
+
+const { idValidate, tradingOptionsValidate } = ValidationMiddleware;
 
 import MessageControllers from "../../controllers/messages.js";
 const {
@@ -27,29 +30,50 @@ const router = express.Router();
 router.get("/all", checkToken, permissionCheck, getAllMessages);
 
 // READ all messages of related post
-router.get("/post/:id", getPostRelatedMessages);
+router.get("/post/:id", idValidate, getPostRelatedMessages);
 
 // READ all messages with related transaction
 router.get(
   "/deal/:id",
   checkToken,
   transactionInvolved,
+  idValidate,
   getTransactionRelatedMessages
 );
 
 // CREATE a message (post and transaction)
-router.post("/new", checkToken, messagePermission, createMessage);
+router.post(
+  "/new",
+  checkToken,
+  messagePermission,
+  idValidate,
+  tradingOptionsValidate,
+  createMessage
+);
 
 // CREATE a reply (post and transaction)
-router.post("/:id/new", checkToken, messagePermission, createReply);
+router.post("/:id/new", checkToken, messagePermission, idValidate, createReply);
 
 // READ one message (for edit rendering value)
-router.get("/:id", checkToken, isMessageAuthor, getOneMessage);
+router.get("/:id", checkToken, idValidate, isMessageAuthor, getOneMessage);
 
 // UPDATE message / reply
-router.put("/:id", checkToken, isMessageAuthor, updateMessage);
+router.put(
+  "/:id",
+  checkToken,
+  idValidate,
+  isMessageAuthor,
+  tradingOptionsValidate,
+  updateMessage
+);
 
 // DELETE message with related replies / single reply
-router.delete("/:id", checkToken, isMessageAuthor, deleteMessageAndRelated);
+router.delete(
+  "/:id",
+  checkToken,
+  idValidate,
+  isMessageAuthor,
+  deleteMessageAndRelated
+);
 
 export default router;
