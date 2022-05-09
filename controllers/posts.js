@@ -86,7 +86,6 @@ export default class PostControllers {
 
   // CREATE a post
   static async createPost(req, res) {
-    // const obj = JSON.parse(JSON.stringify(req.body)); // get rid of [Object: null prototype] in case
     const { itemName, itemStatus, description, region, district, categoryId } =
       res.locals.obj;
     let tradingOptions = res.locals.tradingOptions;
@@ -146,7 +145,6 @@ export default class PostControllers {
   // UPDATE a post
   static async updatePost(req, res) {
     const { id } = req.params;
-    // const obj = JSON.parse(JSON.stringify(req.body)); // get rid of [Object: null prototype] in case
     const {
       itemName,
       itemStatus,

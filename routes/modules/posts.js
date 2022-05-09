@@ -39,8 +39,8 @@ router.post(
   checkToken,
   postPermission,
   idValidate,
-  tradingOptionsValidate,
   uploadCheck.array("imgUrl", 10),
+  tradingOptionsValidate,
   uploadMulti,
   createPost
 );
@@ -64,8 +64,8 @@ router.put(
   checkToken,
   idValidate,
   isPostAuthor,
-  tradingOptionsValidate,
   uploadCheck.array("imgUrl", 10),
+  tradingOptionsValidate,
   uploadMulti,
   updatePost
 );

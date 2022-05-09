@@ -151,6 +151,11 @@ export default class AuthenticationMiddleware {
       return;
     }
 
+    if (!req.headers.authorization) {
+      errorResponse(res, 401);
+      return;
+    }
+
     const {
       sub: { id, accountAuthority },
     } = JWT.verify(
