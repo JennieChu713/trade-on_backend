@@ -37,6 +37,12 @@ export default class UserControllers {
       errorResponse(res, 400);
       return;
     }
+    if (!/^(?=.*[0-9])(?=.*[a-zA-Z])([a-zA-Z0-9]+){6,}$/.test(password)) {
+      return res.status(400).json({
+        error:
+          "password needs to be more than 6 characters,contains alphabets and numbers.",
+      });
+    }
     if (password !== confirmPassword) {
       return res.status(400).json({ error: "password confirmation failed" });
     }

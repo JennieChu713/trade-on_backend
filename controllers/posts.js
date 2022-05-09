@@ -14,7 +14,7 @@ const { deleteImage } = ImgurAPIs;
 
 export default class PostControllers {
   // READ all posts, or related posts of user
-  static async getAllPosts(req, res, next) {
+  static async getAllPosts(req, res) {
     const { page, size, user, isPublic } = req.query;
 
     const publicValue = {};
@@ -61,7 +61,7 @@ export default class PostControllers {
   }
 
   // READ a post
-  static async getOnePost(req, res, next) {
+  static async getOnePost(req, res) {
     const { id } = req.params;
     try {
       const post = await Post.findById(id).populate({
@@ -85,8 +85,7 @@ export default class PostControllers {
   }
 
   // CREATE a post
-  static async createPost(req, res, next) {
-    // const obj = JSON.parse(JSON.stringify(req.body)); // get rid of [Object: null prototype] in case
+  static async createPost(req, res) {
     const { itemName, itemStatus, description, region, district, categoryId } =
       res.locals.obj;
     let tradingOptions = res.locals.tradingOptions;
@@ -144,9 +143,8 @@ export default class PostControllers {
   }
 
   // UPDATE a post
-  static async updatePost(req, res, next) {
+  static async updatePost(req, res) {
     const { id } = req.params;
-    // const obj = JSON.parse(JSON.stringify(req.body)); // get rid of [Object: null prototype] in case
     const {
       itemName,
       itemStatus,
@@ -266,7 +264,7 @@ export default class PostControllers {
   }
 
   // UPDATE a post status
-  static async updatePostStatus(req, res, next) {
+  static async updatePostStatus(req, res) {
     const { id } = req.params;
     try {
       const checkPost = await Post.findById(id);
@@ -281,7 +279,7 @@ export default class PostControllers {
   }
 
   // DELETE a post
-  static async deletePost(req, res, next) {
+  static async deletePost(req, res) {
     const { id } = req.params;
     try {
       let checkTrans = await Transaction.find({ post: ObjectId(id) });
